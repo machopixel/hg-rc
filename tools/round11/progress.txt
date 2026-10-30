@@ -1,0 +1,20 @@
+# Round 11 (Diego, 2026-10-25): the never-attempted HGSIM game functions that call no left-out function
+# (from tools/round10/pending_all.txt), smallest first, one at a time; the round-10 rules apply.
+# Specs tools/verify/spec_w11_<address>.py, logs buildlogs/round11/<address>.log, hooks src/hooks/conv_w10.inc.
+0x10039708 proven+hooked (2000 trials exact, 14/14)
+0x1003a548 proven+hooked (2000 trials exact, 20/20)
+0x10020055 left out: reads the never-written local [ebp-4] (index of the store) - uninitialised stack
+0x1007f9da proven+hooked (2000 trials exact, 32/32)
+0x1007f950 proven+hooked (2000 trials exact, 35/35)
+0x10039931 proven+hooked (2000 trials exact, 53/53)
+0x1003a327 left out: COM method +0x24 (GetStatus) fills the stack dword [ebp-4] (frame pointer to COM; unsure group)
+0x1003a402 left out: same (GetStatus into [ebp-4])
+0x10039c00 left out: same (GetStatus into [ebp-4])
+0x1005f6c6 proven+hooked (2000 trials exact, 77/77; the DLL function's language word passed as 16 bits, see the C)
+0x100397e7 proven+hooked (3000 trials exact, 82/82)
+0x10080471 proven+hooked (3000 trials exact, 92/92)
+0x1005573d proven+hooked (3000 trials exact, 151/151)
+0x10083801 proven+hooked (3000 trials exact, 300/300)
+0x1003be30 proven+hooked (500 trials exact, 279/279)
+0x100b3b16 proven+hooked (3000 trials exact, 300/300)
+# rebuild 12 after round 11: BUILD EXIT 0; hooks 2268 of 2268 (12 new), no duplicates; log buildlogs\round10\build_12.log

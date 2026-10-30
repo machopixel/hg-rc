@@ -1,0 +1,2 @@
+// Round 25 (DECISIONS.md): game file loading; the other nine members are re-hooked in conv_w8y.inc.
+CONV(0xBA7D5, Sim_100ba7d5, 0x55, 0x8B, 0xEC, 0x81, 0xEC, 0x14, 0x01, 0x00, 0x00)

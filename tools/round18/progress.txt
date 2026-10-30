@@ -1,0 +1,11 @@
+# Round 18 (the unset-stack readers): one line per function
+audit: buildlogs/round18/audit.md
+watchers: every read-site watcher now on the private stack (tap taint fixed); 0x1005ab44 parent-key watcher at 0x1005acbf; uninit_native.c PASS
+0x10020055 proven+hooked: dead code (no caller, no pointer), index taken as negative; 3000 trials exact, 22/26 (the store unrun); negative W18_NEG=1 300/300
+0x100a65e7 proven+hooked: the leftover copy is always overwritten before use; 20000 trials exact, 698/698; negative W18_NEG=1 (overwrite NOPed) 40/400
+0x1000aa9e held back: watched in a clean E run of M06 (58 calls, different floats each call); not a single value or chain; AI line-of-fire check, today already fed other leftovers
+0x10021e8c held back: unset camera target on its "hit a unit" path; never called in any watched run
+0x100232d7 held back: unset near-miss owner / ground segment; read sites rarely run (one in M01)
+0x1005ab44 proven+hooked: clean E/D parents identical; gdfscan: no shipped design reaches the unset parent; 4000 trials exact, 209/209; negative W18_NEG=1 300/300
+0x1007581a held back: label NUL issue, calls the graphics library (group 1)
+0x100b8d6c held back: matters only if the leftover word is -1; never called in any watched run

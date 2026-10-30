@@ -1,0 +1,7 @@
+0x1009b772 proven: 4000 exact, coverage 72/72; mutation W23_NEG=1 10/300
+0x1001efbe / 0x1001f14f proven: 3000 exact each, coverage complete (95/95 code, 64/64); mutation W23_NEG=1 caught
+0x100d422f proven: 4000 exact, coverage 95/95; mutation 18/300
+0x1007760b proven: 6000 exact, coverage 255/255; mutation 2/300 (0xc9 on a selected type-4 row only)
+0x1007792c proven: 4000 exact, coverage 91/91; mutation 9/300
+0x100ce586 proven: 4000 exact, coverage 247/247 (the DLL sprintf stubbed: it faults in the checker; the unused read of the player's +0x28 kept, volatile); mutation caught
+0x100cde94 proven: 4000 exact, coverage 446/446; mutation 11/300. conv_w23.inc 8 entries; build OK, 0 warnings

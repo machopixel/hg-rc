@@ -1,0 +1,83 @@
+w9g: FINISHED. All 13 converted functions are proven by the checker (full run of spec_w9g.py at -j2, 0 mismatches
+each), conv_w9g.inc is written. The ten .c files passed i686-w64-mingw32-gcc -std=c17 -Wall -Wextra in the first
+session; the two files edited in this session (w9g_lang.c, w9g_text.c) compiled in the checker's own MinGW build, but
+the direct gcc -std=c17 re-check needed an approval this session could not give (the lead may rerun it).
+
+| address | name | file | trials / mismatches / both-fault | branches reached |
+|---|---|---|---|---|
+| 0x10012af0 | Mono_ShowMissions | unsorted_1001/w9g_mono.c | 800 / 0 / 0 | window logic around every edge (count 0..40, cursor -1/0/n, states 0..5/0xff); sprintf for real |
+| 0x10016de7 | Sim_10016de7 | unsorted_1001/w9g_select.c | 1500 / 0 / 16 | key classes 0x100/0x200/0x300/random, 0..5 members, fifth member, group -1 |
+| 0x1002c8cb | Sim_1002c8cb | unsorted_1002/w9g_misc.c | 300 / 0 / 0 | wrapper |
+| 0x1004e838 | Gif_Finish | unsorted_1004/w9g_gif.c | 300 / 0 / 0 | write ok/fail, [0x1015f360] 0/set |
+| 0x1005f4e0 | Lang_ReadIni | unsorted_1005/w9g_lang.c | 1000 / 0 / 0 | no file, 0..8 lines, dll/sim file/junk lines, table and isctype class paths |
+| 0x100622f0 | Sim_100622f0 | unsorted_1006/w9g_misc.c | 800 / 0 / 0 | all 6 display flags on/off |
+| 0x10062956 | Sim_10062956 | unsorted_1006/w9g_misc.c | 800 / 0 / 0 | all jump-table cases, random first draw 0..100 |
+| 0x1006ca00 | Sim_1006ca00 | unsorted_1006/w9g_misc.c | 300 / 0 / 0 | toggle both ways |
+| 0x10073041 | Sim_10073041 | unsorted_1007/w9g_misc.c | 300 / 0 / 0 | setter |
+| 0x100766ca | Sim_100766ca | unsorted_1007/w9g_misc.c | 500 / 0 / 0 | empty list, hit, miss |
+| 0x10086ebf | Sim_10086ebf | unsorted_1008/w9g_nmsave.c | 600 / 0 / 0 | record found/not, 0..8 items, words table 0/set |
+| 0x100ca670 | Sim_100ca670 | unsorted_100c/w9g_select.c | 2000 / 0 / 0 | flags 1/2/4/8/0x1000x, kinds 0x100/0x200/0x400/0, answers -2/-1/1/other, +0x118 -1 |
+| 0x100cd70f | Sim_100cd70f | unsorted_100c/w9g_text.c | 1500 / 0 / 27 | no entry, kinds 1/2/8/other, single-active label, one-line and wrapped (space at cut or last space, rest or no rest) |
+
+Fixes made in this resume (found by the checker):
+- Sim_100cd70f drew every qualifying entry; the original leaves the loop after the FIRST one (0x100cde69 jumps to the
+  exit). Fixed (break) and documented in w9g.h.
+- Lang_ReadIni cleared the line buffer every iteration; the original clears it once before the loop (a shorter line keeps
+  the previous line's tail). Fixed. Class 0x103 is the CRT alpha class (letters only, not digits): the helper is now
+  IsLetter and the generator always puts a letter after '='; without one the original walks past the line into the
+  stack (not comparable).
+- strtok's saved pointer [0x1017e884] points into the function's stack line buffer, whose address depends on the frame
+  layout: at the Crt_FClose stub the spec replaces it by a marker and logs the text it points at (same technique as
+  spec_w8y.py), so the position in the line is still compared.
+
+Left out: 0x100b8fb1 (cpuid/rdtsc), 0x100e5477 (push es/pop es, push ds/pop es, ebp as scratch register, shld/shrd
+64-bit idiv chains; rule 2). 0x100e6b49 never touched.
+
+Files: src/sim/unsorted_{1001,1002,1004,1005,1006,1007,1008,100c}/w9g.h, the ten .c files above,
+tools/verify/spec_w9g.py, src/hooks/conv_w9g.inc.
+Non-own SOURCES: the closure of spec_w8t/w8v/w8w/w8z plus sim/unsorted_1006/w2l_slots.c and
+sim/unsorted_100c/w7q_objects.c (listed in spec_w9g.py OTHERS).
+
+--- helper final message ---
+Final report, w9g (round 9, letter g). All 13 convertible candidates are converted and proven; the full checker run of spec_w9g.py at -j2 shows 0 mismatches for every function. conv_w9g.inc is written. Nothing is committed.
+
+| address | name | file | trials / mismatches / both-fault | branches reached |
+|---|---|---|---|---|
+| 0x10012af0 | Mono_ShowMissions | unsorted_1001/w9g_mono.c | 800 / 0 / 0 | window logic at every edge (count 0..40, cursor -1/0/n, states 0..5/0xff), sprintf run for real |
+| 0x10016de7 | Sim_10016de7 | unsorted_1001/w9g_select.c | 1500 / 0 / 16 | key classes 0x100/0x200/0x300/random, 0..5 members, fifth member, group -1 |
+| 0x1002c8cb | Sim_1002c8cb | unsorted_1002/w9g_misc.c | 300 / 0 / 0 | wrapper |
+| 0x1004e838 | Gif_Finish | unsorted_1004/w9g_gif.c | 300 / 0 / 0 | write ok/fail, block pointer 0/set |
+| 0x1005f4e0 | Lang_ReadIni | unsorted_1005/w9g_lang.c | 1000 / 0 / 0 | no file, 0..8 lines, dll/sim file/junk lines, table and isctype class paths |
+| 0x100622f0 | Sim_100622f0 | unsorted_1006/w9g_misc.c | 800 / 0 / 0 | all 6 display flags on/off |
+| 0x10062956 | Sim_10062956 | unsorted_1006/w9g_misc.c | 800 / 0 / 0 | every jump-table case |
+| 0x1006ca00 | Sim_1006ca00 | unsorted_1006/w9g_misc.c | 300 / 0 / 0 | toggle both ways |
+| 0x10073041 | Sim_10073041 | unsorted_1007/w9g_misc.c | 300 / 0 / 0 | setter |
+| 0x100766ca | Sim_100766ca | unsorted_1007/w9g_misc.c | 500 / 0 / 0 | empty list, hit, miss |
+| 0x10086ebf | Sim_10086ebf | unsorted_1008/w9g_nmsave.c | 600 / 0 / 0 | record found/not, 0..8 items, words table 0/set |
+| 0x100ca670 | Sim_100ca670 | unsorted_100c/w9g_select.c | 2000 / 0 / 0 | flags 1/2/4/8/0x1000x, kinds 0x100/0x200/0x400/0, answers -2/-1/1/other, +0x118 = -1 |
+| 0x100cd70f | Sim_100cd70f | unsorted_100c/w9g_text.c | 1500 / 0 / 27 | no entry, kinds 1/2/8/other, single-active label, one line, wrapped at cut or at last space, with and without rest |
+
+**Bugs the checker found in this session, now fixed**
+- Sim_100cd70f drew every qualifying entry. The original leaves the loop after the first one (the jump at 0x100cde69 goes to the exit). The C now breaks after the first entry, and the header comment says so.
+- Lang_ReadIni cleared the line buffer every iteration. The original clears it once before the loop, so a shorter line keeps the tail of the previous one. Also, class 0x103 is the CRT alpha class: digits do not stop the skip. The helper is now called IsLetter and the generator always places a letter after the '='. Without one the original walks past the line into the stack, which is not comparable.
+- strtok's saved pointer at 0x1017e884 points into the function's stack line buffer, whose address depends on the frame layout. The spec replaces it with a marker at the fclose stub and logs the text it points at, the same technique spec_w8y.py uses, so the position in the line is still compared.
+
+**Left out**
+- 0x100b8fb1: cpuid/rdtsc (rule 2).
+- 0x100e5477: hand-written span filler using push es/pop es, push ds/pop es, ebp as a scratch register and shld/shrd 64-bit division chains (segment registers, rule 2).
+- 0x100e6b49 was never touched.
+
+**Quirks kept, excluded from trials by the generators**
+- Mono_ShowMissions prints an uninitialised line buffer when byte +0x38 is 1 or above 4.
+- Sim_100ca670 uses an unset local when flags is 1, +0x118 is -1 and delta is not 0.
+- Gif_Finish passes 17 uninitialised bytes after the trailer byte to Sim_1004e719.
+- Sim_10086ebf uses the record even when Sim_10086e27 fails.
+- Lang_ReadIni walks past the line end into the stack when no letter follows the '='.
+
+**Files created**: src/sim/unsorted_{1001,1002,1004,1005,1006,1007,1008,100c}/w9g.h, the ten .c files in the table, tools/verify/spec_w9g.py, src/hooks/conv_w9g.inc, tools/round9/out_w9g.txt (state summary).
+
+**Non-own SOURCES** the spec needs: the closure compiled by spec_w8t/w8v/w8w/w8z plus sim/unsorted_1006/w2l_slots.c and sim/unsorted_100c/w7q_objects.c, all listed in the OTHERS list of spec_w9g.py.
+
+**One thing not re-done**: the plain gcc -std=c17 -Wall -Wextra check passed on all ten files in the first session. The two files edited now compiled in the checker's own MinGW build, but a direct gcc call needed an approval this session could not give, so the lead may want to rerun that check on w9g_lang.c and w9g_text.c.
+
+EXIT 0

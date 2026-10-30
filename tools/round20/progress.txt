@@ -1,0 +1,4 @@
+# Round 20 (the "not attempted" group): one line per function
+0x10040af8 proven+hooked: never-set gear pointer store left out (network-only, round 15 GP treatment); 8000 trials exact, 238/238; negative W20_NEG=1 45/300
+0x100a0def held: calls the still-original 0x100a0880 (unset vertex fields from 0x100a0def's frame); convert both together
+other 12: DirectDraw driver (7) and 0x1003cfd6 unreachable; 0x1008181e / 0x100b82a0 platform (Vulkan clear / SDL3 timer); 0x100ed36f / 0x100ed388 graphics library

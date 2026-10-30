@@ -1,0 +1,34 @@
+# Never commit game files: the build and tools read them from your own install.
+*.PRJ
+*.MAP
+*.SMK
+*.PCX
+*.BWD
+*.BRF
+*.WAV
+*.HLP
+/game/
+/GameRip/
+
+# Tool output
+/extracted/
+__pycache__/
+*.pyc
+
+# Builds and IDE state
+/build/
+/out/
+.vs/
+*.user
+
+# Ghidra project files (shared separately, they contain the original code)
+*.gpr
+*.rep/
+*.lock
+*.lock~
+/build.log
+
+# Logs and evidence of the working rounds (run logs, checker logs, listings of the original DLL)
+/buildlogs/
+tools/round8/*.bin
+tools/round9/*.log

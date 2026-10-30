@@ -1,0 +1,4 @@
+Round 25 (Diego go 2026-10-30): game file loading family
+0x100bc70d proven: 4000 exact, coverage 238/238; mutation caught
+0x100bc70d: a C version already exists (round 8, w8y_pack.c); my duplicate removed
+All ten hooked; build OK, 0 warnings; expected 2338 of 2340

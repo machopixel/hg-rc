@@ -1,0 +1,4 @@
+# Round 19 (the node-tree walks): one line per function
+watcher: classifying watcher for the two walks (hooks_uninit.c); clean E run of M06: no leaf read saw the marker
+0x10089066 proven+hooked: in-walk carry-over exact, outside / earlier-walk values as "not the marker"; 10000 trials exact, 227/227; mutation 40/1000; negative W19_NEG=1 244/400
+0x1008950e proven+hooked: same; 10000 trials exact, 227/227; mutation 34/1000; negative W19_NEG=1 241/400

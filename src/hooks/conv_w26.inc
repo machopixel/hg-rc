@@ -1,0 +1,2 @@
+// Round 26 (DECISIONS.md): the beam-shot update, with the effect's camera point fixed to the hit point.
+CONV(0x21E8C, Sim_10021e8c, 0x55, 0x8B, 0xEC, 0x81, 0xEC, 0xA8, 0x00, 0x00, 0x00)

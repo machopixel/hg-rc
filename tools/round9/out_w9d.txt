@@ -1,0 +1,77 @@
+Round 9, letter d: final report (all 14 candidates converted and proven; log tools/round9/run_w9d_final.log)
+
+address    | name          | file                                | trials | mism | both-fault | branches reached
+0x10016632 | Sim_10016632  | src/sim/unsorted_1001/w9d_select.c  | 1500   | 0    | 0  | early-outs (both selections -1, no members), modes 10/11/5 by kind word (incl. selection -1 -> 0x200), held / not-held records in both the network and local cases, fifth slot on/off, final flag set / not set (kind 0x10)
+0x10017b3e | Sim_10017b3e  | src/sim/unsorted_1001/w9d_misc.c    | 300    | 0    | 0  | straight line
+0x1001edd0 | Sim_1001edd0  | src/sim/unsorted_1001/w9d_misc.c    | 500    | 0    | 0  | all 5 cases, out-of-range (negative, big), case 2 with and without the CD stop
+0x1002ad50 | CmdLine_Parse | src/sim/unsorted_1002/w9d_cmdline.c | 2500   | 0    | 1  | NULL cmdline, empty line, the 9 word switches (mixed case), every letter switch B..Z incl. the '=' sub-forms (F values, O E/F, V G / V = digit by both ctype paths, X F/G/M/P/S, Z H), unknown switch (error report), plain tokens copied to rest
+0x1003218b | Sim_1003218b  | src/sim/unsorted_1003/w9d_tree.c    | 500    | 0    | 0  | NULL, trees of depth 0..4 with random child presence, wrapping sizes
+0x10047569 | Sim_10047569  | src/sim/unsorted_1004/w9d_path.c    | 400    | 0    | 0  | empty / non-empty prefix text (sprintf path and plain copy path), names 0..70 chars
+0x10063037 | Sim_10063037  | src/sim/unsorted_1006/w9d_hud.c     | 1200   | 0    | 0  | target 0 / bit 0x1000, kinds 0x100 (negative and positive ring counters, both palettes, projected visible / not), 0x200, 0x400, other kinds
+0x10065384 | Sim_10065384  | src/sim/unsorted_1006/w9d_hud.c     | 800    | 0    | 0  | no font (early out), the three text routines, random sizes incl. negative widths/heights; int->double->trunc bit-exact
+0x1006561a | Sim_1006561a  | src/sim/unsorted_1006/w9d_hud.c     | 800    | 0    | 0  | inactive, not yet due, due with count-down continuing (sound on/off, toggle) and reaching 0 (reset), final draw on/off
+0x100690d4 | Sim_100690d4  | src/sim/unsorted_1006/w9d_hud.c     | 300    | 0    | 0  | first call hit / miss (second call with swapped arguments)
+0x1009a137 | Sim_1009a137  | src/sim/unsorted_1009/w9d_radar.c   | 800    | 0    | 0  | mode 4 skip, texts 0..20 chars (len clamp to 7), no resource / resource with both blit routines; (float)int -> trunc bit-exact
+0x100bfa33 | Sim_100bfa33  | src/sim/unsorted_100b/w9d_states.c  | 1500   | 0    | 17 | every state 0..0x1b plus out-of-range (-1, 0x1c, 0x8000..): weapon release on/off, target clear by word -1 / by each of the three globals, entry found / not found / negative
+0x100e3c6a | Sim_100e3c6a  | src/sim/unsorted_100e/w9d_decode.c  | 200    | 0    | 0  | straight line
+0x100e41cc | Sim_100e41cc  | src/sim/unsorted_100e/w9d_decode.c  | 2000   | 0    | 0  | codings 0..5 and bad coding (NULL result mid-stream), rates 0/1/2/3, 1..4 blocks, lengths 1..0x1000 (lengths > 0x400 exercise the scratch/block overlap of the two expanders, > 0x401 the delta-table overwrite), all state values. 0x100e440b and 0x100e4463 (EDI/ECX register arguments) are static helpers in the same file and are proven through it; one CONV line.
+
+Float: 0x10063037, 0x10065384, 0x1009a137 contain only int<->float conversions, one double product and _ftol truncation; checked bit for bit (no fp=True / tol), x87 control word 0x27f.
+
+Left out: nothing from cand_w9d.txt.
+Not mine but mentioned in the addendum: 0x1002a8a4 and 0x1002a8b0 are in cand_w9e.txt; they end with `ret 0x10` / `ret 4` (not cdecl) and only call the timer wait 0x100e4550, so they cannot be converted whatever the wait question.
+
+Notes for the lead
+- Sim_100e41cc's proof nops the original's six single-byte segment instructions (push ds, push es, push ds, pop es at 0x100e41d2..d8; pop es, pop ds at 0x100e4407..08), no-ops in flat mode, exactly as spec_core.py does for Timer_Step: the ES reload makes every es: write fault in the emulator on both sides.
+- 0x109b9900 holds a POINTER to the HUD font name (other letters' headers call it "the font [0x109b9900]"), 0x101658d8 the message text; 0x100ba7d5(name, key, 0) loads the font, Sim_100bb2b0(name, key) releases it.
+- 0x100ba7d5 upper-cases its name in place: Sim_1009a137 passes a stack copy (as the original), Sim_10065384 the game's own name buffer.
+- Sim_10016632 reads the entry's dword +0xb7 even when the selection is -1 (entry -1 of the table, i.e. the bytes before it); kept.
+- spec_w9d.py's SOURCES: my 9 files + the callees + the spec_w8t/w8x base + a 27-file link closure (computed with nm over all of src/sim). Every non-own file is already in the CMake lists; only the 9 w9d_*.c files need wiring.
+
+Files created: src/sim/unsorted_1001/{w9d.h,w9d_select.c,w9d_misc.c}, src/sim/unsorted_1002/{w9d.h,w9d_cmdline.c}, src/sim/unsorted_1003/{w9d.h,w9d_tree.c}, src/sim/unsorted_1004/{w9d.h,w9d_path.c}, src/sim/unsorted_1006/{w9d.h,w9d_hud.c}, src/sim/unsorted_1009/{w9d.h,w9d_radar.c}, src/sim/unsorted_100b/{w9d.h,w9d_states.c}, src/sim/unsorted_100e/{w9d.h,w9d_decode.c}, tools/verify/spec_w9d.py, src/hooks/conv_w9d.inc (14 CONV lines, hookgen; none of the addresses is in another hooks_*.c / conv_*.inc), tools/round9/run_w9d_{1,2,3,final}.log, tools/round9/out_w9d.txt.
+Compile: all 9 .c files build with i686-w64-mingw32-gcc -std=c17 -Wall -Wextra without warnings.
+
+--- helper final message ---
+The checker is linking and running now with the closed source set. I'll pick up as soon as its results arrive.
+
+The original's text buffer spans ebp-0x28 to ebp-0x19, exactly 16 bytes, so the C buffer matches. Only the final full run's result is outstanding now; I'll write the report when it lands.
+
+Waiting on the final full run; the report follows once its 14 result lines arrive.
+
+That was the old monitor from the second run expiring. The final run's monitor is still armed; waiting for its results.
+
+Round 9, letter d: all 14 candidates converted and proven (final full run: tools/round9/run_w9d_final.log).
+
+| address | name | file | trials | mism | both-fault | branches reached |
+|---|---|---|---|---|---|---|
+| 0x10016632 | Sim_10016632 | unsorted_1001/w9d_select.c | 1500 | 0 | 0 | early-outs (both selections -1, no members), modes 10/11/5 by kind word incl. selection -1, held/not-held records in network and local cases, fifth slot on/off, final flag set/not (kind 0x10) |
+| 0x10017b3e | Sim_10017b3e | unsorted_1001/w9d_misc.c | 300 | 0 | 0 | straight line |
+| 0x1001edd0 | Sim_1001edd0 | unsorted_1001/w9d_misc.c | 500 | 0 | 0 | all 5 cases, out of range, case 2 with/without CD stop |
+| 0x1002ad50 | CmdLine_Parse | unsorted_1002/w9d_cmdline.c | 2500 | 0 | 1 | NULL line, empty line, 9 word switches (mixed case), every letter switch B..Z with its '=' sub-forms (F values, O E/F, V G and V=digit by both ctype paths, X F/G/M/P/S, Z H), unknown switch error, plain tokens to rest |
+| 0x1003218b | Sim_1003218b | unsorted_1003/w9d_tree.c | 500 | 0 | 0 | NULL, trees depth 0..4, wrapping sizes |
+| 0x10047569 | Sim_10047569 | unsorted_1004/w9d_path.c | 400 | 0 | 0 | sprintf path and plain-copy path, names 0..70 chars |
+| 0x10063037 | Sim_10063037 | unsorted_1006/w9d_hud.c | 1200 | 0 | 0 | target 0 / bit 0x1000, kind 0x100 (negative and positive ring counters, both palettes, visible/not), 0x200, 0x400, other |
+| 0x10065384 | Sim_10065384 | unsorted_1006/w9d_hud.c | 800 | 0 | 0 | no font, the three text routines, random sizes; int->double->trunc bit-exact |
+| 0x1006561a | Sim_1006561a | unsorted_1006/w9d_hud.c | 800 | 0 | 0 | inactive, not due, due with count continuing (sound on/off) and reaching 0, final draw on/off |
+| 0x100690d4 | Sim_100690d4 | unsorted_1006/w9d_hud.c | 300 | 0 | 0 | first call hit / miss (swapped retry) |
+| 0x1009a137 | Sim_1009a137 | unsorted_1009/w9d_radar.c | 800 | 0 | 0 | mode-4 skip, texts 0..20 chars (clamp to 7), no resource / both blit routines; (float)int->trunc bit-exact |
+| 0x100bfa33 | Sim_100bfa33 | unsorted_100b/w9d_states.c | 1500 | 0 | 17 | every state 0..0x1b plus out of range: weapon release on/off, target clear by word -1 / each of three globals, entry found / not / negative |
+| 0x100e3c6a | Sim_100e3c6a | unsorted_100e/w9d_decode.c | 200 | 0 | 0 | straight line |
+| 0x100e41cc | Sim_100e41cc | unsorted_100e/w9d_decode.c | 2000 | 0 | 0 | codings 0..5 and bad coding, rates 0..3, 1..4 blocks, lengths 1..0x1000 (over 0x400 exercises the scratch/block overlap, over 0x401 the delta-table overwrite). 0x100e440b and 0x100e4463 are static helpers proven through it; one CONV line |
+
+**Float.** The three functions with float code (0x10063037, 0x10065384, 0x1009a137) only convert ints and truncate; proven bit for bit, no tolerance.
+
+**Left out.** Nothing from my list. The addendum's 0x1002a8a4 and 0x1002a8b0 are in letter e's list, not mine. Both end with `ret 0x10` / `ret 4`, so they are not cdecl and cannot be converted regardless of the timer wait.
+
+**What changed this session.** The earlier session had written all C and spec entries but never got a passing run. The spec's SOURCES did not link (not transitively closed), so I added a 27-file closure computed with nm over all of src/sim. Sim_10065384 was passing the address 0x109b9900 where the original passes the pointer stored there (the HUD font name). Sim_100e41cc faulted on every trial because its `push ds / pop es` makes every es: write fault in the emulator, so its spec now nops those six single-byte instructions, as spec_core does for Timer_Step.
+
+**Notes for the lead.**
+- 0x109b9900 holds a pointer to the HUD font name and 0x101658d8 the message text. 0x100ba7d5 loads the font and Sim_100bb2b0 releases it. 0x100ba7d5 upper-cases the name in place; Sim_1009a137 passes a stack copy like the original.
+- Sim_10016632 reads the entry's dword +0xb7 even for selection -1 (the bytes before the table); kept as the original.
+- Every non-own file in SOURCES is already in the CMake lists. Only the nine w9d_*.c files need wiring.
+
+**Files created.** w9d.h plus w9d_select.c and w9d_misc.c in unsorted_1001, w9d_cmdline.c in unsorted_1002, w9d_tree.c in unsorted_1003, w9d_path.c in unsorted_1004, w9d_hud.c in unsorted_1006, w9d_radar.c in unsorted_1009, w9d_states.c in unsorted_100b, w9d_decode.c in unsorted_100e, each folder with its own w9d.h. Also tools/verify/spec_w9d.py, src/hooks/conv_w9d.inc (14 CONV lines, none of the addresses hooked elsewhere), the run logs tools/round9/run_w9d_*.log and this report in tools/round9/out_w9d.txt. All nine C files build with MinGW GCC at -std=c17 -Wall -Wextra without warnings. Nothing was committed.
+
+That was only the log watcher expiring after the run had already finished. The work is complete and the final report above stands; nothing further is pending.
+
+EXIT 0

@@ -1,0 +1,191 @@
+#include "w2n.h"
+
+#define F32(addr) (*SIM_PTR(float, addr))
+#define U32(addr) (*SIM_PTR(uint32_t, addr))
+#define RENDER_PLUGIN SIM_PTR(void, 0x109e3dc0)
+#define RENDER_CALL RENDER_SLOT(int(__cdecl *)(int, void *, void *, int, void *), 0x109e3d30)
+#define CAMERA (*SIM_PTR(unsigned char *, 0x1014cae0))
+#define PROJECTED_LIST ((unsigned char **)SIM_PTR(unsigned char *, 0x101c76a0))
+#define MAX_POLY 255 /* the projected list holds at most 0xff vertices */
+#define ONE_BITS 0x3f800000u
+
+/* Fields of a 36-byte plugin vertex taken from a projected vertex: screen x, y as floats, camera z. */
+static void ScreenPosition(unsigned char *v, const unsigned char *p)
+{
+    *(float *)v = (float)*(const int32_t *)(p + 0x18);
+    *(float *)(v + 4) = (float)*(const int32_t *)(p + 0x1c);
+    *(uint32_t *)(v + 8) = *(const uint32_t *)(p + 8);
+}
+
+// FUNCTION: HGSIM 0x100a0339
+int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, int count)
+{
+    unsigned char buf[MAX_POLY * 0x24];
+    unsigned char *v = buf;
+    void **next = projected;
+    int left = count;
+
+    if (texture == NULL || U32(0x1017b940) == 0)
+        return 0;
+    while (left-- != 0) {
+        const unsigned char *p = *next++;
+
+        ScreenPosition(v, p);
+        *(float *)(v + 0xc) = *(float *)(CAMERA + 0x94) / *(const float *)(p + 8);
+        *(uint32_t *)(v + 0x1c) = *(const uint32_t *)(p + 0x20);
+        *(uint32_t *)(v + 0x20) = *(const uint32_t *)(p + 0x24);
+        if (U32(0x1017b940) != 0)
+            *(uint32_t *)(v + 0x10) = 0xff;
+        else
+            *(uint32_t *)(v + 0x10) = 0x80;
+        v[0x14] = (unsigned char)U32(0x10143fdc);
+        v[0x15] = (unsigned char)U32(0x10143fe0);
+        v[0x16] = (unsigned char)U32(0x10143fe4);
+        v[0x17] = *SIM_PTR(unsigned char, 0x101cfc8c);
+        if (left < count - 2)
+            *(uint32_t *)(v + 0x18) = 0;
+        else
+            *(uint32_t *)(v + 0x18) = 0xff000000u;
+        v += 0x24;
+    }
+    if (U32(0x1017d0ac) != 0)
+        RENDER_CALL(2, RENDER_PLUGIN, buf, count, texture);
+    else
+        RENDER_CALL(6, RENDER_PLUGIN, buf, count, texture);
+    return 1;
+}
+
+/* The software path: 24-byte records (x, y, z << 16, 1, 1, 1) for the routine at 0x100f9fd4. */
+static void DrawSoftware(unsigned n)
+{
+    int32_t sw[MAX_POLY * 6];
+    int32_t *out = sw;
+    unsigned char **next = PROJECTED_LIST;
+    unsigned i;
+
+    for (i = 0; i < n; i++, out += 6) {
+        const unsigned char *p = *next++;
+
+        out[0] = *(const int32_t *)(p + 0x18);
+        out[1] = *(const int32_t *)(p + 0x1c);
+        out[5] = 1;
+        out[3] = 1;
+        out[4] = 1;
+        out[2] = (int32_t)((uint32_t)Render_Ftol(*(const float *)(p + 0x20)) << 16);
+    }
+    if (U32(0x1017d1e4) == 0)
+        U32(0x1017d1e4) = (uint32_t)(uintptr_t)RENDER_LOAD(SIM_PTR(void, 0x1014d1dc), *SIM_PTR(void *, 0x1014cf0c));
+    SIM_FN(void(__cdecl *)(void *, void *, unsigned, int, int, int, void *, int), 0x100f9fd4)(
+        SIM_PTR(void, 0x109e3e00), sw, n, 0x40, 0, 0, (void *)(uintptr_t)U32(0x1017d1e4), 0);
+}
+
+// FUNCTION: HGSIM 0x100ac738
+void __cdecl Render_SubmitClipped_100ac738(unsigned char *verts, unsigned count)
+{
+    unsigned n = Render_ClipPolygon(verts, count, *(uint32_t *)(CAMERA + 0x3c), *(uint32_t *)(CAMERA + 0x40));
+
+    if (U32(0x1017b940) != 0) {
+        unsigned char buf[MAX_POLY * 0x24];
+        int32_t desc[2];
+        unsigned char *out;
+        unsigned char **next;
+        unsigned i;
+
+        if (n < 3)
+            return;
+        next = PROJECTED_LIST;
+        out = buf + (n - 1) * 0x24;
+        for (i = 0; i < n; i++, out -= 0x24) {
+            const unsigned char *p = *next++;
+            float u;
+
+            ScreenPosition(out, p);
+            *(uint32_t *)(out + 0xc) = ONE_BITS;
+            *(uint32_t *)(out + 0x1c) = ONE_BITS;
+            *(uint32_t *)(out + 0x20) = ONE_BITS;
+            *(uint32_t *)(out + 0x10) = 0xfe;
+            out[0x14] = 0xf2;
+            out[0x16] = 0x46;
+            out[0x15] = 0xae;
+            *(uint32_t *)(out + 0x18) =
+                (uint32_t)Render_FogLevel(*(const float *)(p + 8), *(const float *)(verts + 0x10)) << 24;
+            u = *(const float *)(p + 0x20);
+            out[0x17] = (!(u < F32(0x1012baa4)) && !(u > F32(0x1012baa4))) ? 0x40 : 0;
+        }
+        desc[1] = 0xfe;
+        RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
+    } else if (n >= 3) {
+        DrawSoftware(n);
+    }
+}
+
+// FUNCTION: HGSIM 0x100ad1f3
+void __cdecl Sim_100ad1f3(unsigned char *obj, unsigned char *part)
+{
+    unsigned char recs[MAX_POLY * 0x58];
+    float fogParam = *(float *)(obj + 0x18);
+    unsigned char *table;
+    unsigned char *rec;
+    unsigned n, i;
+
+    if (part == NULL || (*(uint32_t *)(part + 0x1c) & 0x80000000u) != 0)
+        return;
+    U32(0x101c9ea8) = 0;
+    n = *(uint16_t *)(part + 2);
+    table = *(unsigned char **)(*(unsigned char **)(part + 0x24) + 0x30) + 0x18;
+    for (i = 0, rec = recs; i < n; i++, rec += 0x58) {
+        const unsigned char *src = table + part[*(int32_t *)(part + 4) + i] * 0x58;
+
+        *(uint32_t *)(rec + 0xc) = *(const uint32_t *)(src + 0xc);
+        *(uint32_t *)(rec + 0x14) = *(const uint32_t *)(src + 0x14);
+        if (!(fogParam < F32(0x1012baa8)) && !(fogParam > F32(0x1012baa8)))
+            *(float *)(rec + 0x10) = 0.0f;
+        else
+            *(float *)(rec + 0x10) = fogParam + F32(0x1012baac);
+        *(uint32_t *)(rec + 0x18) = 0;
+        *(uint32_t *)(rec + 0x1c) = 0;
+        *(uint32_t *)(rec + 0x2c) = 0;
+    }
+    n = Render_ClipPolygon(recs, n, *(uint32_t *)(CAMERA + 0x3c), *(uint32_t *)(CAMERA + 0x40));
+    if (n < 3)
+        return;
+    if (U32(0x1017b940) != 0) {
+        unsigned char buf[MAX_POLY * 0x24];
+        int32_t desc[2];
+        unsigned char *out = buf + (n - 1) * 0x24;
+        unsigned char **next = PROJECTED_LIST;
+
+        for (i = 0; i < n; i++, out -= 0x24) {
+            const unsigned char *p = *next++;
+
+            ScreenPosition(out, p);
+            *(uint32_t *)(out + 0xc) = ONE_BITS;
+            *(uint32_t *)(out + 0x1c) = ONE_BITS;
+            *(uint32_t *)(out + 0x20) = ONE_BITS;
+            *(uint32_t *)(out + 0x10) = 0xfe;
+            out[0x14] = 0;
+            out[0x16] = 0;
+            out[0x15] = 0;
+            out[0x17] = 0x80;
+            *(uint32_t *)(out + 0x18) = (uint32_t)Render_FogLevel(*(const float *)(p + 8), fogParam) << 24;
+        }
+        desc[1] = 0xfe;
+        RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
+    } else {
+        unsigned char buf[MAX_POLY * 0x24];
+        unsigned char *out = buf;
+        unsigned char **next = PROJECTED_LIST;
+
+        for (i = 0; i < n; i++, out += 0x24) {
+            const unsigned char *p = *next++;
+
+            ScreenPosition(out, p);
+            *(uint32_t *)(out + 0xc) = ONE_BITS;
+            *(uint32_t *)(out + 0x1c) = ONE_BITS;
+            *(uint32_t *)(out + 0x20) = ONE_BITS;
+            *(uint32_t *)(out + 0x10) = 0xf0;
+            *(uint32_t *)(out + 0x14) = 0xff000000u;
+        }
+        RENDER_SLOT(void(__cdecl *)(unsigned, void *, int), 0x1014cb4c)(n, buf, 0xf0);
+    }
+}

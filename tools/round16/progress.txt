@@ -1,0 +1,9 @@
+# Round 16 (the within-range test 0x100687a3, the Behemoth collision bug): one line per function
+0x100687a3 proven+hooked without its three checks of never-written locals (DECISIONS.md round 16): 20000 trials exact, 80/80; leftovers non-zero as seen with the original code; negative check W16_NEG=1 358/500 mismatch
+0x100688a3 proven+hooked (round 10 C, 8000 trials exact, 114/114)
+0x100689c0 proven+hooked (8000 trials exact, 132/132)
+0x10066907 proven+hooked (12000 trials exact, 723/732: 9 dead; mutation 1/3000)
+0x100663c0 proven+hooked (15000 trials exact, 400/400; mutation 74/3000; kill-credit leftover set by 0x10084a94 first, tools/round16/reach.py)
+0x1006e22c held back: reads its own unset [ebp-0x2c] (drive speed) on the jump/side-step path, reachable without the write at 0x1006e77b (tools/round16/reach_addr.py); needs a watcher run and a start value
+watcher: uninittrace entry for 0x1006e22c [ebp-0x2c] + read sites 0x1006ebc2 / 0x1006ebf5 / 0x1006eddc / 0x1006ee11 (src/hooks/uninit_table.inc, site taps raised to 36, first 4 unset values per site printed); build exit 0
+0x1006e22c proven+hooked with start values 0 for [ebp-0x2c] (watcher: original 50/50 zero) and [ebp-0x238] (only sub-1e-7 near the origin): 12000 trials exact, 3021/3031 (10 dead); negative check W16_NEG=1 49/400

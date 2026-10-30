@@ -1,0 +1,17 @@
+# Round 12 (uninitialised stack, start values in DECISIONS.md): one line per function
+0x100b9dde proven+hooked (3000 trials exact, 58/58; line empty + pointer at the line start; negative check: 1161 mismatches without the start values)
+0x1001a4fa proven+hooked (4000 trials exact, 171/171; the unset name buffer only reaches Sim_100b8d5c, which ignores it: no start value needed)
+0x100c0158 proven+hooked (4000 trials exact, 163/163; node starts at 0 for other kinds; negative check: 2260 mismatches with a non-zero leftover)
+0x10019fe1 proven+hooked (4000 trials exact, 195/195; the four sscanf floats start at 0.0; sscanf stubbed: the DLL's float parser needs CRT start-up tables; negative check: 483 mismatches with non-zero leftovers)
+0x1001a23e proven+hooked (4000 trials exact, 228/228; the sscanf fields start at 0; negative check: 456 mismatches with non-zero leftovers)
+0x100a0063 proven+hooked (4000 trials exact, 161/161; the sscanf locals start at 0 / empty; negative check: 411 mismatches with non-zero leftovers)
+0x100b66a0 proven+hooked (4000 trials exact, 179/179; the divisor starts at 1)
+0x100648a0 proven+hooked (4000 trials exact, 362/362; palette starts at 0; negative: 650 mismatches)
+0x10064d05 proven+hooked (4000 trials exact, 344/344; palette starts at 0; negative: 383 mismatches)
+0x10064364 proven+hooked (4000 trials exact, 340/340; heading starts at 0.0)
+0x100c2ae5 proven+hooked (6000 trials exact, 458/458; the thing found starts at 0)
+0x10055048 proven+hooked (15000 trials exact, 458/458; the key word starts at 0)
+0x100c7120 proven+hooked (8000 trials exact, 906/906; position / size / rank start at 0 for other kinds)
+0x1007581a left original: besides the label buffer it reads [ebp-0x144] / [ebp-0x140] (the item position), written only when the menu's +4 text is set, then passed to 0x1008d65d / 0x1008d6f7 either way - an unset local the table did not list
+0x100e2aa3 proven+hooked (6000 trials exact, 1098/1098; a 16-character name ends after its 16th byte; negative: 54 mismatches)
+0x1005bb7a left original: besides [ebp-0xc0] / [ebp-0xa8] / [ebp-0x84] it stores [ebp-0x14] (the armour class, set only by a part of type 2 with sub-kind 0..4) into +0xbdb unconditionally at 0x1005cb66 - an unset local the table did not list

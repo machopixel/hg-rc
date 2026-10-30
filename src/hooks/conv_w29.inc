@@ -1,0 +1,2 @@
+// Round 29 (DECISIONS.md): the kind-0 shot update, with the ground impact (no hit) on the shot's own path.
+CONV(0x232D7, Sim_100232d7, 0x55, 0x8B, 0xEC, 0x81, 0xEC, 0x60, 0x01, 0x00, 0x00)

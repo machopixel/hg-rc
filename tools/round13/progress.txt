@@ -1,0 +1,5 @@
+# Round 13 (callers of round 12 conversions): one line per function
+0x100139ff proven+hooked (4000 trials exact, 295/295; Sim_10014061 and fmod run for real)
+0x100be0f0 proven+hooked (6000 trials exact, 602/602; every callee stubbed, the key word compared as 16 bits)
+0x100782a9 proven+hooked (5000 trials exact, 371/372; the one unrun instruction is mode 0 of the switch, unreachable after the early return; the camera copy is filled by Sim_10044992, which only skips it without a camera, where Sim_100619a0 would fault anyway)
+0x10063529 proven+hooked (8000 trials exact, 684/684, 0 both-fault; sprintf stubbed (its %f needs CRT start-up tables); the marker name keeps the original's 16-byte buffer, as Sim_10063037 does)

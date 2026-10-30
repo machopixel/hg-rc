@@ -1,0 +1,5 @@
+// Icons are extracted from your own HG.EXE by tools/res/extract_icons.py.
+103 ICON "@HG_ICON_DIR@/icon103.ico"
+104 ICON "@HG_ICON_DIR@/icon104.ico"
+107 ICON "@HG_ICON_DIR@/icon107.ico"
+108 ICON "@HG_ICON_DIR@/icon108.ico"

@@ -1,0 +1,8 @@
+# Round 17 (the kill credit and the collision damage): one line per function
+0x10067ec6 proven+hooked: C core Sim_10067ec6_Credit takes the unset killer as unsetKiller; 20000 trials exact, 188/188 (original's [ebp-4] preset, C given the same value); negative check W17_NEG=1 189/400 mismatch
+0x1006788c proven+hooked: original 0x1006788c with the original 0x10084a94 and 0x10067ec6 inside vs C, stack below the call randomised; 20000 trials exact, 438/438, inner kill credit 187/188 (0x10067f28 = b == 0, not reachable from 0x1006788c); negative check W17_NEG=1 (max instead of min) 153/400 mismatch
+0x100680dd held back: its killer is always -2 (it passes b = 0), but the shot it hands 0x1006c161 has its kind word +0x7c ([ebp-0xf4]) never set, and 0x1006c161 reads it (damage split); needs a watcher run and a start value
+watcher: uninittrace entry for 0x100680dd [ebp-0xf4] (16 bits) + read site 0x100685be (src/hooks/uninit_table.inc); build exit 0
+0x100680dd traced (tools/round17/footprint.py): the kind word is left by the slide 0x100663c0 call (stack address, record address or world-object flags word, by path); only 1..4 vs other matters; watcher kept for confirmation
+0x100680dd kind word: never 1..4 on every path except the own unit's crash-sound crash (float bits, ~4/65536); objflags.py: 12015 OBJ chunks give 0/0x10/0xb0/0xd0/0xe0/0x800; runtime writers checked
+0x100680dd proven+hooked with kind 0: 20000 trials exact, 390/390; negative W17_NEG=1 244/400; damage log DESTROYED lines; build exit 0

@@ -1,0 +1,67 @@
+Round 9 letter f: FINISHED (see the final report in the session). All 15 integer candidates converted and proven
+by tools/verify/spec_w9f.py with 0 mismatches (Sim_1005e426, the one x87 function, exact without tolerance);
+0x100e4c2c left out (segment registers / hand-written rasterizer). Files: src/sim/unsorted_{1001,1003,1004,1005,
+100a,100b,1007}/w9f*.{c,h}, tools/verify/spec_w9f.py, src/hooks/conv_w9f.inc.
+Owner note: difftest.py counts a trial where BOTH runs hit the instruction limit ('timeout') as a pass and not as
+both-fault; Sim_1005e426 "passed" that way with a broken generator until the coverage check caught it.
+
+--- helper final message ---
+The checker is still running in the background (the -j2 runner prints each share only when it finishes). I'll wait for its completion notification before doing anything else, since every remaining step depends on those results.
+
+Everything else is done; I'm waiting for the coverage run to finish (its output arrives as a task notification), then I'll write the final report.
+
+Final report, round 9 letter f
+
+All 15 integer candidates are converted and proven; 0x100e4c2c is left out. Every function below shows 0 mismatches in `tools/verify/spec_w9f.py` (run at -j2), and the ten .c files compile with plain `i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c`. "Branches" is measured: the share of the function's conditional jumps for which the trials made the original take both outcomes (a scratch block-coverage run on the same generators).
+
+| address | name | file | trials | mism. | both-fault | branches reached |
+|---|---|---|---|---|---|---|
+| 0x10016117 | Sim_10016117 | unsorted_1001/w9f_select.c | 1500 | 0 | 0 | 28/28 jcc both ways; all switch kinds 2,3,5,7,8,11,13,14,15 and others, both exits |
+| 0x10036876 | Plugin_LoadList | unsorted_1003/w9f_plugin.c | 500 | 0 | 0 | 2/2; no file, empty lines, 0..5 lines |
+| 0x100473e4 | Screenshot_Save | unsorted_1004/w9f_screenshot.c | 400 | 0 | 0 | 2/2; tga and gif paths, counter limit |
+| 0x1004b8b0 | Sim_1004b8b0 | unsorted_1004/w9f_screenshot.c | 400 | 0 | 0 | 1/1; whole table and out-of-range |
+| 0x10054a79 | GameKey_LoadMap | unsorted_1005/w9f_gamekey.c | 1000 | 0 | 0 | 14/14; all five error reports, key names, single chars, >=0x80 chars, duplicate defines |
+| 0x1005e426 | Sim_1005e426 | unsorted_1005/w9f_score.c | 1500 | 0 | 0 | 9/10; the one left is the negative-weight branch, dead code (entries 2-4 of the table can never win the scan) |
+| 0x10078a7f | Sim_10078a7f | unsorted_1007/w9f_panel.c | 800 | 0 | 0 | 9/9 |
+| 0x10078f60 | Sim_10078f60 | unsorted_1007/w9f_sides.c | 600 | 0 | 0 | 5/5; 0..5 members, error 0x4a |
+| 0x1007adfc | Sim_1007adfc | unsorted_1007/w9f_objectives.c | 800 | 0 | 0 | 14/14 (codes 5 and 6 only, see below) |
+| 0x1007b1d0 | Sim_1007b1d0 | unsorted_1007/w9f_objectives.c | 600 | 0 | 0 | 15/15 (codes 2, 3, 4 only) |
+| 0x1007b5db | Sim_1007b5db | unsorted_1007/w9f_objectives.c | 2500 | 0 | 0 | 113/120; every type of both switches reached |
+| 0x1007c42f | Sim_1007c42f | unsorted_1007/w9f_objectives.c | 1500 | 0 | 0 | 36/37 |
+| 0x1007cbcb | Sim_1007cbcb | unsorted_1007/w9f_sides.c | 400 | 0 | 0 | 2/2 |
+| 0x100ab1f2 | Sim_100ab1f2 | unsorted_100a/w9f_misc.c | 300 | 0 | 0 | constant, no branches |
+| 0x100b78d0 | Text_FormatNumbered | unsorted_100b/w9f_text.c | 1200 | 0 | 12 | 20/23; numbered items in any order, repeated and missing numbers, %%, bad items, failing allocations |
+
+FP class: only Sim_1005e426 has x87 code (two fld/fadd and two _ftol). It is game logic (a score) and is checked bit for bit with the control word 0x27f, no `fp=True`; _ftol is written as a cast with the 64-bit indefinite case handled. All other functions are integer only.
+
+Corrections made in this session (the C from the earlier session had three real errors found by the checker):
+- Sim_1007adfc, code 6: the mark byte is row +0x8c (byte 3 of the first name) even though the +0x99 text is tested. Ghidra and the earlier C put it at +0x9c.
+- Sim_1007b5db, type 0x40000: the original toggles the byte at the other row's +0x74. Ghidra showed a dword at +0x75.
+- Sim_1005e426: the high half of the result is the advanced record pointer, or the advanced list pointer when the list loop ran. The spec now also keeps the word count small, because its generator had overwritten the count with random words.
+- Sim_10016117 now passes clean 16-bit kind/sel values. The original pushes them in registers with leftover upper halves; Sim_10040f5f and Sim_10015d30 read only 16 or 8 bits, so the spec masks those arguments.
+
+Left out:
+- 0x100e4c2c: hand-written assembler polygon filler. It uses `push es` / `push ds; pop es`, shld chains and 64-bit idiv in edx:eax (rule 2, segment registers and tricks C cannot express).
+
+Known limits of the proofs, stated in the spec: Sim_1007adfc is checked with codes 5 and 6 and Sim_1007b1d0 with 2, 3, 4 only, since other codes make the original read uninitialised locals; names longer than 15 characters and screenshot numbers below -99999 overflow the originals' own frames and are kept out.
+
+Files created or edited (all new to this letter):
+- src/sim/unsorted_1001/w9f.h, w9f_select.c
+- src/sim/unsorted_1003/w9f.h, w9f_plugin.c
+- src/sim/unsorted_1004/w9f.h, w9f_screenshot.c
+- src/sim/unsorted_1005/w9f.h, w9f_gamekey.c, w9f_score.c
+- src/sim/unsorted_100a/w9f.h, w9f_misc.c
+- src/sim/unsorted_100b/w9f.h, w9f_text.c
+- src/sim/unsorted_1007/w9f.h, w9f_panel.c, w9f_sides.c, w9f_objectives.c
+- tools/verify/spec_w9f.py
+- src/hooks/conv_w9f.inc (15 CONV lines from hookgen; none of the addresses is patched by any hooks_*.c or other conv_*.inc)
+- tools/round9/out_w9f.txt (state notes)
+
+Non-own sources the functions call directly (for CMake if not yet there): util/lookup.c, unsorted_1004/tables.c, unsorted_1002/w8t_misc.c, unsorted_1001/w7l_misc.c, unsorted_1001/w8t_actions.c, unsorted_1004/w3p_net.c, unsorted_100f/w6h_crt.c, unsorted_1003/w8u_plugin.c, unsorted_100f/w6i_stream.c, unsorted_100f/w2g_crt.c, unsorted_100f/w8z_crt.c, unsorted_100f/w2e_string.c, unsorted_1004/w8v_shots.c, unsorted_1004/w5c_calls.c, unsorted_1004/w2h_palette.c, unsorted_1004/w5a_misc.c, unsorted_1004/w5y_misc.c, unsorted_1005/w7n_input.c, unsorted_100f/w6i_misc.c, unsorted_100f/w7r_ctype.c, view/objlist.c, view/w2l_rects.c, unsorted_1007/w8w_misc.c, unsorted_1007/w6e_misc.c, unsorted_1002/w5y_misc.c, unsorted_1004/w2b_checks.c, unsorted_1007/w2k_misc.c, unsorted_1007/w2h_misc.c, unsorted_1007/w2i_map.c, unsorted_1001/w5z_calls.c, unsorted_100b/w5y_misc.c, unsorted_100f/w6i_mem.c, unsorted_1010/w7r_heap.c, unsorted_1010/w8A_text.c, unsorted_100f/w2k_string.c, unsorted_100f/w2j_str.c. The spec itself compiles the spec_w9g.py closure plus these.
+
+For the owner:
+- difftest.py counts a trial in which both runs hit the instruction limit as a pass, not as both-fault. Sim_1005e426 "passed" that way with the broken generator until the coverage check showed every trial timing out. A one-line change (treat `timeout` like `fault`) would close that gap; it is a shared file, so I left it alone.
+- The side table at 0x10473800 (one 0x4fc3a-byte block per side, rows of 0x13f from +0x3a) and its users in w9f_sides.c and w9f_objectives.c are the mission-objective state machine; a src/sim/objectives folder would fit those files plus Sim_1007b4d6, Sim_10079e3b, Sim_10079ecd and Sim_10079c86.
+- Nothing was committed or published.
+
+EXIT 0

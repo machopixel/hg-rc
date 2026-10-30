@@ -1,0 +1,16 @@
+10016117 1096 calls: -
+10036876 198 calls: 1003650d(HOOKED)
+100473e4 247 calls: -
+1004b8b0 528 calls: -
+10054a79 799 calls: 100bc280(HOOKED)
+1005e426 4282 calls: -
+10078a7f 1249 calls: 100782a9(UNCONV)
+10078f60 1450 calls: 100bc280(HOOKED)
+1007adfc 561 calls: -
+1007b1d0 604 calls: -
+1007b5db 3668 calls: 1007a005(UNCONV) 1007a4af(UNCONV) 1007a955(UNCONV) 1007adfc(mine) 1007b1d0(mine)
+1007c42f 1109 calls: 1007b5db(mine) 1007b1d0(mine)
+1007cbcb 3301 calls: -
+100ab1f2 1662 calls: -
+100b78d0 2512 calls: -
+100e4c2c 2123 calls: -

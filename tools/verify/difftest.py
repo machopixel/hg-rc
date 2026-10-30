@@ -1,0 +1,509 @@
+#!/usr/bin/env python3
+"""
+Runs an original HGSIM.DLL function and its C conversion in the same emulated
+machine (Unicorn), on the same random inputs, and compares the return value
+and every byte of writable memory afterwards.
+
+  difftest.py HGSIM.DLL spec.py [name ...]
+
+spec.py defines SPECS = [dict(name, orig=0x100b9748, c='Cache_StampNewer',
+args=[...], trials=300, setup=optional)], see tools/verify/README.md.
+The C sources are compiled with i686-w64-mingw32-gcc into one flat image.
+"""
+import json, os, random, struct, subprocess, sys, tempfile
+import pefile
+from unicorn import *
+from unicorn.x86_const import *
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+SRC = os.path.normpath(os.path.join(HERE, '..', '..', 'src'))
+CBASE = 0x40000000
+STACK_TOP = 0x00800000
+STACK_SIZE = 0x00100000
+ARGMEM = 0x00A00000     # argument buffers
+ARGSIZE = 0x00100000
+RET_ADDR = 0x00F00000
+STUB_BASE = 0x00F20000    # one 16-byte stub per imported Windows function
+PAGE = 0x1000
+
+
+def build_c(sources, cflags=()):
+    """Compiles the sources into one flat PE; returns (sections, symbols)."""
+    tmp = tempfile.mkdtemp()
+    exe = os.path.join(tmp, 't.exe')
+    cmd = ['i686-w64-mingw32-gcc', '-O1', '-ffreestanding', '-fno-builtin', '-nostdlib',
+           '-fno-stack-protector', '-fno-asynchronous-unwind-tables', '-w',
+           '-I', SRC, '-I', os.path.join(SRC, 'sim', 'mem'), '-I', os.path.join(SRC, 'sim', 'core'),
+           '-Wl,--image-base=0x%x' % CBASE, '-Wl,--entry=_rt_entry', '-Wl,--section-alignment=0x1000',
+           '-Wl,--file-alignment=0x1000', '-Wl,--disable-dynamicbase', '-Wl,--disable-reloc-section',
+           
+           '-o', exe, os.path.join(HERE, 'rt.c')] + list(cflags) + sources
+    open(os.path.join(tmp, 'e.c'), 'w').write('void rt_entry(void){}\n')
+    cmd.append(os.path.join(tmp, 'e.c'))
+    subprocess.check_call(cmd)
+    nm = subprocess.check_output(['i686-w64-mingw32-nm', exe]).decode()
+    syms = {}
+    for line in nm.splitlines():
+        p = line.split()
+        if len(p) == 3:
+            syms[p[2].lstrip('_') if p[2].startswith('_') else p[2]] = int(p[0], 16)
+    pe = pefile.PE(exe)
+    secs = [(CBASE + s.VirtualAddress, s.get_data().ljust(max(s.Misc_VirtualSize, len(s.get_data())), b'\0'))
+            for s in pe.sections]
+    return secs, syms
+
+
+class TrackedUc:
+    """Forwards to the real Unicorn object but notes which pages the host writes to."""
+    def __init__(self, uc, dirty):
+        self._uc, self._dirty = uc, dirty
+
+    def __getattr__(self, name):
+        return getattr(self._uc, name)
+
+    def mem_write(self, addr, data):
+        self._dirty.update(range(addr >> 12, (addr + max(len(data), 1) - 1 >> 12) + 1))
+        return self._uc.mem_write(addr, data)
+
+
+class Machine:
+    def __init__(self, dll, csecs, syms):
+        pe = pefile.PE(dll)
+        self.base = pe.OPTIONAL_HEADER.ImageBase
+        self.image = pe.get_memory_mapped_image()
+        self.syms = syms
+        self.csecs = csecs
+        self.raw = Uc(UC_ARCH_X86, UC_MODE_32)
+        self.dirty = set()
+        self.uc = TrackedUc(self.raw, self.dirty)
+        uc = self.uc
+        dirty = self.dirty
+        def note_write(_uc, access, address, size, value, ud):
+            dirty.update(range(address >> 12, (address + size - 1 >> 12) + 1))
+        # stack pushes are far the most frequent writes and the stack is always copied whole
+        self.raw.hook_add(UC_HOOK_MEM_WRITE, note_write, None, 0, STACK_TOP - STACK_SIZE - 1)
+        self.raw.hook_add(UC_HOOK_MEM_WRITE, note_write, None, STACK_TOP + 1, 0xFFFFFFFF)
+        self._idx_snap = None
+        size = (pe.OPTIONAL_HEADER.SizeOfImage + PAGE - 1) & ~(PAGE - 1)
+        uc.mem_map(self.base, size)
+        uc.mem_write(self.base, self.image)
+        self.dll_size = size
+        # writable range of the dll = .data/.bss sections
+        self.wr = []
+        for s in pe.sections:
+            if s.Characteristics & 0x80000000:
+                lo = self.base + s.VirtualAddress
+                hi = lo + ((max(s.Misc_VirtualSize, s.SizeOfRawData) + PAGE - 1) & ~(PAGE - 1))
+                self.wr.append((lo, min(hi, self.base + size) - lo))
+        for va, data in csecs:
+            n = (len(data) + PAGE - 1) & ~(PAGE - 1)
+            uc.mem_map(va, n)
+            uc.mem_write(va, data)
+            self.wr.append((va, n))
+        uc.mem_map(STACK_TOP - STACK_SIZE, STACK_SIZE)
+        uc.mem_map(ARGMEM, ARGSIZE)
+        uc.mem_map(RET_ADDR, PAGE)
+        uc.mem_write(RET_ADDR, b'\xf4')
+        uc.mem_write(syms['g_simBase'], struct.pack('<I', self.base))
+        self.wr += [(STACK_TOP - STACK_SIZE, STACK_SIZE), (ARGMEM, ARGSIZE)]
+        self.install_import_stubs(pe)
+        self.snap0 = self.dump()
+        self.dirty.clear()
+
+    # ---- Windows imports: every import slot points at a tiny stub. Calls are logged (name and
+    # arguments) and compared between the original and the C run, and the stub answers with a
+    # fixed, repeatable value (a spec can supply its own answers in its `api` dict).
+    CDECL_IMPORTS = {'USER32.dll!wsprintfA': 4}
+
+    def install_import_stubs(self, pe):
+        table = json.load(open(os.path.join(HERE, 'winapi_args.json')))
+        self.api_names, self.api_log, self.api_n, self.api_handlers = [], [], 0, {}
+        if not hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
+            return
+        slots = []
+        for d in pe.DIRECTORY_ENTRY_IMPORT:
+            for i in d.imports:
+                key = d.dll.decode() + '!' + (i.name.decode() if i.name else 'ord%d' % i.ordinal)
+                slots.append((i.address, key))
+        self.raw.mem_map(STUB_BASE, (16 * len(slots) + PAGE - 1) & ~(PAGE - 1))
+        for k, (iat, key) in enumerate(slots):
+            nbytes = table.get(key, 0)
+            code = b'\xc2' + struct.pack('<H', nbytes) if nbytes else b'\xc3'
+            self.raw.mem_write(STUB_BASE + 16 * k, code)
+            self.raw.mem_write(iat, struct.pack('<I', STUB_BASE + 16 * k))
+            self.api_names.append((key, (nbytes // 4) or self.CDECL_IMPORTS.get(key, 0)))
+        self.raw.hook_add(UC_HOOK_CODE, self._api_hook, None, STUB_BASE, STUB_BASE + 16 * len(slots) - 1)
+
+    def _api_hook(self, uc, addr, size, ud):
+        key, nargs = self.api_names[(addr - STUB_BASE) >> 4]
+        esp = uc.reg_read(UC_X86_REG_ESP)
+        args = []
+        for k in range(nargs):
+            v = struct.unpack('<I', bytes(uc.mem_read(esp + 4 + 4 * k, 4)))[0]
+            # addresses of stack locals differ between the two runs and mean nothing
+            args.append('stack' if STACK_TOP - STACK_SIZE <= v <= STACK_TOP else v)
+        name = key.split('!')[1]
+        self.api_log.append((name, tuple(args)))
+        h = self.api_handlers.get(name)
+        if h is None:
+            val = 1
+        elif h.__code__.co_argcount >= 3:
+            val = h(self.api_n, args, self.uc)      # a handler may write results into emulator memory
+        else:
+            val = h(self.api_n, args)
+        uc.reg_write(UC_X86_REG_EAX, val & 0xffffffff)
+        self.api_n += 1
+
+    # ---- page-level state handling: only pages written since the last reset are touched
+    FULL = (STACK_TOP - STACK_SIZE, ARGMEM)     # small regions that are always copied whole
+
+    def _index(self):
+        if self._idx_snap is self.snap0 and self._idx_n == len(self.wr):
+            return
+        self.pagemap = {}                       # page number -> (snapshot bytes, offset)
+        self.full = []                          # (region index) copied whole every time
+        for i, ((a, n), d) in enumerate(zip(self.wr, self.snap0)):
+            assert a % PAGE == 0 and n % PAGE == 0, 'region not page aligned'
+            if a in self.FULL:
+                self.full.append(i)
+                continue
+            for off in range(0, n, PAGE):
+                self.pagemap[(a + off) >> 12] = (d, off)
+        self._idx_snap, self._idx_n = self.snap0, len(self.wr)
+        self.dirty.clear()
+
+    def page_now(self, pg):
+        return bytes(self.raw.mem_read(pg << 12, PAGE))
+
+    def page_snap(self, pg):
+        d, off = self.pagemap[pg]
+        return d[off:off + PAGE]
+
+    def full_now(self):
+        return [bytes(self.raw.mem_read(*self.wr[i])) for i in self.full]
+
+    def set_full(self, blobs):
+        for i, b in zip(self.full, blobs):
+            self.raw.mem_write(self.wr[i][0], b)
+
+    def reset_to_snap0(self):
+        self._index()
+        for pg in self.dirty:
+            if pg in self.pagemap:
+                self.raw.mem_write(pg << 12, self.page_snap(pg))
+        for i in self.full:
+            self.raw.mem_write(self.wr[i][0], self.snap0[i])
+        self.dirty.clear()
+
+    def dump(self):
+        return [bytes(self.raw.mem_read(a, n)) for a, n in self.wr]
+
+    def restore(self, snap):
+        for (a, n), d in zip(self.wr, snap):
+            self.raw.mem_write(a, d)
+        self.dirty.clear()
+
+    def call(self, addr, args, limit=2_000_000):
+        uc = self.uc
+        self.api_log, self.api_n = [], 0
+        sp = STACK_TOP - 0x100
+        for a in reversed(args):
+            sp -= 4
+            uc.mem_write(sp, struct.pack('<I', a & 0xffffffff))
+        sp -= 4
+        uc.mem_write(sp, struct.pack('<I', RET_ADDR))
+        uc.reg_write(UC_X86_REG_ESP, sp)
+        uc.reg_write(UC_X86_REG_EBP, 0)
+        for r in (UC_X86_REG_EBX, UC_X86_REG_ESI, UC_X86_REG_EDI):
+            uc.reg_write(r, 0x5a5a5a5a)
+        try:
+            uc.emu_start(addr, RET_ADDR, count=limit)
+        except UcError as e:
+            return ('fault', str(e))
+        if uc.reg_read(UC_X86_REG_EIP) != RET_ADDR:
+            return ('timeout', None)
+        return ('ok', (uc.reg_read(UC_X86_REG_EAX),
+                       uc.reg_read(UC_X86_REG_EBX), uc.reg_read(UC_X86_REG_ESI),
+                       uc.reg_read(UC_X86_REG_EDI), uc.reg_read(UC_X86_REG_ESP) - (sp + 4)))
+
+
+class Ctx:
+    """Handed to an argument generator: random source and argument memory."""
+    def __init__(self, m, rng):
+        self.m, self.rng = m, rng
+        self.next = ARGMEM
+        self.bufs = []
+
+    def buf(self, size, fill='rand'):
+        a = self.next
+        self.next += (size + 63) & ~15
+        if fill == 'rand':
+            d = bytes(self.rng.getrandbits(8) for _ in range(size))
+        elif fill == 'text':
+            d = bytes(self.rng.choice(b'abcXYZ019 _.\\/') for _ in range(size - 1)) + b'\0'
+        elif fill == 'zero':
+            d = bytes(size)
+        else:
+            d = fill
+        self.m.uc.mem_write(a, d)
+        self.bufs.append((a, size))
+        return a
+
+    def u32(self):
+        r = self.rng.random()
+        if r < 0.2: return self.rng.choice([0, 1, 2, 3, 0xffffffff, 0x7fffffff, 0x80000000])
+        if r < 0.6: return self.rng.randrange(0, 256)
+        if r < 0.8: return self.rng.randrange(0, 1 << 16)
+        return self.rng.getrandbits(32)
+
+    def s32small(self):
+        return self.rng.randrange(-300, 300) & 0xffffffff
+
+
+fp_dev = [0.0]
+fp_worst = [0.0]
+
+
+def fp_close(x, y, tol):
+    """Returns y with every 32-bit word that is a float within tol of x's word replaced by x's."""
+    if x == y:
+        return y
+    yb = bytearray(y)
+    for i in range(0, len(x) - 3, 4):
+        if x[i:i+4] != y[i:i+4]:
+            a = struct.unpack('<f', x[i:i+4])[0]
+            b = struct.unpack('<f', y[i:i+4])[0]
+            # only ordinary floats on both sides: near zero (denormals, small integers read as floats) must match
+            if a == a and b == b and 1e-30 < abs(a) < 1e30 and 1e-30 < abs(b) < 1e30:
+                d = abs(a - b) / max(abs(a), abs(b), 1e-30)
+                if d <= tol:
+                    if os.environ.get('DT_FPDEBUG'):
+                        print('  fp word %d: %r vs %r (%.2e)' % (i, a, b, d))
+                    fp_dev[0] = max(fp_dev[0], d)
+                    yb[i:i+4] = x[i:i+4]
+    return bytes(yb)
+
+
+def fp_log_equal(a, b, tol):
+    """The call logs a and b are equal, but for 32-bit words that are floats within tol of each other (fp specs)."""
+    if a == b:
+        return True
+    if isinstance(a, (list, tuple)) and isinstance(b, (list, tuple)):
+        return len(a) == len(b) and all(fp_log_equal(x, y, tol) for x, y in zip(a, b))
+    if isinstance(a, int) and isinstance(b, int) and 0 <= a < 1 << 32 and 0 <= b < 1 << 32:
+        x = fp_close(struct.pack('<I', a), struct.pack('<I', b), tol)
+        if x == struct.pack('<I', a):
+            fp_worst[0] = max(fp_worst[0], fp_dev[0]); fp_dev[0] = 0.0
+            return True
+    return False
+
+
+def run_spec(m, spec, seed=1):
+    name = spec['name']
+    rng = random.Random(seed)
+    bad = 0
+    both_fault = 0
+    details = []
+    n = spec.get('trials', 300)
+    m._index()
+    m.api_handlers = spec.get('api', {})
+    for t in range(n):
+        m.reset_to_snap0()
+        ctx = Ctx(m, rng)
+        args = spec['gen'](ctx) if 'gen' in spec else [g(ctx) if callable(g) else g for g in spec['args']]
+        d0 = {pg for pg in m.dirty if pg in m.pagemap}
+        pre_pages = {pg: m.page_now(pg) for pg in d0}
+        pre_full = m.full_now()
+        m.dirty.clear()
+        ro, vo = m.call(spec['orig'], args)
+        log_o = m.api_log
+        d1 = {pg for pg in m.dirty if pg in m.pagemap}
+        after_o = {pg: m.page_now(pg) for pg in d1}
+        full_o = m.full_now()
+        # back to the generated state
+        for pg in d1:
+            m.raw.mem_write(pg << 12, pre_pages[pg] if pg in pre_pages else m.page_snap(pg))
+        m.set_full(pre_full)
+        m.dirty.clear()
+        rc, vc = m.call(m.syms[spec['c']], args)
+        log_c = m.api_log
+        d2 = {pg for pg in m.dirty if pg in m.pagemap}
+        m.dirty.update(d0 | d1)     # every page this trial touched is put back to the snapshot before the next one
+        after_c = {pg: m.page_now(pg) for pg in d2}
+        full_c = m.full_now()
+        if ro == rc and ro in ('fault', 'timeout'):     # both hit the instruction limit: not a pass either
+            both_fault += 1
+            if os.environ.get('DT_DEBUG') and both_fault == 1: print('  fault:', vo, vc)
+            continue
+        ok = ro == rc and (ro != 'ok' or (vo[0] == vc[0] if not spec.get('void') else True)
+                           and vo[1:4] == vc[1:4] and vo[4] == vc[4])
+        why = None
+        if ok and log_o != log_c and not (spec.get('fp') and fp_log_equal(log_o, log_c, spec.get('tol', 4e-7))):
+            ok = False
+            k = next((i for i in range(min(len(log_o), len(log_c))) if log_o[i] != log_c[i]), min(len(log_o), len(log_c)))
+            why = 'Windows calls differ at call %d: orig %s, c %s' % (k, log_o[k:k + 3], log_c[k:k + 3])
+        # memory state of the original after its run = its written pages, else what was there before
+        def orig_page(pg):
+            if pg in after_o: return after_o[pg]
+            return pre_pages[pg] if pg in pre_pages else m.page_snap(pg)
+        def c_page(pg):
+            if pg in after_c: return after_c[pg]
+            return orig_after_unwritten(pg)
+        def orig_after_unwritten(pg):       # C did not touch the page: it still has the generated content
+            return pre_pages[pg] if pg in pre_pages else m.page_snap(pg)
+        # spec 'ignore_syms' {C symbol: size}: C-side state the original has no counterpart for (round 22 mount table)
+        ignore = [(m.syms[sym], size) for sym, size in spec.get('ignore_syms', {}).items()]
+        # spec 'ignore_addrs' {address: size}: original-side scratch only the OS reads (round 28 clip box)
+        ignore += list(spec.get('ignore_addrs', {}).items())
+        for pg in sorted(d0 | d1 | d2):
+            x, y = orig_page(pg), c_page(pg)
+            for a, size in ignore:
+                lo, hi = max(a, pg << 12), min(a + size, (pg + 1) << 12)
+                if lo < hi:
+                    y = y[:lo - (pg << 12)] + x[lo - (pg << 12):hi - (pg << 12)] + y[hi - (pg << 12):]
+            if x == y:
+                continue
+            if spec.get('fp') and ro == 'ok' and rc == 'ok':
+                y = fp_close(x, y, spec.get('tol', 4e-7))
+                fp_worst[0] = max(fp_worst[0], fp_dev[0]); fp_dev[0] = 0.0
+                if x == y:
+                    continue
+            if ok:
+                ok = False
+                i = next(i for i in range(PAGE) if x[i] != y[i])
+                why = 'memory differs at 0x%x (orig %02x, c %02x)' % ((pg << 12) + i, x[i], y[i])
+            break
+        for i, xo, yc in zip(m.full, full_o, full_c):
+            if m.wr[i][0] == STACK_TOP - STACK_SIZE:
+                continue
+            if spec.get('fp') and ro == 'ok' and rc == 'ok':
+                yc = fp_close(xo, yc, spec.get('tol', 4e-7))
+                fp_worst[0] = max(fp_worst[0], fp_dev[0]); fp_dev[0] = 0.0
+            if xo != yc and ok:
+                ok = False
+                j = next(j for j in range(len(xo)) if xo[j] != yc[j])
+                why = 'memory differs at 0x%x (orig %02x, c %02x)' % (m.wr[i][0] + j, xo[j], yc[j])
+        if not ok:
+            bad += 1
+            if bad <= 3:
+                details.append('MISMATCH %s trial %d args=%s orig=%s c=%s %s' % (name, t, [hex(a & 0xffffffff) for a in args], (ro, vo), (rc, vc), why or ''))
+    return bad, both_fault, n, details
+
+
+# ---- quiet mode (default): one summary line per function on the console, the detail in a log file per function
+# (buildlogs/round10/<address>.log for round-10 specs, else buildlogs/difftest/), an index line per function.
+# --verbose or env DIFFTEST_VERBOSE=1 gives the old full console output.
+VERBOSE = bool(os.environ.get('DIFFTEST_VERBOSE'))
+
+
+def report_quiet(specfile, s, bad, bf, n, details, extra, cov):
+    root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    base = os.path.basename(specfile)
+    sub = 'round10' if base.startswith('spec_w10') else 'round11' if base.startswith('spec_w11') else \
+        'round12' if base.startswith('spec_w12') else 'round13' if base.startswith('spec_w13') else \
+        'round14' if base.startswith('spec_w14') else \
+        'round15' if base.startswith('spec_w15') else \
+        'round16' if base.startswith('spec_w16') else \
+        'round17' if base.startswith('spec_w17') else \
+        'round18' if base.startswith('spec_w18') else \
+        'round19' if base.startswith('spec_w19') else \
+        'round20' if base.startswith('spec_w20') else \
+        'round21' if base.startswith('spec_w21') else \
+        'round22' if base.startswith('spec_w22') else \
+        'round29' if base.startswith('spec_w29') else \
+        'round28' if base.startswith('spec_w28') else \
+        'round27' if base.startswith('spec_w27') else \
+        'round26' if base.startswith('spec_w26') else \
+        'round25' if base.startswith('spec_w25') else \
+        'round24' if base.startswith('spec_w24') else \
+        'round23' if base.startswith('spec_w23') else \
+        'sound' if base.startswith('spec_snd') else 'difftest'
+    logdir = os.environ.get('DIFFTEST_LOGDIR') or os.path.join(root, 'buildlogs', sub)
+    os.makedirs(logdir, exist_ok=True)
+    orig = s['orig'] if isinstance(s['orig'], int) else 0
+    key = '0x%08x' % orig if orig >= 0x10000000 else s['name']
+    covtxt = ''
+    if cov:
+        covtxt = ', coverage %d/%d' % (cov[0], cov[1])
+    status = 'PASS' if bad == 0 else 'FAIL'
+    line = '%s %s %s %d trials, %d mismatches, %d both-fault%s%s' % (status, key, s['name'], n, bad, bf, covtxt, extra)
+    path = os.path.join(logdir, '%s.log' % key)
+    with open(path, 'w') as fo:
+        if details:
+            fo.write('=== FIRST MISMATCH ===\n%s\n=== END FIRST MISMATCH ===\n\n' % details[0])
+        fo.write(line + '\nspec: %s\n' % specfile)
+        if cov:
+            fo.write('coverage %d/%d; not run: %s\n' % (cov[0], cov[1], ' '.join(cov[2])))
+        for d in details[1:]:
+            fo.write(d + '\n')
+    idx = os.path.join(logdir, 'index.txt')
+    rows = []
+    if os.path.exists(idx):
+        rows = [r for r in open(idx).read().splitlines() if r.split(' ')[1:2] != [key]]
+    rows.append(line)
+    with open(idx, 'w') as fo:
+        fo.write('\n'.join(rows) + '\n')
+    print(line)
+    if details:
+        print('  first: ' + details[0][:600])
+        print('  log: ' + path)
+
+
+def main():
+    global VERBOSE
+    args = [a for a in sys.argv[1:] if a != '--verbose']
+    if '--verbose' in sys.argv[1:]:
+        VERBOSE = True
+        os.environ['DIFFTEST_VERBOSE'] = '1'
+    jobs = 1
+    if args and args[0].startswith('-j'):
+        jobs = int(args[0][2:] or os.cpu_count() or 1)
+        args = args[1:]
+    dll, specfile = args[0], args[1]
+    want = set(args[2:])
+    ns = {}
+    exec(open(specfile).read(), ns)
+    specs = [s for s in ns['SPECS'] if not want or s['name'] in want]
+    if jobs > 1 and len(specs) > 1:
+        # one process per share of the specs, balanced by trial count; output is printed per share
+        shares = [[] for _ in range(min(jobs, len(specs)))]
+        load = [0] * len(shares)
+        for sp in sorted(specs, key=lambda x: -x.get('trials', 300)):
+            i = load.index(min(load))
+            shares[i].append(sp['name'])
+            load[i] += sp.get('trials', 300)
+        procs = [subprocess.Popen([sys.executable, '-u', os.path.abspath(__file__), dll, specfile] + names,
+                                  stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True) for names in shares]
+        fails = 0
+        for pr in procs:
+            out, _ = pr.communicate()
+            print(out, end='')
+            fails += pr.returncode != 0
+        sys.exit(1 if fails else 0)
+    srcs = [os.path.join(SRC, p) for p in ns['SOURCES']]
+    csecs, syms = build_c(srcs, ns.get('CFLAGS', ()))
+    m = Machine(dll, csecs, syms)
+    for sp in specs:
+        for a in sp.get('nop', []):
+            m.uc.mem_write(a, b'\x90')
+        m.snap0 = m.dump()
+    fails = 0
+    cov = ns.get('_cov_summary')
+    for s in specs:
+        bad, bf, n, details = run_spec(m, s)
+        extra = ' (worst float deviation %.2e)' % fp_worst[0] if s.get('fp') else ''
+        fp_worst[0] = 0.0
+        if VERBOSE:
+            for d in details:
+                print('  ' + d)
+            print('%s %-28s %d trials, %d mismatches, %d both-fault%s' % ('ok ' if bad == 0 else 'BAD', s['name'], n, bad, bf, extra))
+        else:
+            report_quiet(specfile, s, bad, bf, n, details, extra, cov() if cov and len(specs) == 1 else None)
+        fails += bad > 0
+    if not VERBOSE and len(specs) > 1:
+        print('total: %d functions, %d failed' % (len(specs), fails))
+    sys.exit(1 if fails else 0)
+
+
+if __name__ == '__main__':
+    main()

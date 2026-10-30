@@ -1,0 +1,118 @@
+Round 9, letter c (helper w9c) - final report
+==============================================
+
+Checker: python tools\verify\difftest.py -j2 C:\Coding\HeavyGear\Project\HGSIM.DLL tools\verify\spec_w9c.py
+All integer code; no float tolerance anywhere.
+
+address    name              file                                 trials  mism  both-fault  branches reached (coverage counters in the original)
+0x1002a2f6 Sim_1002a2f6      sim/unsorted_1002/w9c_record.c        400     0     0         record initialiser (straight line, two Sim_10047aa0 calls run for real)
+0x1003b986 Sim_1003b986      sim/unsorted_1003/w9c_slots.c         600     0     0         key found 760 / not found / empty table
+0x10057d2d Key_SetState      sim/unsorted_1005/w9c_keys.c         1500     0     0         extended-key table 620, set bit 729, clear bit 461, shift 44, ctrl 165, alt 182
+0x1006bf33 Sim_1006bf33      sim/unsorted_1006/w9c_event.c        1500     0     0         closed record 1483, code mismatch 729, sound switch 441 (all 14 cases, by +4)
+0x1007e0ff Sim_1007e0ff      sim/unsorted_1007/w9c_messages.c     1200     0     0         expired 1206, timer running 616, font ok 463, shape ok 374, three text paths 177/96/101
+0x1009d90e Sim_1009d90e      sim/unsorted_1009/w9c_tree.c         2000     0     1         new object 6631, alloc failed 495, POF owner 1005, child link 2755, detach 3616 (recursive, trees to depth 4)
+0x100b5bcb Sim_100b5bcb      sim/unsorted_100b/w9c_misc.c          300     0     0         straight line
+0x100c4f6c Sim_100c4f6c      sim/unsorted_100c/w9c_misc.c          300     0     0         returns -1
+0x100ccc60 Sim_100ccc60      sim/unsorted_100c/w9c_hud.c          2000     0     0         single scan 900, entry 765, kinds 1/2/4/8/other 115/233/99/113/197, kind2-single 8, short 301, long 464, cut at space 387, marks 5/6/other 162/157/446
+0x100d3d10 Sim_100d3d10      sim/unsorted_100d/w9c_hud.c          2000     0     0         colours -1/0/2/default 167/143/158/464, inner 0..4 55/48/43/46/50, selected 655, box shape 729, kind shape 500, kind -1 shape 81, shape at pos 49, count text 523, frame 655
+0x10035aec Sim_10035aec      sim/unsorted_1003/w9c_surface.c       500     0     0         row copy 1018 rows over 500 trials, plus 0 / negative heights (no rows), stride 0 (overlapping)
+0x100363af Plugin_ProbeList  sim/unsorted_1003/w9c_plugin.c       1000     0     0         no list file 269, token 2324 (blank lines -> NULL token), closed 731
+0x100bb405 Cache_LoadItem    sim/unsorted_100b/w9c_cache.c        1500     0     0         cached 492; file 465 (no memory 101, fixup 465, replaced 239); pack 278 (none 78, fixup 200, replaced 95); search path 186 (none 79, no memory 37, fixup 186, replaced 98)
+
+Left out
+--------
+0x100e5d25 (1364 bytes): hand-written assembly, not C: `push es` / `push ds; pop es` (segment registers), shld/shrd
+  16.16 fixed point, a scan-line filler with a palette lookup (byte translate through [ebp+0x14]) and unrolled
+  word loops. Rule 2 of the brief (segment registers, hand-written tricks) - not convertible.
+
+Things the owner should know
+----------------------------
+- 0x10035aec, 0x100363af and 0x100bb405 are NOT referenced anywhere in HGSIM.DLL: no call or jmp (other than
+  their own thunks at 0x100017e9, 0x100026bc, 0x100017a8, which nothing calls), no stored pointer, not exported.
+  Dead code; converted and proven anyway, hook lines included (harmless), drop them if you prefer.
+- 0x100bb405 Cache_LoadItem: when the fixup callback argument is NULL the original tests an UNINITIALISED local
+  (the callback result slot [ebp-0x10c]) to decide whether to replace the block. The C uses 0 (keep the block).
+  The checker cannot prove that path; the spec only passes calls with a callback. Dead code anyway (above).
+- 0x100ecce0 (font height, called by 0x100ccc60 via SIM_FN) does `push es` / `pop es`. Unicorn runs it wrong: the
+  trial faults and, worse, the emulator keeps a truncated 16-bit stack pointer afterwards, so EVERY later trial of
+  EVERY function in the same checker process faults too (reported as both-fault). Stubbed in spec_w9c.py like the
+  other specs do. Checker weakness worth knowing: a fault in one trial can poison the rest of the process.
+- The strtok of the DLL (0x100fd560) keeps its next-token pointer at 0x1017e884; when the token buffer is on the
+  caller's stack (Plugin_ProbeList) that pointer differs between the original and the C frame, so strtok is
+  stubbed on both sides with an in-place tokeniser that leaves the static alone.
+- hooks_input.c calls 0x10057d2d (Key_SetState) through its original address (SIM(RVA_KEY_STATE)); it does not
+  patch it, so the CONV line is fine and that call goes through the hook as well.
+- The spec's SOURCES is the exact transitive closure of undefined symbols computed with nm over src/sim (168 files
+  beyond mine); the earlier hand-made list did not link.
+
+Files created (all new; no existing file edited)
+------------------------------------------------
+src/sim/unsorted_1002/w9c.h, w9c_record.c
+src/sim/unsorted_1003/w9c.h, w9c_slots.c, w9c_plugin.c, w9c_surface.c
+src/sim/unsorted_1005/w9c.h, w9c_keys.c
+src/sim/unsorted_1006/w9c.h, w9c_event.c
+src/sim/unsorted_1007/w9c.h, w9c_messages.c
+src/sim/unsorted_1009/w9c.h, w9c_tree.c
+src/sim/unsorted_100b/w9c.h, w9c_misc.c, w9c_cache.c
+src/sim/unsorted_100c/w9c.h, w9c_misc.c, w9c_hud.c
+src/sim/unsorted_100d/w9c.h, w9c_hud.c
+tools/verify/spec_w9c.py
+src/hooks/conv_w9c.inc (13 CONV lines)
+All compile with plain `i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c` (0 warnings).
+
+Non-own .c files my code links against (direct callees; CMake needs them present, they already are):
+  unsorted_1004/w3p_calc.c, unsorted_100f/w2e_string.c (Mem_Fill, Mem_Move, Str_*), unsorted_1002/w5a_misc.c
+  (Sim_100203cf), core/w2a_timers.c (Sim_1002ab9d), unsorted_1002/w5c_calls.c (Sim_10029ab3), unsorted_1003/slots.c
+  (Sim_1003b485), unsorted_100a/w6g_nodes.c, w2i_misc.c, w5y_misc.c, w5z_calls.c (Sim_100a9830, Sim_100a9b7f,
+  Sim_100a9b8d, Sim_100a9d47, Sim_100aa0da), unsorted_100f/w6h_crt.c (Crt_StrStr, Sim_100fd850),
+  unsorted_100f/w8z_crt.c (Crt_SPrintf, Crt_FClose), unsorted_100c/w7q_objects.c (Sim_100ccb0d),
+  unsorted_1008/w2h_misc.c, w7o_cells.c, unsorted_100b/w6g_misc.c (Sim_1008d405, Sim_1008d4f1, Sim_100bb2b0),
+  unsorted_1003/w8u_plugin.c (Plugin_ProbeAll), unsorted_1003/w6e_misc.c (Plugin_ProbeRaster),
+  unsorted_100f/w2g_crt.c (Str_NextToken_100fd560), unsorted_100f/w6i_stream.c (Stream_ReadLine),
+  unsorted_100f/w6i_mem.c (Heap_Malloc, Heap_FreeBlock), unsorted_100f/w7q_stream.c (Crt_FTell),
+  unsorted_100f/w8A_stream.c (Crt_FSeek, Crt_FRead), unsorted_1010/w7s_locale.c (Crt_StrUpper),
+  unsorted_100b/w3o_hash.c (Sim_100baf3f, Sim_100bda9f), unsorted_100b/w8y_cache.c (Sim_100b9b3f),
+  unsorted_100b/w7p_misc.c (Sim_100bae0a).
+  The full link closure is the SOURCES list in tools/verify/spec_w9c.py.
+
+--- helper final message ---
+Nothing remains that does not depend on the final checker run. All thirteen functions already passed individually with zero mismatches; the whole-spec run at -j2 is the last confirmation, and I'll report as soon as its results arrive.
+
+The final whole-spec run confirms every function. The state file tools\round9\out_w9c.txt already holds this report.
+
+**Final report, round 9 letter c (w9c)**
+
+Checker: `python tools\verify\difftest.py -j2 C:\Coding\HeavyGear\Project\HGSIM.DLL tools\verify\spec_w9c.py`. All integer code, no float tolerance.
+
+| address | name | file | trials | mism | both-fault | branches reached |
+|---|---|---|---|---|---|---|
+| 0x1002a2f6 | Sim_1002a2f6 | unsorted_1002/w9c_record.c | 400 | 0 | 0 | straight line (two Sim_10047aa0 calls run for real) |
+| 0x1003b986 | Sim_1003b986 | unsorted_1003/w9c_slots.c | 600 | 0 | 0 | key found 760, not found, empty table |
+| 0x10057d2d | Key_SetState | unsorted_1005/w9c_keys.c | 1500 | 0 | 0 | extended table 620, set 729, clear 461, shift 44, ctrl 165, alt 182 |
+| 0x1006bf33 | Sim_1006bf33 | unsorted_1006/w9c_event.c | 1500 | 0 | 0 | closed 1483, code mismatch 729, all 14 switch cases 441 |
+| 0x1007e0ff | Sim_1007e0ff | unsorted_1007/w9c_messages.c | 1200 | 0 | 0 | expired 1206, running 616, font ok 463, shape ok 374, 3 text paths |
+| 0x1009d90e | Sim_1009d90e | unsorted_1009/w9c_tree.c | 2000 | 0 | 1 | new object 6631, alloc failed 495, POF owner 1005, child link 2755, detach 3616 |
+| 0x100b5bcb | Sim_100b5bcb | unsorted_100b/w9c_misc.c | 300 | 0 | 0 | straight line |
+| 0x100c4f6c | Sim_100c4f6c | unsorted_100c/w9c_misc.c | 300 | 0 | 0 | returns -1 |
+| 0x100ccc60 | Sim_100ccc60 | unsorted_100c/w9c_hud.c | 2000 | 0 | 0 | kinds 1/2/4/8/other, kind2-single 8, short 301, long 464, cut at space 387, marks 5/6/other |
+| 0x100d3d10 | Sim_100d3d10 | unsorted_100d/w9c_hud.c | 2000 | 0 | 0 | all colour cases, selected 655, box/kind/kind -1 shapes, count text 523, frame 655 |
+| 0x10035aec | Sim_10035aec | unsorted_1003/w9c_surface.c | 500 | 0 | 0 | 1018 rows, zero/negative heights, stride 0 overlap |
+| 0x100363af | Plugin_ProbeList | unsorted_1003/w9c_plugin.c | 1000 | 0 | 0 | no list file 269, tokens 2324 (blank lines give a NULL token), closed 731 |
+| 0x100bb405 | Cache_LoadItem | unsorted_100b/w9c_cache.c | 1500 | 0 | 0 | cached 492; file/pack/search-path 465/278/186, each with no-memory, fixup, replaced and none sub-paths |
+
+**Left out**
+- 0x100e5d25: hand-written assembly. It uses `push es` and `push ds; pop es`, shld/shrd 16.16 fixed point, and unrolled word loops for a scan-line fill with palette lookup. Rule 2 (segment registers) forbids it.
+
+**Things the owner should know**
+- 0x10035aec, 0x100363af and 0x100bb405 are dead code: nothing in the DLL calls them or their thunks, no stored pointer, not exported. They are converted, proven and hooked anyway. Drop the hook lines if preferred.
+- Cache_LoadItem with a NULL fixup callback: the original tests an uninitialised stack local to decide whether to replace the block. The C uses 0. The checker cannot prove that path, so the spec only passes calls with a callback. Documented in w9c.h.
+- The font-height helper 0x100ecce0 does `push es` / `pop es`. The emulator runs it wrong, and after the fault it keeps a truncated 16-bit stack pointer, so every later trial of every function in that checker process faults. This is why the resumed spec showed 2000 both-faults. It is stubbed now, as the other specs do. A fault in one trial poisoning the rest of the process is a checker weakness worth knowing.
+- The DLL's strtok keeps a pointer into the caller's stack frame at 0x1017e884, which cannot agree between the two frames. It is stubbed on both sides with an in-place tokeniser.
+- hooks_input.c calls Key_SetState through its original address but does not patch it, so the hook is fine.
+- The spec's SOURCES is now the exact nm-computed link closure (168 files beyond mine). The earlier hand-made list did not link.
+
+**Files created** (all new, no existing file edited): w9c.h plus w9c_record.c (1002); w9c_slots.c, w9c_plugin.c, w9c_surface.c (1003); w9c_keys.c (1005); w9c_event.c (1006); w9c_messages.c (1007); w9c_tree.c (1009); w9c_misc.c, w9c_cache.c (100b); w9c_misc.c, w9c_hud.c (100c); w9c_hud.c (100d); tools/verify/spec_w9c.py; src/hooks/conv_w9c.inc (13 lines); tools/round9/out_w9c.txt. All 13 .c files compile with plain `i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c` without warnings.
+
+**Non-own sources my code calls directly** (for CMake): w3p_calc.c, 100f/w2e_string.c, 1002/w5a_misc.c, core/w2a_timers.c, 1002/w5c_calls.c, 1003/slots.c, 100a/w6g_nodes.c, w2i_misc.c, w5y_misc.c, w5z_calls.c, 100f/w6h_crt.c, w8z_crt.c, w2g_crt.c, w6i_stream.c, w6i_mem.c, w7q_stream.c, w8A_stream.c, 100c/w7q_objects.c, 1008/w2h_misc.c, w7o_cells.c, 100b/w6g_misc.c, w3o_hash.c, w8y_cache.c, w7p_misc.c, 1003/w8u_plugin.c, w6e_misc.c, 1010/w7s_locale.c. The full closure is the SOURCES list in spec_w9c.py.
+
+EXIT 0

@@ -1,0 +1,49 @@
+# Round 11 step 1: the 40 never-attempted HGSIM game functions (tools/round10/pending_all.txt group c), checked
+# against the round-10 rules (read-only, 2026-10-25). Size = bytes reached from the entry. Order = conversion order
+# (smallest ready first; a function comes after the candidates it calls). "convert" still gets the full
+# per-instruction check while it is converted, as in round 10, so a few may yet turn out to be left original.
+#
+# address     size  verdict          reason
+# ---- convert (12; 0x10020055, 0x1003a327, 0x1003a402 and 0x10039c00 moved below after the detailed check)
+0x10039708      29  convert          sound object: one method call through its table
+0x1003a548      56  convert          sound shutdown: one method call, CoUninitialize
+0x1007f950     138  convert          method calls through tables; calls 0x1007f9da (converted first)
+0x1007f9da     154  convert          method calls through tables
+0x10039931     195  convert          sound: method call, 0x10039540
+0x1005f6c6     310  convert          LoadLibrary / GetProcAddress / FreeLibrary and calls through the fetched pointers (stubs)
+0x100397e7     330  convert          sound: method calls, x87 through converted 0x10084766 (no CRT trig)
+0x10080471     357  convert          display object: method calls, 0x10083495
+0x1005573d     515  convert          fatal-error box: sprintf into the global 0x1015f468 (not the frame), ShowCursor, MessageBoxA, exit
+0x10083801    1092  convert          SetDIBitsToDevice from global buffers (no frame pointers), memcpy
+0x100b3b16    1145  convert          x87 matrix building through the matrix helpers (no CRT trig)
+0x1003be30    1251  convert          56 GetProcAddress lookups into globals
+# ---- unsure: Windows / COM given a pointer into the frame (left original by the rule unless Diego allows) (11)
+0x1003a327     219  leave original   COM method +0x24 (sound buffer GetStatus) fills the stack dword [ebp-4], read afterwards
+0x1003a402     297  leave original   COM method +0x24 (GetStatus) fills the stack dword [ebp-4], read afterwards
+0x10039c00    1106  leave original   COM method +0x24 (GetStatus) fills the stack dword [ebp-4], read afterwards
+0x100819e2     152  leave original   passes a stack DDPIXELFORMAT to the DirectDraw method +0x54 (GetPixelFormat), which fills it
+0x100399f4     214  leave original   passes stack structs (+0x18, +0x28) to a COM method +0xc (sound buffer creation), which writes an out-pointer
+0x10081286     400  leave original   COM method +0x14 gets a stack out-pointer [ebp-0x10]
+0x1008181e     401  leave original   COM method +0x14 gets a stack out-pointer [ebp-0x10]
+0x10081416     466  leave original   COM method +0x14 gets a stack out-pointer [ebp-0x10]
+0x100815e8     566  leave original   COM methods +0x1c gets a stack out-pointer [ebp-0x10]
+0x1007f35c     745  leave original   SendMessageA with a stack COPYDATA-style record [ebp-0x1814] (Windows only reads it)
+0x1007ea30     885  leave original   LoadModule with a parameter block on the stack [ebp-0x10..-4]
+# ---- leave original (17)
+0x10020055      72  leave original   uninitialised stack: the store index [ebp-4] is never written
+0x100ed36f      25  leave original   part of the HUD 2D library (0x100e4780..0x100f9fd4), excluded by Diego
+0x100ed388      70  leave original   part of the HUD 2D library, excluded by Diego
+0x100b9dde     205  leave original   uninitialised stack: fgets may leave the 256-byte buffer unwritten (strstr reads it), and [ebp-4] is read when strstr fails
+0x100b8d6c     288  leave original   uninitialised stack: the word [ebp-0x10] is stored through arg 0 on the cache-hit path, which never writes it; a 4-char strncpy leaves the rest of the 8-byte name unwritten
+0x100db78b    2811  leave original   strcpy of 32-byte-slot names into the 12-byte stack buffer [ebp-0x98] overflows into [ebp-0x80], used afterwards
+0x1003cfd6    2153  leave original   calls HUD-library functions 0x100eb070 / 0x100ed491 / 0x100ed6aa (left original)
+0x10040af8     955  leave original   calls left-out 0x1009d200
+0x1007fe6f    1283  leave original   calls 0x1007fa74 (register arguments)
+0x100805d6    1665  leave original   calls 0x10082790 (register arguments)
+0x10080c57    1583  leave original   calls 0x10082790 (register arguments)
+0x10081a7a     931  leave original   calls 0x10082790 (register arguments) and HUD-library 0x100f01cc
+0x10081e1d     916  leave original   calls 0x10082790 (register arguments) and HUD-library 0x100f01cc
+0x100821b1    1503  leave original   calls 0x10082790 (register arguments) and HUD-library 0x100f01cc
+0x100a0def    6644  leave original   calls left-out 0x100a0880 (uninitialised stack) and HUD-library 0x100e5477
+0x100b82a0    1428  leave original   calls HUD-library 0x100e91dc / 0x100eb070 / 0x100ed7e6 / 0x100ed8c3
+0x100dcc12   17762  leave original   calls left-out 0x1005cd4a and 0x100b48de

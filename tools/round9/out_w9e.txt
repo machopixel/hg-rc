@@ -1,0 +1,53 @@
+Round 9 helper w9e: state note (the final report is the last message of the session).
+
+Converted and proven by tools/verify/spec_w9e.py (0 mismatches, 0 both-fault, block coverage checked):
+  0x1001dd66 Sim_1001dd66 (300), 0x10075753 Sim_10075753 (1000), 0x100dc2d7 GameThing_NextIndex (400),
+  0x1009b516 Sim_1009b516 (1500), 0x10051c90 Hud_DrawShadedBox (1000), 0x100a2d91 Clip_Polygon2D (2000),
+  0x1005a1db Sim_1005a1db (1500), 0x100b43ce Sim_100b43ce (1500), 0x100b9203 Sim_100b9203 (1500),
+  0x10034ec9 Sim_10034ec9 (1000), 0x100ce983 Sim_100ce983 (1500), 0x100543ee Input_ReadMap (1500).
+Left out: 0x1002a8a4 / 0x1002a8b0 (ret 0x10 / ret 4: not cdecl), 0x100b9dde (dereferences an uninitialised
+  local pointer when lang.ini has no "language" line), 0x100b8d6c (strncat into an uninitialised 8-byte stack
+  buffer; its result depends on stack leftovers).
+Files: src/sim/unsorted_{1001,1003,1005,1007,1009,100a,100b,100c,100d}/w9e*.{c,h}, tools/verify/spec_w9e.py,
+  tools/verify/w9e_shim.c (test-only bodies for stubbed callees), src/hooks/conv_w9e.inc.
+Done: hookgen, mingw -std=c17 syntax check (clean with -Wall), full spec run.
+
+--- helper final message ---
+Final report, round 9 helper w9e.
+
+**Result**: 12 of 16 candidates converted and proven, 4 left out. All checks run with the full spec at `-j2`; every function 0 mismatches, 0 both-fault.
+
+| address | name | file | trials / mism / both-fault | branches reached |
+|---|---|---|---|---|
+| 0x1001dd66 | Sim_1001dd66 | unsorted_1001/w9e_misc.c | 300 / 0 / 0 | 4/4 blocks |
+| 0x10075753 | Sim_10075753 | unsorted_1007/w9e_misc.c | 1000 / 0 / 0 | all 21 real blocks (one "missed" is jump-table data) |
+| 0x100dc2d7 | GameThing_NextIndex | unsorted_100d/w9e_misc.c | 400 / 0 / 0 | 4/4, incl. the "Too many gamethings" error |
+| 0x1009b516 | Sim_1009b516 | unsorted_1009/w9e_misc.c | 1500 / 0 / 0 | all 29 blocks before the ret (the rest of the listed size is the switch table) |
+| 0x10051c90 | Hud_DrawShadedBox | unsorted_1005/w9e_hud.c | 1000 / 0 / 0 | 31/31 |
+| 0x100a2d91 | Clip_Polygon2D | unsorted_100a/w9e_clip.c | 2000 / 0 / 0 | 79/80; the missed one is dead code (even-pass swap after the first plane) |
+| 0x1005a1db | Sim_1005a1db | unsorted_1005/w9e_gear.c | 1500 / 0 / 0 | all 94 real blocks (one "missed" is padding) |
+| 0x100b43ce | Sim_100b43ce | unsorted_100b/w9e_links.c | 1500 / 0 / 0 | 16/16 |
+| 0x100b9203 | Sim_100b9203 | unsorted_100b/w9e_cache.c | 1500 / 0 / 0 | 63/66: untested are ext==NULL (strcmp would crash) and the two assert paths |
+| 0x10034ec9 | Sim_10034ec9 | unsorted_1003/w9e_frame.c | 1000 / 0 / 0 | 36/37: the missed block is the unreachable 16-bit screen-quad fill |
+| 0x100ce983 | Sim_100ce983 | unsorted_100c/w9e_hud.c | 1500 / 0 / 0 | 99/99 |
+| 0x100543ee | Input_ReadMap | unsorted_1005/w9e_input.c | 1500 / 0 / 0 | 43/43 (all error paths, analog/discrete/menu kinds, _plus/_minus base registration, skip-to-"}") |
+
+Branch coverage was measured with a Unicorn block hook on the original during the same trials; "missed" counts are conservative since fallthrough targets are not block starts.
+
+**Left out**
+- 0x1002a8a4, 0x1002a8b0: end in `ret 0x10` / `ret 4`, not cdecl (they forward to the timer 0x100e4550).
+- 0x100b9dde: when lang.ini has no "language" line it dereferences an uninitialised local pointer (ebp-4); the C cannot reproduce that.
+- 0x100b8d6c: strncat into an 8-byte stack buffer whose first 8 bytes are never initialised (only the 9th is zeroed); the file name it builds depends on stack leftovers. Its callee 0x100b9203 is converted anyway.
+
+**Owner should know**
+- Sim_100b43ce: the original passes an uninitialised position to Sim_100aa0da when the closed record had no node; the C passes zeros there and the spec keeps that path out. Consider marking it OFF if that path matters.
+- Sim_10034ec9 stores the original routine addresses 0x10001ab9 / 0x10002ce3 / 0x10001e42 into the slot 0x1014cb40 exactly like the original (through g_simBase).
+- Input_ReadMap keeps the original's buffer sizes; an over-long word in the map file overflows differently.
+- tools/verify/w9e_shim.c is test-only: empty bodies for callees that the spec stubs on both sides, because their real files pull most of the DLL into the link. Not for the game build.
+- A STR_AT macro was missing from unsorted_100c/w9e_hud.c (my own file); fixed. All twelve sources pass `i686-w64-mingw32-gcc -std=c17 -fsyntax-only -Wall` with no warnings.
+
+**Files created**: src/sim/unsorted_{1001,1003,1005,1007,1009,100a,100b,100c,100d}/w9e.h and w9e_*.c (12 functions), tools/verify/spec_w9e.py, tools/verify/w9e_shim.c, src/hooks/conv_w9e.inc (12 CONV lines, no address is patched by any hooks_*.c), tools/round9/out_w9e.txt.
+
+**Non-own sources the spec needs** (all already-converted files; the lead's CMake should already have them): unsorted_1004 tables.c, fields.c, w2h_misc.c, w2k_flags.c, w2l_values.c; unsorted_100a w3o_misc.c, w2g_misc.c, w5x/w5y/w5z, w7o_nodes.c; unsorted_100b w3o_hash.c, w4v_wrappers.c, w2f_tables.c; unsorted_100f w2e_string.c, w6h_crt.c, w2k_string.c, w2j_str.c, w6i_mem.c, w2h_mem.c; unsorted_1010 w7s_locale.c, w2h_misc.c, w6k_misc.c, w2i_crt.c, w2f_mantissa.c, w2f_ld12.c; unsorted_100d state.c, w5c_calls.c; unsorted_1000 w2i_misc.c; unsorted_1005 w5y_misc.c. The game build also needs the real files behind the shim: unsorted_100b w3s_array.c, w7p_ptrarray.c, w7p_misc.c, w6g_misc.c, fields.c; unsorted_100a w8x_scene.c, w8y_scene.c; unsorted_1008 w8x_hud.c; unsorted_100c w7q_objects.c; unsorted_100f w8z_crt.c; unsorted_1005 w7n_input.c, w8v_input.c.
+
+EXIT 0

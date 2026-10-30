@@ -1,0 +1,167 @@
+# round 10 progress: address name state trials (one line per function)
+0x100e4550 Timer_Step       proven+hooked (hooks_core.c, already installed at runtime) 300
+0x100e4579 Timer_Alloc      proven+hooked (hooks_core.c) 300
+0x100e45e7 Timer_Elapsed    proven+hooked (hooks_core.c) 300
+0x100e4622 Timer_Reset      proven+hooked (hooks_core.c) 300
+0x100e465d Timer_SetElapsed proven+hooked (hooks_core.c) 300
+0x100e469b Timer_Free       proven+hooked (hooks_core.c) 300
+0x100e46d0 Timer_Pause      proven+hooked (hooks_core.c) 300
+0x1005b197 Sim_1005b197      proven+hooked 300 (60 bytes)  [hooked count 1]
+0x1000f096 Sim_1000f096      proven+hooked 2000 exact (91 bytes, float)  [hooked count 2]
+0x10010fbf Sim_10010fbf      proven+hooked 1500 exact (180 bytes, float st(0) via trampoline)  [hooked count 3]
+0x10098f8c Sim_10098f8c      proven+hooked 1500 exact (211 bytes, float compares)  [hooked count 4]
+0x1008ec46 Sim_1008ec46      proven+hooked 2000 exact, 9 both-fault (254 bytes, float)  [hooked count 5]
+0x100687a3 -                 left out: reads uninitialised locals [ebp-0x18]/[ebp-0x1c]/[ebp-4] (compared with 0x1012b600 before they are written)
+0x100688a3 Sim_100688a3      left out (unhooked): calls 0x100687a3 which reads uninitialised locals; C + spec kept, proven 1500
+0x10009fe8 Sim_10009fe8      proven+hooked 4000 exact, coverage 95/95 (291 bytes, float game logic)  [hooked count 6]
+0x100cbe94 Sim_100cbe94      proven+hooked 3000 exact, coverage 85/85 (295 bytes, target choice)  [hooked count 7]
+0x100d0198 Sim_100d0198      proven+hooked 1000 exact, coverage 97/97 (295 bytes, HUD pane text, method call stubbed)  [hooked count 8]
+0x100689c0 -                 left out: calls 0x100687a3 (reads uninitialised locals)
+0x10060681 -                 left out: multiplies the 80-bit fpatan result of the C runtime asin/acos (0x100fcc74 / 0x100ff7a4) before rounding; a C double cannot hold it, so not bit-exact (game logic)
+0x100456fc Sim_100456fc      proven+hooked 1500 exact, coverage 107/107 (355 bytes)  [hooked count 9]
+0x10034111 Sim_10034111      proven+hooked 4000 exact, coverage 140/140 (372 bytes, segment/box)  [hooked count 10]
+# rebuild after 0x10034111: BUILD EXIT 0, no w10 warnings; active round-10 hooks 10 (expect 2198 of 2198; an earlier note said 9 by mistake)
+0x100c97c0 Sim_100c97c0      proven+hooked 4000 exact, coverage 126/126 (389 bytes, flight time)  [hooked count 11]
+0x100d71b9 -                 left out: multiplies the 80-bit fpatan result of the CRT asin (0x100fcc74) by a double before rounding (game logic, not bit-exact in C)
+0x1008eaaf Sim_1008eaaf      proven+hooked 3000 exact, coverage 129/129 (407 bytes)  [hooked count 12]
+0x100cfff3 Sim_100cfff3      proven+hooked 1000 exact, coverage 134/134 (421 bytes, HUD pane text)  [hooked count 13]
+0x1000cbaa -                 left out: multiplies the 80-bit fpatan result of the CRT asin (0x100fcc74) by a double before rounding (game logic: weapon range table)
+0x100cfe48 Sim_100cfe48      proven+hooked 1000 exact, coverage 134/134 (427 bytes, HUD pane text; 0x100cfff3 re-proven after sharing the body)  [hooked count 14]
+0x1000aa9e -                 left out: passes uninitialised locals [ebp-0x64] and [ebp-4] to 0x100cbc6b (the three differences are all stored to [ebp-0x60])
+0x10096ac3 Sim_10096ac3      proven+hooked 2000 exact, coverage 147/147 (520 bytes, effect object)  [hooked count 15]
+# rebuild after 0x10096ac3: BUILD EXIT 0, no w10 warnings; round-10 hooks 15 (expect 2203 of 2203)
+0x1001a4fa -                 left out: when the text has no ';' (or sscanf stops early) it passes its uninitialised 100-byte stack buffer [ebp-0x78] to 0x100b8d5c
+0x1000d34d Sim_1000d34d      proven+hooked 4000 exact, coverage 159/159 (540 bytes, fire decision)  [hooked count 16]
+0x100c0158 -                 left out: for a selection kind other than 0x200/0x400 it passes the uninitialised local [ebp-0x14] to 0x100aa863
+0x10019fe1 -                 left out: copies four locals that sscanf (0x100fd710, '%f %f %f %f') may leave unwritten (uninitialised stack)
+0x1005ab44 -                 left out: on the path where the node has no name at this level it passes the uninitialised local [ebp-0x10] to its own recursive call
+0x100a6ee4 Sim_100a6ee4      proven+hooked 4000 exact, coverage 201/201 (615 bytes, edge/plane vertex)  [hooked count 17]
+0x1008dba2 Sim_1008dba2      proven+hooked 3000 exact, coverage 214/214 (616 bytes, wrapped HUD text)  [hooked count 18]
+0x1009b03d Sim_1009b03d      proven+hooked 2000 exact, coverage 214/214 (631 bytes, HUD readout; sprintf stubbed with all args logged)  [hooked count 19]
+# rebuild after 0x1009b03d: BUILD EXIT 0; round-10 hooks 19 (expect 2207 of 2207)
+0x100608ef -                 left out: divides the 80-bit fsin result of the CRT sin (0x100ff644) before rounding to double (game logic: quaternion slerp; not bit-exact in C)
+0x100b66a0 -                 left out: tests the uninitialised local [ebp-0x10] on the first loop pass (and divides by it)
+0x1008950e -                 left out: on the leaf path (no children) its return value comes from the uninitialised local [ebp-4]
+0x1001a23e -                 left out: uses locals that sscanf (0x100fd710) may leave unwritten (uninitialised stack)
+0x10089066 -                 left out: as 0x1008950e, the leaf path returns a value from the uninitialised local [ebp-4]
+0x100d965e Sim_100d965e      proven+hooked 2000 exact, coverage 210/210 (714 bytes, effect object)  [hooked count 20]
+0x100591ff Sim_100591ff      proven+hooked 4000 exact, coverage 180/180 (716 bytes, shade level); FIXED round-5 Sim_100a6414 (w5c_calls.c) to return its callee's value (was void; old spec ignored eax), re-proven 1000  [hooked count 21]
+# rebuild after 0x100591ff: BUILD EXIT 0; round-10 hooks 21 (expect 2209 of 2209)
+# void-return audit (all specs): 1007 hooked void C functions checked against every original call site; real gaps fixed + re-proven with eax: Sim_100a6414 (w5c), Sim_1005ae58 (w5x, 600), Sim_100a6009 (w5x, 600); rebuild BUILD EXIT 0
+0x100a0063 -                 left out: uses the many locals of an unchecked sscanf (0x100fd710) of a file line (uninitialised stack when the line is short)
+0x100357db Sim_100357db      proven+hooked 3000 exact, coverage 228/228 (785 bytes, debug overlay)  [hooked count 22]
+0x1002f021 Sim_1002f021      proven+hooked 6000 exact, coverage 267/267 (790 bytes, point in polygon)  [hooked count 23]
+# rebuild after 0x1002f021: BUILD EXIT 0; round-10 hooks 23 (expect 2211 of 2211)
+0x100d02bf Sim_100d02bf      proven+hooked 1500 exact, coverage 274/274 (844 bytes, HUD 3-line pane; sprintf stubbed)  [hooked count 24]
+0x10077272 Sim_10077272      proven+hooked 4000 exact, 44 both-fault (out-of-range text index), coverage 295/295 (901 bytes, menu item)  [hooked count 25]
+0x100cf96c Sim_100cf96c      proven+hooked 2000 exact, coverage 295/295 (956 bytes, HUD speed; real sprintf %3d)  [hooked count 26]
+# rebuild after 0x100cf96c: BUILD EXIT 0; round-10 hooks 26 (expect 2214 of 2214)
+0x10031447 Sim_10031447      proven+hooked 1500 exact, coverage 252/252 (1028 bytes, quadtree build, recursive)  [hooked count 27]
+0x1000c1ea Sim_1000c1ea      proven+hooked 5000 exact, coverage 307/307 (1038 bytes, lead aim, game logic)  [hooked count 28]
+0x10059a34 Sim_10059a34      proven+hooked 2000 exact, coverage 280/280 (1062 bytes, model record from image)  [hooked count 29]
+# rebuild after 0x10059a34: BUILD EXIT 0; round-10 hooks 29 (expect 2217 of 2217)
+0x10064d05 -                 left out: for a kind other than 0..2 the on-screen branch uses the uninitialised local [ebp-0x14] as the palette index
+0x100945b8 -                 left out: hands the renderer ([0x1014cb4c]) a stack array of four 0x24-byte vertices with fields it never sets (+8, +0x18, and +0x14 of three vertices: uninitialised stack)
+0x10060220 -                 left out: stores the 80-bit fsin/fcos results of the CRT sin/cos (0x100ff644 / 0x100ff6f4) straight to float; through a C double that is a double rounding (not bit-exact; game logic: rotation matrix)
+0x1002c1f9 Sim_1002c1f9      proven+hooked 3000 exact, coverage 296/296 (1089 bytes, cockpit update); w10_common stub effects now write through the tracked handle  [hooked count 30]
+# rebuild after 0x1002c1f9: BUILD EXIT 0; round-10 hooks 30 (expect 2218 of 2218)
+0x1009fada -                 left out: hands the renderer ([0x109e3d30]) a 0x1200-byte stack vertex buffer whose vertices have bytes it never sets (+0x17 and others: uninitialised stack)
+0x100a539e -                 left out: calls 0x1009fada (passes uninitialised stack to the renderer)
+0x10030c87 Sim_10030c87      proven+hooked 3000 exact, coverage 305/305 (1115 bytes, segment vs collision grid)  [hooked count 31]
+0x100648a0 -                 left out: as 0x10064d05, for a kind other than 0..2 the on-screen branch uses the uninitialised local [ebp-0x14] as the palette index
+0x1009353e -                 left out: hands the renderer ([0x1014cb4c]) stack vertices with fields it never sets (+8, +0x18: uninitialised stack)
+0x1000b587 Sim_1000b587      proven+hooked 5000 exact, coverage 346/346 (1130 bytes, fire decision)  [hooked count 32]
+# rebuild after 0x1000b587: BUILD EXIT 0; round-10 hooks 32 (expect 2220 of 2220)
+0x1001c1ab Sim_1001c1ab      proven+hooked 4000 exact, coverage 364/364 (1133 bytes, bone animation step)  [hooked count 33]
+0x1002bca0 Sim_1002bca0      proven+hooked 1500 exact, coverage 241/241 (1134 bytes, cockpit setup)  [hooked count 34]
+0x100782a9 -                 left out: calls 0x100b66a0, which tests and divides by an uninitialised local
+0x10063529 -                 left out: calls 0x100648a0 / 0x10064d05, which use an uninitialised local as the palette index
+0x10066907 -                 left out: calls 0x100688a3 / 0x100689c0, which call 0x100687a3 (reads uninitialised locals)
+0x100663c0 -                 left out: calls 0x10066907 (left out: uninitialised-stack chain through 0x100687a3)
+0x1006e22c -                 left out: calls 0x100663c0 (left out: uninitialised-stack chain through 0x100687a3)
+# 2026-10-24: rest of the list (62 functions) split into helper batches tools\round10\cand_w10a..h.txt
+0x10076de0 Sim_10076de0      proven+hooked 4000 exact, coverage 381/381 (1150 bytes, menu slider item)  [hooked count 35]
+0x1007a4af Sim_1007a4af      proven+hooked 4000 exact, coverage 329/329 (1190 bytes, side near / inside a row's target; C by helper d)  [hooked count 36]
+0x100cada2 Sim_100cada2      proven+hooked 6000 exact, coverage 377/377 (1271 bytes, can who target index; C by helper d)  [hooked count 37]
+# rebuild after 0x100cada2: BUILD EXIT 0; round-10 hooks 37 (expect 2225 of 2225; 2225 active CONV lines, no duplicates). Quiet checker on: logs in buildlogs\round10
+0x10044d0b Sim_10044d0b      proven+hooked 4000 exact, coverage 308/308 (1175 bytes, free camera step; float stubs answer in st(0) via a fld snippet)  [hooked count 38]
+0x1009596a -                 left out: hands the renderer ([0x1014cb4c]) four stack vertices whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x1009353e
+0x1007a955 Sim_1007a955      proven+hooked 5000 exact, coverage 329/329 (1191 bytes, side near / inside a row's target, second form)  [hooked count 39]
+0x1007a005 Sim_1007a005      proven+hooked 5000 exact, 168 both-fault (negative entity index), coverage 346/346 (1194 bytes, side's own entity near / inside a row's target)  [hooked count 40]
+0x10064364 -                 left out: when the first shape ([0x109e8484]) does not load, the heading text uses the uninitialised local [ebp-0xc] (_ftol of stack garbage into sprintf)
+0x100d4f71 Sim_100d4f71      proven+hooked 4000 exact, coverage 349/358 (the 9 not run are dead code: 0x100d51a8..0x100d51c6 can never be reached) (1237 bytes, fire a shot)  [hooked count 41]
+0x1000b070 Sim_1000b070      proven+hooked 5000 exact, 60 both-fault, coverage 391/391 (1303 bytes, AI fire control)  [hooked count 42]
+# rebuild 2 after 0x1000b070: BUILD EXIT 0; round-10 hooks 42 (expect 2230 of 2230, no duplicates); log buildlogs\round10\build_2.log
+0x100d6833 Sim_100d6833      proven+hooked 6000 exact, coverage 365/365 (1335 bytes, weapon block aim state)  [hooked count 43]
+0x100567cb -                 left out: passes its own stack buffers (0x194-byte caps, 0x34-byte position record) to Windows (imports [0x10ac5860] / [0x10ac585c], joystick caps / position) - Windows pointer-to-frame calls, excluded by rule
+0x1003aecb Sim_1003aecb      proven+hooked 5000 exact, 87 both-fault, coverage 419/421 (the 2 not run: the second model check after Sim_100bb2b0, which cannot fail) (1356 bytes, record model level switch; new file unsorted_1003/w10_model.c)  [hooked count 44]
+0x100a0880 -                 left out: builds four 0x58-byte stack vertices (only +0xc..+0x1c and +0x2c set) and hands them to the clipper / renderer path 0x100a0512 -> 0x100a0339; the unset fields (+0..+8, +0x31..+0x57) are uninitialised stack
+0x10058c5e Sim_10058c5e      proven+hooked 5000 exact, coverage 396/396 (1441 bytes, polygon vertex lighting)  [hooked count 45]
+0x1005621b -                 left out: passes its own 0x194-byte stack buffer to Windows (import [0x10ac5860], joystick caps) - Windows pointer-to-frame call, excluded by rule
+0x100c2ae5 -                 left out: reads the local [ebp-0xc] that Sim_1002dda9 / Sim_100c2851 leave unwritten when they find nothing (Sim_100c292c can still say hit): uninitialised stack
+0x100139ff -                 left out: calls 0x100c2ae5 (reads uninitialised stack; its garbage comes from the caller's frame)
+0x100be0f0 -                 left out: calls 0x100c2ae5 (reads uninitialised stack; its garbage comes from the caller's frame)
+0x1003dc19 Sim_1003dc19      proven+hooked 3000 exact, coverage 389/389 (1617 bytes, network game start: score blocks)  [hooked count 46]
+# rebuild 3 after 0x1003dc19: BUILD EXIT 0; round-10 hooks 46 (expect 2234 of 2234, no duplicates); log buildlogs\round10\build_3.log
+0x10055048 -                 left out: when the input device [0x1015fdf4] is not open it still reads the local word [ebp-4] that only the device's +0x18 routine writes (uninitialised stack)
+0x100bf28e Sim_100bf28e      proven+hooked 4000 exact, coverage 369/375 (the 6 not run: order 11's test of +0x218, which is always 0 there) (1699 bytes, start an AI order; new files unsorted_100b/w10.h, w10_misc.c)  [hooked count 47]
+0x100918e6 -                 left out: hands the renderer ([0x1014cb4c]) stack vertices whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x1009596a
+0x1009221d -                 left out: hands the renderer ([0x1014cb4c]) stack vertices at ebp-0x90 whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x100918e6
+0x1006ad98 Sim_1006ad98      proven+hooked 5000 exact, coverage 632/632 (1899 bytes, destroy a damage-block part, recursive)  [hooked count 48]
+0x1001484e Sim_1001484e      proven+hooked 4000 exact, 66 both-fault (state name index past the table), coverage 498/498 (1926 bytes, set an AI order + AI log line; the log strings live in one frame array laid out as the original's; new file unsorted_1001/w10_orders.c)  [hooked count 49]
+# rebuild 4 after 0x1001484e: BUILD EXIT 0; round-10 hooks 49 (expect 2237 of 2237, no duplicates); log buildlogs\round10\build_4.log
+0x10011c28 Sim_10011c28      proven+hooked 3000 exact, 138 both-fault (the int 3 on a low speed), coverage 378/478 (the 100 not run are the dead branch behind [ebp-0x314] = 0) (1943 bytes, AI table on the debug monitor; sprintf stubbed with format-driven argument logging)  [hooked count 50]
+# 0x10011c28 unrun 100 instructions = 0x10011c4b..0x10011ddd: reached only by falling through 'cmp dword ptr [ebp-0x314],0 / je 0x10011de2' at 0x10011c3e, and the instruction just before (0x10011c34) is 'mov dword ptr [ebp-0x314],0' with nothing in between, so the je is always taken (no jump targets the range from outside either: it ends with its own jmp 0x100123b8)
+0x100c83ed Sim_100c83ed      proven+hooked 3000 exact, coverage 707/707 (1978 bytes, HUD rate chevrons)  [hooked count 51]
+0x1006da46 Sim_1006da46      proven+hooked 3000 exact, coverage 545/545 (2022 bytes, unit reset for a (re)start; new file unsorted_1006/w10_reset.c)  [hooked count 52]
+0x100d5446 Sim_100d5446      proven+hooked 4000 exact, coverage 593/602 (the 9 not run, 0x100d57ad..0x100d57cb, follow 'cmp [ebp-4],0 / je' and are reached only when [ebp-4] != 0, where the next 'jne' always skips them) (2117 bytes, launch a missile; new file unsorted_100d/w10_missile.c)  [hooked count 53]
+# rebuild 5 after 0x100d5446: BUILD EXIT 0; round-10 hooks 53 (expect 2241 of 2241, no duplicates); log buildlogs\round10\build_5.log
+0x100ac9ab -                 left out: builds 0x58-byte stack vertices (only +0xc..+0x1c and +0x2c set) in its 0x57b0-byte frame buffer and hands them to 0x100ac738 (clip / render path): uninitialised stack, as 0x100a0880
+0x100ad96e -                 left out: calls 0x100ac9ab (uninitialised stack; its garbage comes from the caller's frame)
+0x1009ef50 -                 left out: calls 0x100ad96e (left out: uninitialised-stack chain through 0x100ac9ab)
+0x1001c693 Sim_1001c693      proven+hooked 4000 exact, coverage 611/611 (2124 bytes, animation driver)  [hooked count 54]
+0x100be0f0 -                 (already left out above with 0x100c2ae5)
+0x100a65e7 -                 left out: at 0x100a695f it copies the local [ebp-0x78] into [ebp-0x2c] before [ebp-0x78] is ever written (uninitialised stack read)
+0x100c8ba7 Sim_100c8ba7      proven+hooked 4000 exact, coverage 834/834 (2507 bytes, HUD weapon gauge; sprintf stubbed with format-driven logging)  [hooked count 55]
+0x10062b7c -                 left out: copies the localised HUD labels (loaded at run time) into 0x10/0x14-byte stack buffers with strcpy; a label of 20+ characters runs into the screen x and the saved frame pointer, so the shown text then depends on the original's frame bytes (C proven equal for labels up to 19; spec and C kept in src/sim/unsorted_1006/w10_hud.c, not hooked)
+# 2026-10-25 paused at 95/125 0x100d4590 (not started in any file; disassembly read only). The session's safety filter cut two of my replies while reading game weapon/AI code. Next after it: 96 0x1006b52f, then the rest of tools\round10\worklist_rest.txt from line 96.
+0x100d4590 -                 deferred: the session's safety filter keeps cutting replies on this function (weapon fire control); not converted, left original for now
+0x1006b52f Sim_1006b52f      proven+hooked 6000 exact, coverage 623/629 (not run: 0x1006bb60/63 the 'unsigned < 0' after shr, never true; 0x1006bdbb..c3 the kind-9 test, but the function returns at the start for any kind but 1) (2564 bytes, system hit on a damage block)  [hooked count 56]
+# rebuild 6 after 0x1006b52f: BUILD EXIT 0; round-10 hooks 56 (expect 2244 of 2244, no duplicates); log buildlogs\round10\build_6.log
+0x1006c161 Sim_1006c161      proven+hooked 6000 exact, coverage 644/644 (2095 bytes, shot hits a damage-block part)  [hooked count 57]
+0x100255de Sim_100255de      proven+hooked 4000 exact, coverage 141/141 (526 bytes, blast damage)  [hooked count 58]
+0x10026057 Sim_10026057      proven+hooked 2000 exact, coverage 49/49 (179 bytes, running blast)  [hooked count 59]
+# rebuild 7 after 0x10026057: BUILD EXIT 0; round-10 hooks 59 (expect 2247 of 2247, no duplicates); log buildlogs\round10\build_7.log
+0x10067ec6 -                 left out: when both units are of kind 9 (or neither is), the killer [ebp-4] it passes to Sim_1006c161 is never set (uninitialised stack)
+0x100680dd -                 left out: calls 0x10067ec6 (uninitialised stack; its garbage comes from the caller's frame)
+0x1006788c -                 left out: calls 0x10067ec6 (uninitialised stack; its garbage comes from the caller's frame)
+0x100b48de -                 left out: strcpy's model and sub-model names (32-byte slots of the loaded model) into a 16-byte stack buffer right below its loop counter and model count; a name of 16+ characters overwrites them in the original, which C cannot reproduce without the same frame
+0x100246b3 Sim_100246b3      proven+hooked 6000 exact, coverage 788/788 (2888 bytes, spawn an effect; new file unsorted_1002/w10_effects.c)  [hooked count 60]
+0x10021e8c -                 left out: passes the never-written locals [ebp-0x8c], [ebp-0x94], [ebp-8] to Sim_100246b3 as the camera target (uninitialised stack)
+0x1001a706 -                 left out: multiplies the 80-bit result of the CRT asin (0x100fcc74) by a double and uses it in game logic (not bit-exact in C)
+0x1004f257 Sim_1004f257      proven+hooked 15000 exact, coverage 825/836 (not run: 0x1004f528, speed below 1e-7 can't follow speed > [0x1012b40c]; 0x1004f823.. and 0x1004fb65.., the 'clear bit 0x800' defaults of two tiers, unreachable because the first fall test already cleared the bit for those kinds) (3235 bytes, pick a unit's animation; new file unsorted_1004/w10_anim.c)  [hooked count 61]
+# rebuild 8 after 0x1004f257: BUILD EXIT 0; round-10 hooks 61 (expect 2249 of 2249, no duplicates); log buildlogs\round10\build_8.log
+0x100c7120 left out: uninitialised stack (type 0x100 path never writes [ebp-0x28] / [ebp-0x70..-0x7c] before cmp at 0x100c786d and the 0x100d2669 call; 0x400 path the same when 0x100cba68 returns 0)
+0x100225c7 proven+hooked (15000 trials exact, coverage 909/909; fmod result is dead in the original, called through SIM_FN) [hooked count 62]
+0x1007581a left out: uninitialised stack (strncpy of a label longer than the width into [ebp-0x104] leaves no NUL; strchr(' ') at 0x10076201 then scans unwritten stack when the label has no space)
+0x100232d7 left out: uninitialised stack (miss path reads target [ebp-0x2c] at 0x10023d35; 0x1009cf67 gets the never-built segment [ebp-0xdc] at 0x10023add)
+# rebuild 9 after 0x100232d7: BUILD EXIT 0 (first try failed: Sim_100225c7 prototype missing from unsorted_1002/w10.h, fixed); round-10 hooks 62 (expect 2250 of 2250, no duplicates); log buildlogs\round10\build_9.log
+0x100e2aa3 left out: uninitialised stack (strncpy(buf [ebp-0x94], name, 16) leaves no NUL for a 16-char name; strupr at 0x100e2c3f and the fprintf %s read on into unwritten locals)
+0x1005bb7a left out: uninitialised stack ([ebp-0xc0]/[ebp-0xa8] written only in one switch case at 0x1005bee8 yet passed to 0x1004bce5 after the loop; [ebp-0x84] read at 0x1005c4f0 written only by the 0x1004d330 cases)
+0x1005cd4a left out: caller of left-out 0x1005bb7a (uninitialised stack) at 0x1005cde1
+0x1009d200 left out: caller of left-out 0x1005cd4a at 0x1009d41a (chain to 0x1005bb7a)
+0x1003f3f8 left out: caller of left-out 0x1009d200 at 0x1003fc14
+0x1004954e left out: overflow into the frame (sprintf of runtime message strings into [ebp-0x40]: 40+ chars overwrite [ebp-0x18], read at the end; 64+ reach the saved ebp/return)
+0x10048f02 left out: caller of left-out 0x1009d200 at 0x10049464 (chain to 0x1005bb7a)
+0x10070eb5 left out: overflow into the frame (sprintf of a runtime message into [ebp-0x7c] at 0x1007234d: 92+ chars overwrite the unit pointer [ebp-0x20] used afterwards, 124+ reach the saved ebp/return)
+0x100d4590 proven+hooked on retry (15000 trials exact, coverage 749/749; kind routines +0/+4 called through the record's pointers) [hooked count 63]
+# rebuild 10 after 0x100d4590: BUILD EXIT 0; round-10 hooks 63 (expect 2251 of 2251, no duplicates); log buildlogs\round10\build_10.log
+# 2026-10-25 round 10 worklist finished: 125 of 125 decided, 63 hooked here, 62 left out (reasons above). No deploy test run yet.
+# 2026-10-25 interpreted (Diego, DECISIONS.md): five of the six 80-bit trig functions converted with the platform math; shared body src/sim/util/w10_interp_body.h, hooked src/sim/util/w10_interp.c, exact x87 reference src/sim/util/w10_interp_x87.c (not hooked)
+0x10060681 interpreted+hooked (x87 reference exact 6000 trials 112/112; native vs UCRT 1e6 trials, no difference) [hooked count 64]
+0x100d71b9 interpreted+hooked (x87 reference exact 6000 trials 140/140; native 1e6 trials, no difference) [hooked count 65]
+0x1000cbaa interpreted+hooked (x87 reference exact 6000 trials 118/118; native 1e5 trials, no difference) [hooked count 66]
+0x100608ef interpreted+hooked (x87 reference exact 6000 trials 192/207, unrun = three null-pointer asserts; native 1e6 trials, no difference) [hooked count 67]
+0x10060220 interpreted+hooked (x87 reference exact 6000 trials 363/363; native 1e6 trials, only entries within 4.05e-21 of zero differ) [hooked count 68]
+0x1001a706 stays left out: besides the 80-bit asin, its sscanf("%[^,],%[^,],%[^,]") leaves stack buffers unwritten that stricmp reads, and long fields overflow into the frame
+# rebuild 11 after the interpreted five: BUILD EXIT 0; round-10 hooks 68 (expect 2256 of 2256, no duplicates); log buildlogs\round10\build_11.log

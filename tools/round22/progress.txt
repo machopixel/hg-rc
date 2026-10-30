@@ -1,0 +1,26 @@
+# Round 22 (renderer group): one line per step
+step 1  watchers first (Diego): static unset-read scan tools/round22/unsetscan.py -> buildlogs/round22/unset_static.txt;
+        taps added to src/hooks/uninit_table.inc (fns 0x1009ef50, 0x100a0def new; 0x1009353e, 0x1009fada, 0x100a0880 given
+        offsets; 13 read / record-handover sites); MAX_OFF 5 -> 8; native watcher test PASS; build OK (dev.cmd 4)
+        false positives dropped: 0x100a0def [ebp-0x2c]/[ebp-0x28] (rep movsd of 5 dwords from 0x109e3e00 into [ebp-0x30])
+graphics-library callers (coordinator rule: stop and report): 0x1009353e, 0x100945b8, 0x100a539e -> 0x100e84f0;
+        0x100a539e -> 0x100e86a1; 0x1009ef50 -> 0x100e4780, 0x100e5477; 0x100a0def -> 0x100e5477
+never called in Vulkan runs (debug.log watcher counts): 0x100918e6, 0x1009221d
+0x100ad96e proven (not hooked yet): 4000 exact, coverage 114/114; negative W22_NEG=1 (C-side projection depth moved) 210/300
+0x100a539e proven (not hooked yet): 4000 exact, coverage 299/300 (0x100a567d dead: the flag kind is a multiple of 0x1000); mutation W22_NEG=1 275/300
+open: z (+8) of the four stack vertices in 0x1009353e / 0x100945b8 / 0x1009596a (and 0x100918e6 / 0x1009221d) reaches HGVK and DX5DRAW
+      depth: watchers added at the 5 call sites, E run asked; 0x100a0880 / 0x100ac9ab vertex +0..+8 (copied by 0x100a5c10)
+DX5DRAW Render: modes 13 (0x100043a5) and 16 (0x10004741) never read the texture argument [esp+0x20] (only modes 0..12
+      do); mode 16 sets its blend states off (0x100033e0(1,0), (5,0)) before drawing
+0x1009fada proven (not hooked yet): 4000 exact, coverage 273/273; tex {0, 0x40} and alpha 0 given to the original's stack in the spec; negative W22_NEG=1 154/300
+0x1009ef50 proven (not hooked yet): 6000 exact, coverage 784/790 (the 6 dead default jumps of the kind switch); 105 both-fault
+      (palette index out of the table for random +0x10 / flags); negative W22_NEG=1 39/300; texture record {0, colour or 0},
+      the 4th argument to 0x10006609 0 (masked: it reads three)
+0x100ac9ab proven (not hooked yet): 4000 exact, coverage 400/400; clip-vertex +0..+8 / +0x31.. zero (unread downstream: 0x100a5c10 copies them only to projected +0xc..+0x14 / +0x30..+0x38, which 0x100a62c4 / 0x100a0339 / 0x100ac738 / the edge clippers never read); negative W22_NEG=1 300/300
+0x100a0880 proven (not hooked yet): 4000 exact, coverage 316/316; clip-vertex +0..+8 etc. zero; negative W22_NEG=1 195/300
+0x100a0def proven (not hooked yet): 6000 exact, coverage 1972/1972 (0x1012ba50 varied: with the shipped 4.0 the u reset cannot happen); haze alpha / software +0xc.. zero; negative W22_NEG=1 22/300 (haze paths only)
+0x100945b8 proven (not hooked yet): 4000 exact, coverage 219/219; z and refilled fields 0; negative W22_NEG=1 161/300
+0x1009353e / 0x1009596a proven (not hooked yet): 4000 exact each, coverage 234/234 and 242/242; z 0
+0x100918e6 / 0x1009221d proven (not hooked yet): 4000 exact each, coverage 354/354 each; one C body (they differ only in instruction order); z 0
+hooked: conv_w22.inc (12 CONV), w22_items.c / w22_poly.c in the launcher build; dev.cmd 4 build OK, no new warnings; expected 2321 of 2323
+dropped-gun fix: w22_mounts.c, Sim_1006bf33 fallback, loader record/forget, WEAPON OFF log; specs re-proven; test_w22_weaponoff.py 6/6; build OK (2321 of 2323 unchanged: no new hooks)

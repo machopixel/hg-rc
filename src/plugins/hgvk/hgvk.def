@@ -1,0 +1,22 @@
+LIBRARY HGVK
+EXPORTS
+    CheckFunc
+    FirstDevice
+    GetFuncDesc
+    GetNumDevice
+    GetSocketCaps
+    LastDevice
+    LostDeviceDisplay
+    PreloadTexture
+    Render
+    RenderNoClip
+    RenderRefresh
+    RestoreDevice
+    SetLumaTable
+    SetState
+    SetTexturePalette
+    UpdateTexture
+    LockDisplay
+    UnlockDisplay
+    RefreshDisplay
+    HgvkHudApi

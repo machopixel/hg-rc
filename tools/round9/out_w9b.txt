@@ -1,0 +1,113 @@
+Round 9 letter b, final (2026-10-21). All 13 converted functions pass: python tools\verify\difftest.py -j2 HGSIM.DLL tools\verify\spec_w9b.py
+and all eight .c files compile with i686-w64-mingw32-gcc -std=c17 -Wall.
+
+address    name                 file                                  trials mism bf  branches reached
+0x1001b902 Anim_RecordOfId      src/sim/unsorted_1001/w9b_records.c    600   0   0   every table (0, 0x1000, 0x2000, 0x3000, 0x4000, 0x5000, other), every fixed row, rows in and out of range
+0x1001d0fa Anim_RegisterNames   src/sim/unsorted_1001/w9b_records.c    300   0   0   each of the six enable flags on/off (names, ids, reload flags logged by the Sim_1001bb1f stub)
+0x1003e291 Net_ProcessMessages  src/sim/unsorted_1003/w9b_net.c       1500   0   0   see below
+0x1003eebc Net_SendStateMessage src/sim/unsorted_1003/w9b_net.c       1200   0   0   missing entry, wrong state, kind 0x400 with/without the 0x20 flag and bit, every flag of +7/+9 (0xc19/0xc1d/0xc21/0xc25/0xc29/0xc2d, 0x560, 0x15c, record byte 0x59, the 0x510/0x514/0x518 case), mode 4/5 tail; floats incl. 0, -0, huge, NaN/inf, bit for bit
+0x1004227f Net_UpdatePlayers    src/sim/unsorted_1004/w9b_net.c       1500   0   0   see below
+0x100500ab Sim_100500ab         src/sim/unsorted_1005/w9b_misc.c       300   0   0   straight line; Sim_1004ee50 stub answers 6 values
+0x100572c9 Joy_PickProfileName  src/sim/unsorted_1005/w9b_misc.c       600   0   0   all five results by name and by capability flags (each flag combination and both button counts), random names
+0x1006123b Quat_FromAxisAngles  src/sim/unsorted_1006/w9b_quat.c      1000   0   0   orders 0, 1, 2 and the identity default; angles from -720..720, special values; result bit for bit
+0x100654a1 FlashText_Start      src/sim/unsorted_1006/w9b_tally.c      400   0   0   disabled early-out, all 8 text numbers and the default text
+0x1006a12d Score_RecordKill     src/sim/unsorted_1006/w9b_tally.c     1500   0   0   see below
+0x1008a94d Sim_1008a94d         src/sim/unsorted_1008/w9b_cells.c      500   0   0   all=1 list walk, 9x9 cell walk, single list walk; chains of 0..6 nodes with kind 0xc0 and others
+0x100cf69a Hud_DrawScore        src/sim/unsorted_100c/w9b_hud.c        500   0   0   hidden pane, no font, each of the four game-state conditions, all three draw routines
+0x100cf7e3 Hud_DrawStatusText   src/sim/unsorted_100c/w9b_hud.c        600   0   0   hidden pane, modes 1/2/6/other, empty text, no font, all three draw routines
+
+Branches of the three big ones (generator spec_w9b.py: g_pump, g_update, g_kill):
+- Net_ProcessMessages: the three early-outs; 0..5 messages per trial built from all 23 tags plus unknown and lower-case ones,
+  with the sender key of a real player / self / unknown / 0xfa01; "eD" (type 0) leave with known and unknown keys and
+  the [0x1015f1fc] test; "DA" with and without the 0x4000 flag; every per-tag size check (right and wrong extra word);
+  "SS" end; the periodic block (word 0x1015ec7c set or not, first call setting bit 0 of [0x1017b94c], timer due or
+  not, silent players over 0x38e ticks in state 1 and 3 and the owner copy, the ready check with Sim_10042908
+  answering 0/1 and the game start), the pre-game branch (host/client/no session), and the 0x1015dc84 == 2 tail.
+- Net_UpdatePlayers: timer due or not; tables of 1..8 players; dead-flag clearing; own driven dead entries with
+  killer == self, another player, out of range; respawns left or not, client (Sim_10040ab8) and host rebuild paths;
+  the host hand-over with the round-robin search over shuffled id lists (one free player always exists, as in the
+  game); the target "TC" report with target in state 1 or not.
+- Score_RecordKill: the replay early-out; network and local game; both team slots and none; killer self / another /
+  -1 / -2 / out of range; unit classes 0..11 (incl. 4 -> 6 and the class-1 tallies); team 0/1/2/other of
+  Sim_10052be7; mode 5 with and without [0x1015ebbc]; the new-leader announcement (Sim_10052aaf / Sim_10012843 stubs
+  answering the entry's own index or others); the 0x1400 flag tally.
+
+Left out (4):
+  0x10040af8  reads the uninitialised stack slot [ebp-4] on the path "sender == self+8 and not host" (10040cf2) and
+              writes 0 through it (+0x164); not expressible in C. Called from Net_ProcessMessages via SIM_FN.
+  0x10042125  ends with `ret 0x10` (not cdecl; a callback).
+  0x100e4780  hand-written polygon filler: push es / push ds; pop es, rep stos through es, 64-bit mul/idiv, shld flag
+              accumulation; the segment-register rule.
+  0x100e6279  same family (shaded filler): push es, saves ebp in a global and uses it as a scratch register.
+
+Files created: src/sim/unsorted_1001/{w9b.h,w9b_records.c}, src/sim/unsorted_1003/{w9b.h,w9b_net.c},
+  src/sim/unsorted_1004/{w9b.h,w9b_net.c}, src/sim/unsorted_1005/{w9b.h,w9b_misc.c}, src/sim/unsorted_1006/{w9b.h,
+  w9b_quat.c,w9b_tally.c}, src/sim/unsorted_1008/{w9b.h,w9b_cells.c}, src/sim/unsorted_100c/{w9b.h,w9b_hud.c},
+  tools/verify/spec_w9b.py, src/hooks/conv_w9b.inc (13 CONV lines; none of the addresses is in any hooks_*.c or
+  conv_*.inc).
+
+Non-own SOURCES: the full transitive list is in spec_w9b.py SOURCES after the comment line "converted callees and
+what they need to link" (about 230 files, all converted earlier). The files my C includes directly:
+  unsorted_1001: w5c_calls.c; unsorted_1003: records.c (fns.h), w3p_net.c, w5a_misc.c, w5c_calls.c;
+  core: w2a_timers.c, w2b_timers.c; unsorted_1004: w2b_checks.c, w2h_record.c, w2i_misc.c, w2j_misc.c, w3p_net.c,
+  w5a_misc.c, w5y_misc.c, w6e_misc.c, w7m_misc.c, w8u_camera.c, fields.c/tables.c/state.c (fns.h);
+  unsorted_1006: w8w_event.c, w3q_quat.c, w5a_math.c; unsorted_1007: w2e_state.c, w3p_net.c, w3s_calls.c;
+  unsorted_100a: w5b_calls.c, w5x_calls.c, w5y_misc.c, w5z_calls.c; unsorted_100f: w2e_string.c, w6i_misc.c,
+  w8z_crt.c, w6h_crt.c; unsorted_1001: w8t_actions.c, w2l_misc.c, w3s_group.c, w7l_misc.c; unsorted_1000: w2e_names.c;
+  unsorted_1002: w5a_misc.c, w8t_misc.c; unsorted_1003: w8u_misc.c; unsorted_1005: w5b_calls.c;
+  unsorted_1007: w2f_misc.c; unsorted_1008: w3s_grid.c; view: w2d_view.c, w2l_lists.c; unsorted_100b: w6g_misc.c;
+  util: lookup.c/ring.c/record.c/field.c (util.h), access.h is header-only.
+
+Notes for the owner:
+- Net_ProcessMessages reads the clock (Sim_1002ac1b) ONCE before the receive loop; every `continue` goes back to the
+  receive, not to the clock (first version of the C had it wrong; 4 jumps target 0x1003e30c, none 0x1003e302).
+- Str_CompareNoCase (the CRT _stricmp at 0x100ff1e0) switches on the LC_CTYPE locale handle [0x1017e950]: when it is
+  not 0 it lower-cases through LCMapStringA. The checker's import stub answers success without writing the lowered
+  character, so the compare then depends on stack garbage. Specs that run it for real must keep [0x1017e950] = 0
+  (the C locale, what the game runs with unless setlocale is called).
+- 0x1017b94c: the original tests ([0x1017b94c] | 0x80000000) != 0 before two Score_RecordKill calls, which is always
+  true; the C keeps the behaviour (no test) and says so in a comment.
+- Nothing committed or published.
+
+--- helper final message ---
+The checker buffers its output until it finishes, so there is nothing to read yet. I'm waiting for its completion notification; the interim state is recorded in tools\round9\out_w9b.txt.
+
+Final report, round 9 letter b (resumed run). All 13 converted functions pass the checker with 0 mismatches and 0 both-fault, and all eight C files compile cleanly with `i686-w64-mingw32-gcc -std=c17 -Wall`. The same report is in tools\round9\out_w9b.txt.
+
+| address | name | file | trials | mism | both-fault | branches reached |
+|---|---|---|---|---|---|---|
+| 0x1001b902 | Anim_RecordOfId | src/sim/unsorted_1001/w9b_records.c | 600 | 0 | 0 | every table (0, 0x1000..0x5000, other), every fixed row, rows in and out of range |
+| 0x1001d0fa | Anim_RegisterNames | src/sim/unsorted_1001/w9b_records.c | 300 | 0 | 0 | each of the six enable flags on and off; names, ids and reload flags logged by the registration stub |
+| 0x1003e291 | Net_ProcessMessages | src/sim/unsorted_1003/w9b_net.c | 1500 | 0 | 0 | see below |
+| 0x1003eebc | Net_SendStateMessage | src/sim/unsorted_1003/w9b_net.c | 1200 | 0 | 0 | missing entry, wrong state, kind 0x400 with and without the flag bit, every flag of the two flag words, mode 4/5 tail; all float conversions bit for bit including zeros, huge values, NaN and inf |
+| 0x1004227f | Net_UpdatePlayers | src/sim/unsorted_1004/w9b_net.c | 1500 | 0 | 0 | see below |
+| 0x100500ab | Sim_100500ab | src/sim/unsorted_1005/w9b_misc.c | 300 | 0 | 0 | straight line, six stub answers |
+| 0x100572c9 | Joy_PickProfileName | src/sim/unsorted_1005/w9b_misc.c | 600 | 0 | 0 | all five results by name and by capability flags, every flag combination, both button counts |
+| 0x1006123b | Quat_FromAxisAngles | src/sim/unsorted_1006/w9b_quat.c | 1000 | 0 | 0 | orders 0, 1, 2 and the identity default; result bit for bit |
+| 0x100654a1 | FlashText_Start | src/sim/unsorted_1006/w9b_tally.c | 400 | 0 | 0 | disabled early-out, all eight text numbers, default text |
+| 0x1006a12d | Score_RecordKill | src/sim/unsorted_1006/w9b_tally.c | 1500 | 0 | 0 | see below |
+| 0x1008a94d | Sim_1008a94d | src/sim/unsorted_1008/w9b_cells.c | 500 | 0 | 0 | the all-list walk, the 9x9 cell walk, the single list; chains of 0..6 nodes of kind 0xc0 and others |
+| 0x100cf69a | Hud_DrawScore | src/sim/unsorted_100c/w9b_hud.c | 500 | 0 | 0 | hidden pane, no font, each game-state condition, all three draw routines |
+| 0x100cf7e3 | Hud_DrawStatusText | src/sim/unsorted_100c/w9b_hud.c | 600 | 0 | 0 | hidden pane, modes 1/2/6/other, empty text, no font, all three draw routines |
+
+**Branches of the three big ones.** Net_ProcessMessages: the three early-outs; 0 to 5 messages per trial from all 23 tags plus unknown and lower-case ones, senders real, self, unknown or 0xfa01; the "eD" leave path with known and unknown keys; "DA" with and without the 0x4000 flag; every per-tag size check right and wrong; the "SS" end; the periodic block with timer due or not, silent players in states 1 and 3, the ready check answering 0 and 1 and the game start; the pre-game branch as host, client and no session; the final tail. Net_UpdatePlayers: tables of 1 to 8 players, dead-flag clearing, own driven dead entries with killer self, another player or out of range, respawns left or not, the client and the host rebuild paths, the host hand-over with the round-robin search over shuffled id lists, the target report with the target in state 1 or not. Score_RecordKill: the replay early-out, network and local game, both team slots and none, killer self, another, -1, -2 or out of range, unit classes 0 to 11, teams 0/1/2/other, mode 5 with and without the flag, the new-leader announcement, the 0x1400 tally.
+
+**FP class:** Net_SendStateMessage and Quat_FromAxisAngles are game logic (network state, orientation) and are checked exact, no `fp=True`. Everything else is integer only.
+
+**Left out, with reasons:**
+- 0x10040af8 reads the uninitialised stack slot `[ebp-4]` on the "sender is self+8, not host" path and writes through it. Not expressible in C. Net_ProcessMessages calls it via SIM_FN.
+- 0x10042125 ends with `ret 0x10`, so it is not cdecl.
+- 0x100e4780 is a hand-written polygon filler that pushes and pops ES, fills through ES with `rep stos`, and uses 64-bit mul and idiv. Segment-register rule.
+- 0x100e6279 is the shaded filler of the same family. It also stores EBP in a global and uses it as a scratch register.
+
+**Files created:** w9b.h plus w9b_records.c in unsorted_1001, w9b_net.c in unsorted_1003 and unsorted_1004, w9b_misc.c in unsorted_1005, w9b_quat.c and w9b_tally.c in unsorted_1006, w9b_cells.c in unsorted_1008, w9b_hud.c in unsorted_100c, each with its w9b.h; tools/verify/spec_w9b.py; src/hooks/conv_w9b.inc with 13 CONV lines from hookgen. None of the 13 addresses appears in any hooks_*.c or conv_*.inc.
+
+**Non-own SOURCES:** the full transitive list of about 230 earlier-converted files is in spec_w9b.py after the comment "converted callees and what they need to link". The files my C includes directly are listed in tools\round9\out_w9b.txt by folder.
+
+**Things the owner should know:**
+- Net_ProcessMessages reads the clock once before the receive loop. Every `continue` jumps back to the receive call, never to the clock read. My first C version had the clock inside the loop and the checker caught it.
+- The CRT's case-insensitive compare at 0x100ff1e0 switches on the LC_CTYPE locale handle at 0x1017e950. When it is not 0, it lower-cases through the LCMapStringA import, whose checker stub never writes the result, so the compare reads stack garbage. Any spec that runs that compare for real must keep that word at 0, the C-locale value the game runs with.
+- Before two Score_RecordKill calls the original tests `[0x1017b94c] | 0x80000000` against zero, which is always true. The C keeps the behaviour and says so in a comment.
+- Nothing was committed or published.
+
+EXIT 0

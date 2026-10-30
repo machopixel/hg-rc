@@ -1,0 +1,41 @@
+﻿My usage limit was reached before the checker could run to completion, so this is a partial report. Nothing here is proven yet.
+
+**Status: converted and compile-checked, NOT verified**
+
+Candidate list w9g had 15 functions. Two are not convertible by the rules; 13 were converted to C and all ten new .c files compile cleanly with `i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c`. The checker (`difftest.py -j2 ... spec_w9g.py`) was started once: the link failed on two missing callee sources, which I have since added to the spec's SOURCES. The checker has not been rerun. Every trial/mismatch count below is therefore unknown.
+
+| address | name | file | trials / mismatches / both-fault | note |
+|---|---|---|---|---|
+| 0x10012af0 | Mono_ShowMissions | unsorted_1001/w9g_mono.c | not run | mono-screen mission page; sprintf runs for real, Mono_PutText/BlankRows stubbed |
+| 0x10016de7 | Sim_10016de7 | unsorted_1001/w9g_select.c | not run | key to nearest/eligible group member; 3 stubs |
+| 0x1002c8cb | Sim_1002c8cb | unsorted_1002/w9g_misc.c | not run | wrapper of Sim_10048287 |
+| 0x1004e838 | Gif_Finish | unsorted_1004/w9g_gif.c | not run | GIF trailer 0x3b, close, free [0x1015f360] |
+| 0x1005f4e0 | Lang_ReadIni | unsorted_1005/w9g_lang.c | not run | reads lang.ini "dll =" / "sim file ="; fopen/fgets/fclose stubbed |
+| 0x100622f0 | Sim_100622f0 | unsorted_1006/w9g_misc.c | not run | 7 args, dispatches to 6 display helpers (3 via SIM_FN) |
+| 0x10062956 | Sim_10062956 | unsorted_1006/w9g_misc.c | not run | damage flicker slots, jump table 0x10062a2a |
+| 0x1006ca00 | Sim_1006ca00 | unsorted_1006/w9g_misc.c | not run | toggles [0x10179ca8] |
+| 0x10073041 | Sim_10073041 | unsorted_1007/w9g_misc.c | not run | block+0x4fc = value |
+| 0x100766ca | Sim_100766ca | unsorted_1007/w9g_misc.c | not run | list lookup via Sim_1007652f |
+| 0x10086ebf | Sim_10086ebf | unsorted_1008/w9g_nmsave.c | not run | applies NMSAVE.CFG record (Sim_10086e27 stubbed) |
+| 0x100ca670 | Sim_100ca670 | unsorted_100c/w9g_select.c | not run | selection stepping over 3 pickers |
+| 0x100cd70f | Sim_100cd70f | unsorted_100c/w9g_text.c | not run | HUD mission list with word wrap; 5 stubs |
+
+Note on list sizes: 0x1002c8cb, 0x1006ca00, 0x10073041, 0x100766ca and 0x10086ebf are tiny; the sizes in cand_w9g.txt counted int3 padding.
+
+**Left out**
+- 0x100b8fb1: cpuid/rdtsc (rule 2).
+- 0x100e5477: hand-written span filler using push es/pop es, push ds/pop es, ebp as a scratch register and shld/shrd 64-bit idiv chains (segment registers, rule 2).
+
+**Things the owner should know** (original quirks kept, excluded from trials by the generators)
+- Mono_ShowMissions prints an uninitialised line buffer when byte +0x38 is 1 or above 4.
+- Sim_100ca670 uses an unset local when flags == 1, +0x118 == -1 and delta != 0.
+- Gif_Finish passes 17 uninitialised bytes after the trailer byte to Sim_1004e719.
+- Sim_10086ebf uses the record even when Sim_10086e27 fails (no NMSAVE.CFG).
+- Lang_ReadIni keeps skipping past the line when no letter/digit follows the '='.
+
+**Files created**: src/sim/unsorted_{1001,1002,1004,1005,1006,1007,1008,100c}/w9g.h; the ten .c files above; tools/verify/spec_w9g.py. NOT created: src/hooks/conv_w9g.inc (hookgen must only run after the checker passes).
+
+**Non-own SOURCES**: the spec compiles the union of the spec_w8t/w8v/w8w/w8z closures plus unsorted_1006/w2l_slots.c and unsorted_100c/w7q_objects.c.
+
+**What's left**: rerun `python tools\verify\difftest.py -j2 C:\Coding\HeavyGear\Project\HGSIM.DLL tools\verify\spec_w9g.py`, fix any mismatches (likely candidates: the real sprintf path in Mono_ShowMissions, the wrap arithmetic in Sim_100cd70f), then generate conv_w9g.inc with hookgen for the 13 addresses. The usage limit was reached before that could be done.
+塅呉〠਍

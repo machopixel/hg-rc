@@ -1,0 +1,12 @@
+# Game functions missing from build/ghidra/HGSIM.idx.txt (Ghidra merged them into the function before, or never
+# found them); found 2026-10-29 by scanning .text for push ebp / mov ebp, esp outside every indexed function.
+# All still original; each is reached through a pointer (via its thunk). For a later round.
+0x1001efbe  thunk 0x10001569  pointer tables 0x10149a10, 0x10150584/ac/d4/fc
+0x1001f14f  thunk 0x10001604  pointer tables 0x10149a64, 0x10150588/b0/d8, 0x10150600
+0x1007760b  thunk 0x100015e1  pointer tables 0x10149a78, 0x1014bbb0/c4/d8/ec, 0x1015068c
+0x1007792c  thunk 0x1000102d  per-type table 0x1013d378 (+0x158 each: 0x1013d4d0, ..d628, ..d780, ..d8d8, ..da30, ...)
+0x1009b772  thunk 0x10002cc5  pointer stored by code at 0x10099e04 and 0x1009a095
+0x100cde94  thunk 0x10002d88  pointer stored by code at 0x1002bffd (the F12 objectives list; calls 0x100ccc60)
+0x100ce586  thunk 0x1000246e  pointer stored by code at 0x1002c00d
+0x100d422f  thunk 0x100026b2  pointer stored by code at 0x1002b75d
+# Not game code: 0x100f9fb8 (C runtime), 0x101002b8 (_except_handler3).

@@ -1,0 +1,1923 @@
+# Functions of HGSIM.DLL still running as original code (read-only survey, 2026-10-25).
+# group a = round 10 left out (DECISIONS.md), b = excluded by a conversion rule, c = never attempted.
+# Kinds for b/c are found mechanically from the disassembly (first instructions, ret N, fs:, imports).
+0x1000100a  c  jump thunk
+0x10001014  c  jump thunk
+0x10001019  c  jump thunk
+0x10001023  c  jump thunk
+0x10001028  c  jump thunk
+0x10001032  c  jump thunk
+0x1000103c  c  jump thunk
+0x10001041  c  jump thunk
+0x1000104b  c  jump thunk
+0x10001050  c  jump thunk
+0x10001055  c  jump thunk
+0x1000105a  c  jump thunk
+0x1000105f  c  jump thunk
+0x10001064  c  jump thunk
+0x10001069  c  jump thunk
+0x1000106e  c  jump thunk
+0x10001073  c  jump thunk
+0x10001078  c  jump thunk
+0x10001082  c  jump thunk
+0x10001087  c  jump thunk
+0x1000108c  c  jump thunk
+0x10001091  c  jump thunk
+0x10001096  c  jump thunk
+0x100010a0  c  jump thunk
+0x100010a5  c  jump thunk
+0x100010aa  c  jump thunk
+0x100010af  c  jump thunk
+0x100010b4  c  jump thunk
+0x100010b9  c  jump thunk
+0x100010be  c  jump thunk
+0x100010c3  c  jump thunk
+0x100010c8  c  jump thunk
+0x100010cd  c  jump thunk
+0x100010d7  c  jump thunk
+0x100010dc  c  jump thunk
+0x100010e6  c  jump thunk
+0x100010eb  c  jump thunk
+0x100010f0  c  jump thunk
+0x100010f5  c  jump thunk
+0x100010fa  c  jump thunk
+0x100010ff  c  jump thunk
+0x10001104  c  jump thunk
+0x10001109  c  jump thunk
+0x1000110e  c  jump thunk
+0x10001113  c  jump thunk
+0x10001118  c  jump thunk
+0x1000111d  c  jump thunk
+0x10001122  c  jump thunk
+0x10001131  c  jump thunk
+0x10001136  c  jump thunk
+0x1000113b  c  jump thunk
+0x10001145  c  jump thunk
+0x1000114a  c  jump thunk
+0x1000114f  c  jump thunk
+0x10001154  c  jump thunk
+0x10001159  c  jump thunk
+0x1000115e  c  jump thunk
+0x10001163  c  jump thunk
+0x10001168  c  jump thunk
+0x1000116d  c  jump thunk
+0x10001172  c  jump thunk
+0x10001177  c  jump thunk
+0x1000117c  c  jump thunk
+0x10001186  c  jump thunk
+0x1000118b  c  jump thunk
+0x10001190  c  jump thunk
+0x10001195  c  jump thunk
+0x1000119a  c  jump thunk
+0x1000119f  c  jump thunk
+0x100011a4  c  jump thunk
+0x100011a9  c  jump thunk
+0x100011ae  c  jump thunk
+0x100011b3  c  jump thunk
+0x100011b8  c  jump thunk
+0x100011c7  c  jump thunk
+0x100011cc  c  jump thunk
+0x100011d6  c  jump thunk
+0x100011db  c  jump thunk
+0x100011e0  c  jump thunk
+0x100011e5  c  jump thunk
+0x100011f4  c  jump thunk
+0x100011f9  c  jump thunk
+0x100011fe  c  jump thunk
+0x10001203  c  jump thunk
+0x10001208  c  jump thunk
+0x1000120d  c  jump thunk
+0x10001217  c  jump thunk
+0x1000121c  c  jump thunk
+0x10001226  c  jump thunk
+0x10001230  c  jump thunk
+0x10001235  c  jump thunk
+0x1000123a  c  jump thunk
+0x1000124e  c  jump thunk
+0x10001253  c  jump thunk
+0x10001258  c  jump thunk
+0x1000125d  c  jump thunk
+0x10001267  c  jump thunk
+0x1000126c  c  jump thunk
+0x10001271  c  jump thunk
+0x10001276  c  jump thunk
+0x1000127b  c  jump thunk
+0x10001280  c  jump thunk
+0x10001285  c  jump thunk
+0x1000128a  c  jump thunk
+0x10001294  c  jump thunk
+0x1000129e  c  jump thunk
+0x100012a8  c  jump thunk
+0x100012b2  c  jump thunk
+0x100012bc  c  jump thunk
+0x100012c1  c  jump thunk
+0x100012c6  c  jump thunk
+0x100012cb  c  jump thunk
+0x100012d0  c  jump thunk
+0x100012d5  c  jump thunk
+0x100012da  c  jump thunk
+0x100012df  c  jump thunk
+0x100012e4  c  jump thunk
+0x100012e9  c  jump thunk
+0x100012f3  c  jump thunk
+0x100012fd  c  jump thunk
+0x10001302  c  jump thunk
+0x10001307  c  jump thunk
+0x1000130c  c  jump thunk
+0x10001316  c  jump thunk
+0x1000131b  c  jump thunk
+0x10001320  c  jump thunk
+0x10001325  c  jump thunk
+0x1000132a  c  jump thunk
+0x1000132f  c  jump thunk
+0x10001334  c  jump thunk
+0x10001339  c  jump thunk
+0x1000133e  c  jump thunk
+0x10001343  c  jump thunk
+0x10001352  c  jump thunk
+0x10001357  c  jump thunk
+0x1000135c  c  jump thunk
+0x10001361  c  jump thunk
+0x10001366  c  jump thunk
+0x1000136b  c  jump thunk
+0x10001370  c  jump thunk
+0x10001375  c  jump thunk
+0x1000137a  c  jump thunk
+0x10001384  c  jump thunk
+0x10001389  c  jump thunk
+0x1000138e  c  jump thunk
+0x10001393  c  jump thunk
+0x10001398  c  jump thunk
+0x100013a2  c  jump thunk
+0x100013a7  c  jump thunk
+0x100013b1  c  jump thunk
+0x100013b6  c  jump thunk
+0x100013bb  c  jump thunk
+0x100013c0  c  jump thunk
+0x100013c5  c  jump thunk
+0x100013ca  c  jump thunk
+0x100013cf  c  jump thunk
+0x100013d4  c  jump thunk
+0x100013d9  c  jump thunk
+0x100013de  c  jump thunk
+0x100013e8  c  jump thunk
+0x100013ed  c  jump thunk
+0x100013f7  c  jump thunk
+0x100013fc  c  jump thunk
+0x10001401  c  jump thunk
+0x10001406  c  jump thunk
+0x10001410  c  jump thunk
+0x10001415  c  jump thunk
+0x1000141f  c  jump thunk
+0x10001424  c  jump thunk
+0x1000142e  c  jump thunk
+0x10001438  c  jump thunk
+0x1000143d  c  jump thunk
+0x10001442  c  jump thunk
+0x10001447  c  jump thunk
+0x10001451  c  jump thunk
+0x10001456  c  jump thunk
+0x1000145b  c  jump thunk
+0x10001460  c  jump thunk
+0x10001465  c  jump thunk
+0x1000146a  c  jump thunk
+0x1000146f  c  jump thunk
+0x10001474  c  jump thunk
+0x10001479  c  jump thunk
+0x1000147e  c  jump thunk
+0x10001483  c  jump thunk
+0x1000148d  c  jump thunk
+0x10001497  c  jump thunk
+0x1000149c  c  jump thunk
+0x100014a1  c  jump thunk
+0x100014ab  c  jump thunk
+0x100014b0  c  jump thunk
+0x100014b5  c  jump thunk
+0x100014ba  c  jump thunk
+0x100014bf  c  jump thunk
+0x100014c9  c  jump thunk
+0x100014ce  c  jump thunk
+0x100014e2  c  jump thunk
+0x100014e7  c  jump thunk
+0x100014ec  c  jump thunk
+0x100014f6  c  jump thunk
+0x100014fb  c  jump thunk
+0x10001505  c  jump thunk
+0x1000150f  c  jump thunk
+0x10001514  c  jump thunk
+0x10001519  c  jump thunk
+0x10001523  c  jump thunk
+0x10001528  c  jump thunk
+0x10001537  c  jump thunk
+0x1000153c  c  jump thunk
+0x10001541  c  jump thunk
+0x10001546  c  jump thunk
+0x1000154b  c  jump thunk
+0x10001550  c  jump thunk
+0x1000155a  c  jump thunk
+0x10001564  c  jump thunk
+0x10001573  c  jump thunk
+0x10001578  c  jump thunk
+0x1000157d  c  jump thunk
+0x10001582  c  jump thunk
+0x10001587  c  jump thunk
+0x10001591  c  jump thunk
+0x1000159b  c  jump thunk
+0x100015a0  c  jump thunk
+0x100015a5  c  jump thunk
+0x100015aa  c  jump thunk
+0x100015af  c  jump thunk
+0x100015b4  c  jump thunk
+0x100015b9  c  jump thunk
+0x100015c3  c  jump thunk
+0x100015c8  c  jump thunk
+0x100015d2  c  jump thunk
+0x100015d7  c  jump thunk
+0x100015dc  c  jump thunk
+0x100015e6  c  jump thunk
+0x100015f0  c  jump thunk
+0x100015f5  c  jump thunk
+0x100015fa  c  jump thunk
+0x100015ff  c  jump thunk
+0x10001609  c  jump thunk
+0x10001613  c  jump thunk
+0x10001618  c  jump thunk
+0x1000161d  c  jump thunk
+0x10001622  c  jump thunk
+0x10001627  c  jump thunk
+0x1000162c  c  jump thunk
+0x10001636  c  jump thunk
+0x1000163b  c  jump thunk
+0x10001645  c  jump thunk
+0x1000164f  c  jump thunk
+0x1000165e  c  jump thunk
+0x10001663  c  jump thunk
+0x10001668  c  jump thunk
+0x10001672  c  jump thunk
+0x1000167c  c  jump thunk
+0x10001681  c  jump thunk
+0x10001686  c  jump thunk
+0x1000168b  c  jump thunk
+0x100016a4  c  jump thunk
+0x100016a9  c  jump thunk
+0x100016ae  c  jump thunk
+0x100016b3  c  jump thunk
+0x100016c2  c  jump thunk
+0x100016c7  c  jump thunk
+0x100016d1  c  jump thunk
+0x100016ea  c  jump thunk
+0x100016ef  c  jump thunk
+0x100016f4  c  jump thunk
+0x100016f9  c  jump thunk
+0x100016fe  c  jump thunk
+0x10001703  c  jump thunk
+0x10001708  c  jump thunk
+0x1000170d  c  jump thunk
+0x10001712  c  jump thunk
+0x10001717  c  jump thunk
+0x1000171c  c  jump thunk
+0x10001721  c  jump thunk
+0x10001726  c  jump thunk
+0x1000172b  c  jump thunk
+0x10001730  c  jump thunk
+0x10001735  c  jump thunk
+0x1000173f  c  jump thunk
+0x10001744  c  jump thunk
+0x10001749  c  jump thunk
+0x10001758  c  jump thunk
+0x1000175d  c  jump thunk
+0x10001762  c  jump thunk
+0x10001767  c  jump thunk
+0x1000176c  c  jump thunk
+0x10001776  c  jump thunk
+0x10001780  c  jump thunk
+0x1000178a  c  jump thunk
+0x1000178f  c  jump thunk
+0x10001794  c  jump thunk
+0x1000179e  c  jump thunk
+0x100017a3  c  jump thunk
+0x100017ad  c  jump thunk
+0x100017b2  c  jump thunk
+0x100017b7  c  jump thunk
+0x100017c1  c  jump thunk
+0x100017c6  c  jump thunk
+0x100017cb  c  jump thunk
+0x100017d0  c  jump thunk
+0x100017da  c  jump thunk
+0x100017df  c  jump thunk
+0x100017ee  c  jump thunk
+0x100017f3  c  jump thunk
+0x10001807  c  jump thunk
+0x1000180c  c  jump thunk
+0x10001811  c  jump thunk
+0x1000181b  c  jump thunk
+0x10001825  c  jump thunk
+0x1000182f  c  jump thunk
+0x10001834  c  jump thunk
+0x10001839  c  jump thunk
+0x1000184d  c  jump thunk
+0x10001852  c  jump thunk
+0x10001857  c  jump thunk
+0x1000185c  c  jump thunk
+0x10001861  c  jump thunk
+0x10001866  c  jump thunk
+0x1000186b  c  jump thunk
+0x10001875  c  jump thunk
+0x1000187a  c  jump thunk
+0x1000187f  c  jump thunk
+0x10001884  c  jump thunk
+0x10001889  c  jump thunk
+0x1000188e  c  jump thunk
+0x10001893  c  jump thunk
+0x10001898  c  jump thunk
+0x1000189d  c  jump thunk
+0x100018a2  c  jump thunk
+0x100018ac  c  jump thunk
+0x100018b1  c  jump thunk
+0x100018b6  c  jump thunk
+0x100018bb  c  jump thunk
+0x100018c5  c  jump thunk
+0x100018ca  c  jump thunk
+0x100018d4  c  jump thunk
+0x100018de  c  jump thunk
+0x100018e3  c  jump thunk
+0x100018e8  c  jump thunk
+0x100018ed  c  jump thunk
+0x100018f2  c  jump thunk
+0x10001901  c  jump thunk
+0x10001906  c  jump thunk
+0x1000190b  c  jump thunk
+0x10001910  c  jump thunk
+0x1000191a  c  jump thunk
+0x1000191f  c  jump thunk
+0x10001924  c  jump thunk
+0x1000192e  c  jump thunk
+0x10001933  c  jump thunk
+0x10001938  c  jump thunk
+0x10001942  c  jump thunk
+0x10001947  c  jump thunk
+0x1000194c  c  jump thunk
+0x10001951  c  jump thunk
+0x10001956  c  jump thunk
+0x1000195b  c  jump thunk
+0x10001965  c  jump thunk
+0x1000196a  c  jump thunk
+0x1000196f  c  jump thunk
+0x10001979  c  jump thunk
+0x1000197e  c  jump thunk
+0x10001983  c  jump thunk
+0x10001988  c  jump thunk
+0x1000198d  c  jump thunk
+0x10001997  c  jump thunk
+0x1000199c  c  jump thunk
+0x100019a1  c  jump thunk
+0x100019a6  c  jump thunk
+0x100019ab  c  jump thunk
+0x100019b5  c  jump thunk
+0x100019ba  c  jump thunk
+0x100019bf  c  jump thunk
+0x100019ce  c  jump thunk
+0x100019d3  c  jump thunk
+0x100019d8  c  jump thunk
+0x100019dd  c  jump thunk
+0x100019e2  c  jump thunk
+0x100019e7  c  jump thunk
+0x100019ec  c  jump thunk
+0x100019f6  c  jump thunk
+0x10001a05  c  jump thunk
+0x10001a0a  c  jump thunk
+0x10001a19  c  jump thunk
+0x10001a1e  c  jump thunk
+0x10001a23  c  jump thunk
+0x10001a28  c  jump thunk
+0x10001a2d  c  jump thunk
+0x10001a32  c  jump thunk
+0x10001a37  c  jump thunk
+0x10001a3c  c  jump thunk
+0x10001a41  c  jump thunk
+0x10001a46  c  jump thunk
+0x10001a4b  c  jump thunk
+0x10001a50  c  jump thunk
+0x10001a55  c  jump thunk
+0x10001a5a  c  jump thunk
+0x10001a64  c  jump thunk
+0x10001a69  c  jump thunk
+0x10001a78  c  jump thunk
+0x10001a7d  c  jump thunk
+0x10001a82  c  jump thunk
+0x10001a87  c  jump thunk
+0x10001a8c  c  jump thunk
+0x10001a96  c  jump thunk
+0x10001a9b  c  jump thunk
+0x10001aaa  c  jump thunk
+0x10001ab4  c  jump thunk
+0x10001abe  c  jump thunk
+0x10001ac3  c  jump thunk
+0x10001ac8  c  jump thunk
+0x10001ad7  c  jump thunk
+0x10001adc  c  jump thunk
+0x10001ae1  c  jump thunk
+0x10001ae6  c  jump thunk
+0x10001aeb  c  jump thunk
+0x10001af0  c  jump thunk
+0x10001af5  c  jump thunk
+0x10001afa  c  jump thunk
+0x10001aff  c  jump thunk
+0x10001b04  c  jump thunk
+0x10001b09  c  jump thunk
+0x10001b13  c  jump thunk
+0x10001b18  c  jump thunk
+0x10001b1d  c  jump thunk
+0x10001b22  c  jump thunk
+0x10001b27  c  jump thunk
+0x10001b2c  c  jump thunk
+0x10001b31  c  jump thunk
+0x10001b36  c  jump thunk
+0x10001b3b  c  jump thunk
+0x10001b40  c  jump thunk
+0x10001b45  c  jump thunk
+0x10001b4a  c  jump thunk
+0x10001b4f  c  jump thunk
+0x10001b54  c  jump thunk
+0x10001b59  c  jump thunk
+0x10001b63  c  jump thunk
+0x10001b72  c  jump thunk
+0x10001b7c  c  jump thunk
+0x10001b8b  c  jump thunk
+0x10001b90  c  jump thunk
+0x10001b95  c  jump thunk
+0x10001b9a  c  jump thunk
+0x10001b9f  c  jump thunk
+0x10001ba4  c  jump thunk
+0x10001ba9  c  jump thunk
+0x10001bb3  c  jump thunk
+0x10001bb8  c  jump thunk
+0x10001bbd  c  jump thunk
+0x10001bc2  c  jump thunk
+0x10001bc7  c  jump thunk
+0x10001bcc  c  jump thunk
+0x10001bd1  c  jump thunk
+0x10001bd6  c  jump thunk
+0x10001bdb  c  jump thunk
+0x10001be0  c  jump thunk
+0x10001be5  c  jump thunk
+0x10001bea  c  jump thunk
+0x10001bef  c  jump thunk
+0x10001bf4  c  jump thunk
+0x10001bf9  c  jump thunk
+0x10001c03  c  jump thunk
+0x10001c08  c  jump thunk
+0x10001c0d  c  jump thunk
+0x10001c1c  c  jump thunk
+0x10001c21  c  jump thunk
+0x10001c2b  c  jump thunk
+0x10001c30  c  jump thunk
+0x10001c35  c  jump thunk
+0x10001c3a  c  jump thunk
+0x10001c3f  c  jump thunk
+0x10001c44  c  jump thunk
+0x10001c49  c  jump thunk
+0x10001c4e  c  jump thunk
+0x10001c53  c  jump thunk
+0x10001c5d  c  jump thunk
+0x10001c67  c  jump thunk
+0x10001c6c  c  jump thunk
+0x10001c71  c  jump thunk
+0x10001c76  c  jump thunk
+0x10001c80  c  jump thunk
+0x10001c85  c  jump thunk
+0x10001c8a  c  jump thunk
+0x10001c8f  c  jump thunk
+0x10001c94  c  jump thunk
+0x10001c99  c  jump thunk
+0x10001c9e  c  jump thunk
+0x10001ca3  c  jump thunk
+0x10001ca8  c  jump thunk
+0x10001cad  c  jump thunk
+0x10001cb2  c  jump thunk
+0x10001cb7  c  jump thunk
+0x10001cbc  c  jump thunk
+0x10001cc1  c  jump thunk
+0x10001cc6  c  jump thunk
+0x10001ccb  c  jump thunk
+0x10001cd0  c  jump thunk
+0x10001cd5  c  jump thunk
+0x10001cda  c  jump thunk
+0x10001cdf  c  jump thunk
+0x10001ce4  c  jump thunk
+0x10001ce9  c  jump thunk
+0x10001cee  c  jump thunk
+0x10001cf3  c  jump thunk
+0x10001cf8  c  jump thunk
+0x10001cfd  c  jump thunk
+0x10001d02  c  jump thunk
+0x10001d07  c  jump thunk
+0x10001d0c  c  jump thunk
+0x10001d11  c  jump thunk
+0x10001d16  c  jump thunk
+0x10001d20  c  jump thunk
+0x10001d2a  c  jump thunk
+0x10001d2f  c  jump thunk
+0x10001d39  c  jump thunk
+0x10001d3e  c  jump thunk
+0x10001d43  c  jump thunk
+0x10001d4d  c  jump thunk
+0x10001d52  c  jump thunk
+0x10001d57  c  jump thunk
+0x10001d5c  c  jump thunk
+0x10001d6b  c  jump thunk
+0x10001d70  c  jump thunk
+0x10001d7a  c  jump thunk
+0x10001d7f  c  jump thunk
+0x10001d84  c  jump thunk
+0x10001d8e  c  jump thunk
+0x10001d93  c  jump thunk
+0x10001d98  c  jump thunk
+0x10001d9d  c  jump thunk
+0x10001da2  c  jump thunk
+0x10001db1  c  jump thunk
+0x10001db6  c  jump thunk
+0x10001dbb  c  jump thunk
+0x10001dc0  c  jump thunk
+0x10001dc5  c  jump thunk
+0x10001dca  c  jump thunk
+0x10001dcf  c  jump thunk
+0x10001dd4  c  jump thunk
+0x10001dd9  c  jump thunk
+0x10001de3  c  jump thunk
+0x10001de8  c  jump thunk
+0x10001ded  c  jump thunk
+0x10001df2  c  jump thunk
+0x10001df7  c  jump thunk
+0x10001dfc  c  jump thunk
+0x10001e01  c  jump thunk
+0x10001e06  c  jump thunk
+0x10001e0b  c  jump thunk
+0x10001e1a  c  jump thunk
+0x10001e1f  c  jump thunk
+0x10001e29  c  jump thunk
+0x10001e33  c  jump thunk
+0x10001e38  c  jump thunk
+0x10001e3d  c  jump thunk
+0x10001e4c  c  jump thunk
+0x10001e56  c  jump thunk
+0x10001e5b  c  jump thunk
+0x10001e60  c  jump thunk
+0x10001e65  c  jump thunk
+0x10001e6f  c  jump thunk
+0x10001e79  c  jump thunk
+0x10001e88  c  jump thunk
+0x10001e8d  c  jump thunk
+0x10001e92  c  jump thunk
+0x10001e97  c  jump thunk
+0x10001ea1  c  jump thunk
+0x10001ea6  c  jump thunk
+0x10001eab  c  jump thunk
+0x10001eb0  c  jump thunk
+0x10001eba  c  jump thunk
+0x10001ec4  c  jump thunk
+0x10001ec9  c  jump thunk
+0x10001ed8  c  jump thunk
+0x10001edd  c  jump thunk
+0x10001ee2  c  jump thunk
+0x10001eec  c  jump thunk
+0x10001ef1  c  jump thunk
+0x10001ef6  c  jump thunk
+0x10001f00  c  jump thunk
+0x10001f05  c  jump thunk
+0x10001f0f  c  jump thunk
+0x10001f14  c  jump thunk
+0x10001f19  c  jump thunk
+0x10001f1e  c  jump thunk
+0x10001f28  c  jump thunk
+0x10001f2d  c  jump thunk
+0x10001f32  c  jump thunk
+0x10001f37  c  jump thunk
+0x10001f41  c  jump thunk
+0x10001f46  c  jump thunk
+0x10001f4b  c  jump thunk
+0x10001f55  c  jump thunk
+0x10001f5a  c  jump thunk
+0x10001f5f  c  jump thunk
+0x10001f64  c  jump thunk
+0x10001f69  c  jump thunk
+0x10001f6e  c  jump thunk
+0x10001f78  c  jump thunk
+0x10001f82  c  jump thunk
+0x10001f87  c  jump thunk
+0x10001fa0  c  jump thunk
+0x10001faa  c  jump thunk
+0x10001fb4  c  jump thunk
+0x10001fb9  c  jump thunk
+0x10001fbe  c  jump thunk
+0x10001fc3  c  jump thunk
+0x10001fc8  c  jump thunk
+0x10001fcd  c  jump thunk
+0x10001fd2  c  jump thunk
+0x10001fd7  c  jump thunk
+0x10001fdc  c  jump thunk
+0x10001fe1  c  jump thunk
+0x10001fe6  c  jump thunk
+0x10001feb  c  jump thunk
+0x10001ff0  c  jump thunk
+0x10001ffa  c  jump thunk
+0x10001fff  c  jump thunk
+0x10002004  c  jump thunk
+0x10002009  c  jump thunk
+0x1000200e  c  jump thunk
+0x10002013  c  jump thunk
+0x10002018  c  jump thunk
+0x1000201d  c  jump thunk
+0x10002022  c  jump thunk
+0x10002027  c  jump thunk
+0x1000202c  c  jump thunk
+0x10002031  c  jump thunk
+0x10002036  c  jump thunk
+0x1000203b  c  jump thunk
+0x10002040  c  jump thunk
+0x10002045  c  jump thunk
+0x1000204a  c  jump thunk
+0x10002054  c  jump thunk
+0x1000205e  c  jump thunk
+0x10002063  c  jump thunk
+0x10002068  c  jump thunk
+0x1000206d  c  jump thunk
+0x10002072  c  jump thunk
+0x1000207c  c  jump thunk
+0x10002081  c  jump thunk
+0x1000208b  c  jump thunk
+0x10002090  c  jump thunk
+0x10002095  c  jump thunk
+0x1000209f  c  jump thunk
+0x100020a4  c  jump thunk
+0x100020a9  c  jump thunk
+0x100020ae  c  jump thunk
+0x100020b3  c  jump thunk
+0x100020b8  c  jump thunk
+0x100020c2  c  jump thunk
+0x100020cc  c  jump thunk
+0x100020d1  c  jump thunk
+0x100020d6  c  jump thunk
+0x100020db  c  jump thunk
+0x100020e0  c  jump thunk
+0x100020e5  c  jump thunk
+0x100020f4  c  jump thunk
+0x100020f9  c  jump thunk
+0x100020fe  c  jump thunk
+0x10002103  c  jump thunk
+0x10002108  c  jump thunk
+0x1000210d  c  jump thunk
+0x10002117  c  jump thunk
+0x1000211c  c  jump thunk
+0x1000212b  c  jump thunk
+0x10002130  c  jump thunk
+0x10002135  c  jump thunk
+0x1000213a  c  jump thunk
+0x1000213f  c  jump thunk
+0x10002149  c  jump thunk
+0x1000214e  c  jump thunk
+0x1000215d  c  jump thunk
+0x10002162  c  jump thunk
+0x10002167  c  jump thunk
+0x1000216c  c  jump thunk
+0x10002171  c  jump thunk
+0x10002176  c  jump thunk
+0x10002180  c  jump thunk
+0x10002185  c  jump thunk
+0x1000218a  c  jump thunk
+0x1000218f  c  jump thunk
+0x10002199  c  jump thunk
+0x100021a3  c  jump thunk
+0x100021a8  c  jump thunk
+0x100021ad  c  jump thunk
+0x100021b2  c  jump thunk
+0x100021bc  c  jump thunk
+0x100021c1  c  jump thunk
+0x100021c6  c  jump thunk
+0x100021cb  c  jump thunk
+0x100021d5  c  jump thunk
+0x100021da  c  jump thunk
+0x100021df  c  jump thunk
+0x100021e4  c  jump thunk
+0x100021e9  c  jump thunk
+0x100021ee  c  jump thunk
+0x100021f3  c  jump thunk
+0x100021fd  c  jump thunk
+0x10002207  c  jump thunk
+0x10002211  c  jump thunk
+0x10002216  c  jump thunk
+0x1000221b  c  jump thunk
+0x10002220  c  jump thunk
+0x1000222a  c  jump thunk
+0x1000222f  c  jump thunk
+0x10002239  c  jump thunk
+0x10002243  c  jump thunk
+0x1000224d  c  jump thunk
+0x10002252  c  jump thunk
+0x10002257  c  jump thunk
+0x1000225c  c  jump thunk
+0x10002261  c  jump thunk
+0x10002266  c  jump thunk
+0x1000226b  c  jump thunk
+0x10002270  c  jump thunk
+0x1000227a  c  jump thunk
+0x10002284  c  jump thunk
+0x1000228e  c  jump thunk
+0x10002293  c  jump thunk
+0x10002298  c  jump thunk
+0x100022b6  c  jump thunk
+0x100022bb  c  jump thunk
+0x100022c0  c  jump thunk
+0x100022ca  c  jump thunk
+0x100022cf  c  jump thunk
+0x100022de  c  jump thunk
+0x100022e3  c  jump thunk
+0x100022e8  c  jump thunk
+0x100022ed  c  jump thunk
+0x100022f2  c  jump thunk
+0x100022f7  c  jump thunk
+0x100022fc  c  jump thunk
+0x10002301  c  jump thunk
+0x10002310  c  jump thunk
+0x10002315  c  jump thunk
+0x1000231a  c  jump thunk
+0x1000231f  c  jump thunk
+0x10002324  c  jump thunk
+0x1000232e  c  jump thunk
+0x1000233d  c  jump thunk
+0x10002342  c  jump thunk
+0x10002347  c  jump thunk
+0x1000234c  c  jump thunk
+0x10002356  c  jump thunk
+0x1000235b  c  jump thunk
+0x10002360  c  jump thunk
+0x10002374  c  jump thunk
+0x10002379  c  jump thunk
+0x1000237e  c  jump thunk
+0x10002383  c  jump thunk
+0x10002388  c  jump thunk
+0x1000238d  c  jump thunk
+0x10002392  c  jump thunk
+0x10002397  c  jump thunk
+0x100023a1  c  jump thunk
+0x100023a6  c  jump thunk
+0x100023ab  c  jump thunk
+0x100023b0  c  jump thunk
+0x100023ba  c  jump thunk
+0x100023c4  c  jump thunk
+0x100023c9  c  jump thunk
+0x100023d3  c  jump thunk
+0x100023dd  c  jump thunk
+0x100023e2  c  jump thunk
+0x100023e7  c  jump thunk
+0x100023ec  c  jump thunk
+0x100023f1  c  jump thunk
+0x100023f6  c  jump thunk
+0x10002400  c  jump thunk
+0x10002405  c  jump thunk
+0x1000240a  c  jump thunk
+0x10002414  c  jump thunk
+0x10002419  c  jump thunk
+0x1000241e  c  jump thunk
+0x10002423  c  jump thunk
+0x10002428  c  jump thunk
+0x10002437  c  jump thunk
+0x1000243c  c  jump thunk
+0x10002441  c  jump thunk
+0x10002446  c  jump thunk
+0x10002455  c  jump thunk
+0x1000245a  c  jump thunk
+0x1000245f  c  jump thunk
+0x10002469  c  jump thunk
+0x10002473  c  jump thunk
+0x1000247d  c  jump thunk
+0x10002487  c  jump thunk
+0x1000248c  c  jump thunk
+0x10002491  c  jump thunk
+0x10002496  c  jump thunk
+0x100024a0  c  jump thunk
+0x100024a5  c  jump thunk
+0x100024af  c  jump thunk
+0x100024b4  c  jump thunk
+0x100024b9  c  jump thunk
+0x100024c8  c  jump thunk
+0x100024cd  c  jump thunk
+0x100024d2  c  jump thunk
+0x100024d7  c  jump thunk
+0x100024e1  c  jump thunk
+0x100024e6  c  jump thunk
+0x100024eb  c  jump thunk
+0x10002504  c  jump thunk
+0x1000250e  c  jump thunk
+0x10002518  c  jump thunk
+0x1000251d  c  jump thunk
+0x10002522  c  jump thunk
+0x10002527  c  jump thunk
+0x1000252c  c  jump thunk
+0x10002531  c  jump thunk
+0x10002536  c  jump thunk
+0x10002540  c  jump thunk
+0x10002545  c  jump thunk
+0x1000254f  c  jump thunk
+0x10002554  c  jump thunk
+0x1000255e  c  jump thunk
+0x10002563  c  jump thunk
+0x10002568  c  jump thunk
+0x1000256d  c  jump thunk
+0x10002577  c  jump thunk
+0x10002581  c  jump thunk
+0x10002586  c  jump thunk
+0x1000258b  c  jump thunk
+0x10002590  c  jump thunk
+0x10002595  c  jump thunk
+0x1000259f  c  jump thunk
+0x100025a4  c  jump thunk
+0x100025a9  c  jump thunk
+0x100025ae  c  jump thunk
+0x100025b8  c  jump thunk
+0x100025c2  c  jump thunk
+0x100025c7  c  jump thunk
+0x100025cc  c  jump thunk
+0x100025d1  c  jump thunk
+0x100025d6  c  jump thunk
+0x100025db  c  jump thunk
+0x100025e0  c  jump thunk
+0x100025e5  c  jump thunk
+0x100025ea  c  jump thunk
+0x100025ef  c  jump thunk
+0x100025f4  c  jump thunk
+0x100025f9  c  jump thunk
+0x10002603  c  jump thunk
+0x10002608  c  jump thunk
+0x1000260d  c  jump thunk
+0x10002617  c  jump thunk
+0x10002621  c  jump thunk
+0x10002626  c  jump thunk
+0x10002630  c  jump thunk
+0x1000263a  c  jump thunk
+0x10002649  c  jump thunk
+0x1000264e  c  jump thunk
+0x10002658  c  jump thunk
+0x1000265d  c  jump thunk
+0x10002662  c  jump thunk
+0x10002667  c  jump thunk
+0x1000266c  c  jump thunk
+0x10002676  c  jump thunk
+0x1000267b  c  jump thunk
+0x10002680  c  jump thunk
+0x1000268a  c  jump thunk
+0x1000268f  c  jump thunk
+0x10002694  c  jump thunk
+0x10002699  c  jump thunk
+0x1000269e  c  jump thunk
+0x100026a3  c  jump thunk
+0x100026a8  c  jump thunk
+0x100026ad  c  jump thunk
+0x100026b7  c  jump thunk
+0x100026c1  c  jump thunk
+0x100026c6  c  jump thunk
+0x100026cb  c  jump thunk
+0x100026d0  c  jump thunk
+0x100026d5  c  jump thunk
+0x100026da  c  jump thunk
+0x100026e4  c  jump thunk
+0x100026ee  c  jump thunk
+0x100026f3  c  jump thunk
+0x100026f8  c  jump thunk
+0x100026fd  c  jump thunk
+0x1000270c  c  jump thunk
+0x10002716  c  jump thunk
+0x1000271b  c  jump thunk
+0x10002720  c  jump thunk
+0x10002725  c  jump thunk
+0x1000272a  c  jump thunk
+0x10002734  c  jump thunk
+0x10002739  c  jump thunk
+0x1000273e  c  jump thunk
+0x10002743  c  jump thunk
+0x10002748  c  jump thunk
+0x1000274d  c  jump thunk
+0x10002752  c  jump thunk
+0x1000275c  c  jump thunk
+0x10002761  c  jump thunk
+0x10002766  c  jump thunk
+0x1000276b  c  jump thunk
+0x10002770  c  jump thunk
+0x10002775  c  jump thunk
+0x10002784  c  jump thunk
+0x10002789  c  jump thunk
+0x10002793  c  jump thunk
+0x10002798  c  jump thunk
+0x1000279d  c  jump thunk
+0x100027a2  c  jump thunk
+0x100027ac  c  jump thunk
+0x100027b1  c  jump thunk
+0x100027bb  c  jump thunk
+0x100027c0  c  jump thunk
+0x100027cf  c  jump thunk
+0x100027d4  c  jump thunk
+0x100027d9  c  jump thunk
+0x100027de  c  jump thunk
+0x100027e3  c  jump thunk
+0x100027e8  c  jump thunk
+0x100027ed  c  jump thunk
+0x100027f2  c  jump thunk
+0x100027f7  c  jump thunk
+0x10002806  c  jump thunk
+0x1000280b  c  jump thunk
+0x10002810  c  jump thunk
+0x10002815  c  jump thunk
+0x1000281f  c  jump thunk
+0x10002829  c  jump thunk
+0x10002833  c  jump thunk
+0x10002838  c  jump thunk
+0x10002842  c  jump thunk
+0x10002847  c  jump thunk
+0x1000284c  c  jump thunk
+0x10002851  c  jump thunk
+0x10002856  c  jump thunk
+0x1000285b  c  jump thunk
+0x10002860  c  jump thunk
+0x10002865  c  jump thunk
+0x1000286a  c  jump thunk
+0x10002874  c  jump thunk
+0x10002879  c  jump thunk
+0x1000287e  c  jump thunk
+0x10002883  c  jump thunk
+0x1000288d  c  jump thunk
+0x10002892  c  jump thunk
+0x10002897  c  jump thunk
+0x1000289c  c  jump thunk
+0x100028a6  c  jump thunk
+0x100028ab  c  jump thunk
+0x100028b0  c  jump thunk
+0x100028b5  c  jump thunk
+0x100028ba  c  jump thunk
+0x100028bf  c  jump thunk
+0x100028c4  c  jump thunk
+0x100028c9  c  jump thunk
+0x100028ce  c  jump thunk
+0x100028dd  c  jump thunk
+0x100028e7  c  jump thunk
+0x100028ec  c  jump thunk
+0x100028f1  c  jump thunk
+0x100028f6  c  jump thunk
+0x100028fb  c  jump thunk
+0x10002900  c  jump thunk
+0x10002905  c  jump thunk
+0x1000290a  c  jump thunk
+0x1000290f  c  jump thunk
+0x10002914  c  jump thunk
+0x10002919  c  jump thunk
+0x1000291e  c  jump thunk
+0x10002923  c  jump thunk
+0x10002928  c  jump thunk
+0x1000292d  c  jump thunk
+0x10002932  c  jump thunk
+0x10002937  c  jump thunk
+0x10002941  c  jump thunk
+0x1000294b  c  jump thunk
+0x10002950  c  jump thunk
+0x1000295a  c  jump thunk
+0x1000295f  c  jump thunk
+0x10002969  c  jump thunk
+0x1000296e  c  jump thunk
+0x1000297d  c  jump thunk
+0x10002982  c  jump thunk
+0x10002987  c  jump thunk
+0x10002991  c  jump thunk
+0x1000299b  c  jump thunk
+0x100029a0  c  jump thunk
+0x100029b4  c  jump thunk
+0x100029b9  c  jump thunk
+0x100029be  c  jump thunk
+0x100029c3  c  jump thunk
+0x100029c8  c  jump thunk
+0x100029cd  c  jump thunk
+0x100029d2  c  jump thunk
+0x100029dc  c  jump thunk
+0x100029e1  c  jump thunk
+0x100029eb  c  jump thunk
+0x100029f5  c  jump thunk
+0x100029fa  c  jump thunk
+0x100029ff  c  jump thunk
+0x10002a04  c  jump thunk
+0x10002a13  c  jump thunk
+0x10002a18  c  jump thunk
+0x10002a1d  c  jump thunk
+0x10002a22  c  jump thunk
+0x10002a27  c  jump thunk
+0x10002a2c  c  jump thunk
+0x10002a31  c  jump thunk
+0x10002a3b  c  jump thunk
+0x10002a40  c  jump thunk
+0x10002a45  c  jump thunk
+0x10002a4a  c  jump thunk
+0x10002a4f  c  jump thunk
+0x10002a54  c  jump thunk
+0x10002a59  c  jump thunk
+0x10002a5e  c  jump thunk
+0x10002a63  c  jump thunk
+0x10002a68  c  jump thunk
+0x10002a77  c  jump thunk
+0x10002a86  c  jump thunk
+0x10002a8b  c  jump thunk
+0x10002a90  c  jump thunk
+0x10002a95  c  jump thunk
+0x10002a9a  c  jump thunk
+0x10002aa4  c  jump thunk
+0x10002aa9  c  jump thunk
+0x10002aae  c  jump thunk
+0x10002ab3  c  jump thunk
+0x10002ab8  c  jump thunk
+0x10002ac7  c  jump thunk
+0x10002ad6  c  jump thunk
+0x10002adb  c  jump thunk
+0x10002ae0  c  jump thunk
+0x10002ae5  c  jump thunk
+0x10002aea  c  jump thunk
+0x10002af4  c  jump thunk
+0x10002af9  c  jump thunk
+0x10002afe  c  jump thunk
+0x10002b03  c  jump thunk
+0x10002b0d  c  jump thunk
+0x10002b17  c  jump thunk
+0x10002b1c  c  jump thunk
+0x10002b26  c  jump thunk
+0x10002b2b  c  jump thunk
+0x10002b30  c  jump thunk
+0x10002b3a  c  jump thunk
+0x10002b44  c  jump thunk
+0x10002b49  c  jump thunk
+0x10002b4e  c  jump thunk
+0x10002b53  c  jump thunk
+0x10002b58  c  jump thunk
+0x10002b5d  c  jump thunk
+0x10002b67  c  jump thunk
+0x10002b6c  c  jump thunk
+0x10002b71  c  jump thunk
+0x10002b76  c  jump thunk
+0x10002b7b  c  jump thunk
+0x10002b80  c  jump thunk
+0x10002b85  c  jump thunk
+0x10002b8a  c  jump thunk
+0x10002b8f  c  jump thunk
+0x10002b94  c  jump thunk
+0x10002b99  c  jump thunk
+0x10002b9e  c  jump thunk
+0x10002ba3  c  jump thunk
+0x10002bb7  c  jump thunk
+0x10002bbc  c  jump thunk
+0x10002bc1  c  jump thunk
+0x10002bc6  c  jump thunk
+0x10002bcb  c  jump thunk
+0x10002bd0  c  jump thunk
+0x10002bd5  c  jump thunk
+0x10002bda  c  jump thunk
+0x10002be9  c  jump thunk
+0x10002bee  c  jump thunk
+0x10002bf3  c  jump thunk
+0x10002bfd  c  jump thunk
+0x10002c0c  c  jump thunk
+0x10002c11  c  jump thunk
+0x10002c16  c  jump thunk
+0x10002c20  c  jump thunk
+0x10002c25  c  jump thunk
+0x10002c2a  c  jump thunk
+0x10002c2f  c  jump thunk
+0x10002c39  c  jump thunk
+0x10002c3e  c  jump thunk
+0x10002c43  c  jump thunk
+0x10002c48  c  jump thunk
+0x10002c4d  c  jump thunk
+0x10002c52  c  jump thunk
+0x10002c57  c  jump thunk
+0x10002c5c  c  jump thunk
+0x10002c61  c  jump thunk
+0x10002c6b  c  jump thunk
+0x10002c70  c  jump thunk
+0x10002c75  c  jump thunk
+0x10002c7a  c  jump thunk
+0x10002c7f  c  jump thunk
+0x10002c89  c  jump thunk
+0x10002c8e  c  jump thunk
+0x10002c93  c  jump thunk
+0x10002c98  c  jump thunk
+0x10002c9d  c  jump thunk
+0x10002ca2  c  jump thunk
+0x10002ca7  c  jump thunk
+0x10002cac  c  jump thunk
+0x10002cb1  c  jump thunk
+0x10002cb6  c  jump thunk
+0x10002cbb  c  jump thunk
+0x10002cc0  c  jump thunk
+0x10002ccf  c  jump thunk
+0x10002cd4  c  jump thunk
+0x10002cd9  c  jump thunk
+0x10002cde  c  jump thunk
+0x10002ced  c  jump thunk
+0x10002cf2  c  jump thunk
+0x10002cfc  c  jump thunk
+0x10002d01  c  jump thunk
+0x10002d0b  c  jump thunk
+0x10002d10  c  jump thunk
+0x10002d15  c  jump thunk
+0x10002d1f  c  jump thunk
+0x10002d24  c  jump thunk
+0x10002d29  c  jump thunk
+0x10002d3d  c  jump thunk
+0x10002d42  c  jump thunk
+0x10002d47  c  jump thunk
+0x10002d4c  c  jump thunk
+0x10002d56  c  jump thunk
+0x10002d5b  c  jump thunk
+0x10002d60  c  jump thunk
+0x10002d65  c  jump thunk
+0x10002d79  c  jump thunk
+0x10002d7e  c  jump thunk
+0x10002d83  c  jump thunk
+0x10002d8d  c  jump thunk
+0x10002d97  c  jump thunk
+0x10002d9c  c  jump thunk
+0x10002da1  c  jump thunk
+0x10002da6  c  jump thunk
+0x10002dab  c  jump thunk
+0x10002db0  c  jump thunk
+0x10002dbf  c  jump thunk
+0x10002dc4  c  jump thunk
+0x10002dc9  c  jump thunk
+0x10002dce  c  jump thunk
+0x10002dd3  c  jump thunk
+0x10002dd8  c  jump thunk
+0x10002ddd  c  jump thunk
+0x10002de2  c  jump thunk
+0x10002de7  c  jump thunk
+0x10002dec  c  jump thunk
+0x10002df1  c  jump thunk
+0x10002df6  c  jump thunk
+0x10002e00  c  jump thunk
+0x10002e0a  c  jump thunk
+0x10002e0f  c  jump thunk
+0x10002e14  c  jump thunk
+0x10002e19  c  jump thunk
+0x10002e1e  c  jump thunk
+0x10002e32  c  jump thunk
+0x10002e3c  c  jump thunk
+0x10002e41  c  jump thunk
+0x10002e46  c  jump thunk
+0x10002e55  c  jump thunk
+0x10002e5a  c  jump thunk
+0x10002e5f  c  jump thunk
+0x10002e64  c  jump thunk
+0x10002e69  c  jump thunk
+0x10002e6e  c  jump thunk
+0x10002e73  c  jump thunk
+0x10002e7d  c  jump thunk
+0x10002e82  c  jump thunk
+0x10002e87  c  jump thunk
+0x10002e91  c  jump thunk
+0x10002e96  c  jump thunk
+0x10002e9b  c  jump thunk
+0x10002ea0  c  jump thunk
+0x10002ea5  c  jump thunk
+0x10002eaa  c  jump thunk
+0x10002eaf  c  jump thunk
+0x10002eb4  c  jump thunk
+0x10002eb9  c  jump thunk
+0x10002ebe  c  jump thunk
+0x10002ecd  c  jump thunk
+0x10002ed2  c  jump thunk
+0x10002ed7  c  jump thunk
+0x10002edc  c  jump thunk
+0x10002ee1  c  jump thunk
+0x10002ee6  c  jump thunk
+0x10002ef0  c  jump thunk
+0x10002ef5  c  jump thunk
+0x10002efa  c  jump thunk
+0x10002eff  c  jump thunk
+0x10002f13  c  jump thunk
+0x10002f18  c  jump thunk
+0x10002f1d  c  jump thunk
+0x10002f22  c  jump thunk
+0x10002f27  c  jump thunk
+0x10002f2c  c  jump thunk
+0x10002f31  c  jump thunk
+0x10002f40  c  jump thunk
+0x10002f45  c  jump thunk
+0x10002f4a  c  jump thunk
+0x10002f4f  c  jump thunk
+0x10002f54  c  jump thunk
+0x10002f59  c  jump thunk
+0x10002f5e  c  jump thunk
+0x10002f63  c  jump thunk
+0x10002f68  c  jump thunk
+0x10002f72  c  jump thunk
+0x10002f77  c  jump thunk
+0x10002f7c  c  jump thunk
+0x10002f81  c  jump thunk
+0x10002f86  c  jump thunk
+0x10002f8b  c  jump thunk
+0x10002f90  c  jump thunk
+0x10002f95  c  jump thunk
+0x10002f9a  c  jump thunk
+0x10002f9f  c  jump thunk
+0x10002fa4  c  jump thunk
+0x10002fae  c  jump thunk
+0x10002fb3  c  jump thunk
+0x10002fc2  c  jump thunk
+0x10002fc7  c  jump thunk
+0x10002fcc  c  jump thunk
+0x10002fd1  c  jump thunk
+0x10002fd6  c  jump thunk
+0x10002fdb  c  jump thunk
+0x10002fe0  c  jump thunk
+0x10002fea  c  jump thunk
+0x10002ff9  c  jump thunk
+0x10002ffe  c  jump thunk
+0x10003003  c  jump thunk
+0x1000300d  c  jump thunk
+0x10003017  c  jump thunk
+0x1000301c  c  jump thunk
+0x10003021  c  jump thunk
+0x1000302b  c  jump thunk
+0x10003035  c  jump thunk
+0x1000303f  c  jump thunk
+0x10003044  c  jump thunk
+0x1000304e  c  jump thunk
+0x10003053  c  jump thunk
+0x1000305d  c  jump thunk
+0x10003062  c  jump thunk
+0x10003067  c  jump thunk
+0x1000306c  c  jump thunk
+0x10003076  c  jump thunk
+0x1000307b  c  jump thunk
+0x10003080  c  jump thunk
+0x10003094  c  jump thunk
+0x100030a3  c  jump thunk
+0x100030a8  c  jump thunk
+0x100030ad  c  jump thunk
+0x100030b2  c  jump thunk
+0x100030b7  c  jump thunk
+0x100030c1  c  jump thunk
+0x100030c6  c  jump thunk
+0x100030cb  c  jump thunk
+0x100030df  c  jump thunk
+0x100030e9  c  jump thunk
+0x100030ee  c  jump thunk
+0x100030f3  c  jump thunk
+0x100030f8  c  jump thunk
+0x100030fd  c  jump thunk
+0x10003102  c  jump thunk
+0x10003107  c  jump thunk
+0x1000310c  c  jump thunk
+0x10003111  c  jump thunk
+0x10003116  c  jump thunk
+0x1000311b  c  jump thunk
+0x10003120  c  jump thunk
+0x10003125  c  jump thunk
+0x1000312a  c  jump thunk
+0x1000312f  c  jump thunk
+0x10003134  c  jump thunk
+0x10003139  c  jump thunk
+0x1000313e  c  jump thunk
+0x10003148  c  jump thunk
+0x1000314d  c  jump thunk
+0x10003157  c  jump thunk
+0x1000315c  c  jump thunk
+0x10003166  c  jump thunk
+0x1000316b  c  jump thunk
+0x10003170  c  jump thunk
+0x10003175  c  jump thunk
+0x1000317f  c  jump thunk
+0x10003184  c  jump thunk
+0x10003189  c  jump thunk
+0x1000318e  c  jump thunk
+0x10003193  c  jump thunk
+0x10003198  c  jump thunk
+0x1000319d  c  jump thunk
+0x100031a2  c  jump thunk
+0x100031a7  c  jump thunk
+0x100031ac  c  jump thunk
+0x100031b1  c  jump thunk
+0x100031bb  c  jump thunk
+0x100031c0  c  jump thunk
+0x100031c5  c  jump thunk
+0x100031ca  c  jump thunk
+0x100031cf  c  jump thunk
+0x100031d4  c  jump thunk
+0x100031d9  c  jump thunk
+0x100031e3  c  jump thunk
+0x100031e8  c  jump thunk
+0x100031ed  c  jump thunk
+0x100031fc  c  jump thunk
+0x10003201  c  jump thunk
+0x10003206  c  jump thunk
+0x10003210  c  jump thunk
+0x10003215  c  jump thunk
+0x1000321a  c  jump thunk
+0x1000321f  c  jump thunk
+0x10003224  c  jump thunk
+0x10003229  c  jump thunk
+0x1000322e  c  jump thunk
+0x10003233  c  jump thunk
+0x10003238  c  jump thunk
+0x1000323d  c  jump thunk
+0x10003242  c  jump thunk
+0x10003247  c  jump thunk
+0x1000324c  c  jump thunk
+0x10003251  c  jump thunk
+0x10003256  c  jump thunk
+0x10003265  c  jump thunk
+0x1000326a  c  jump thunk
+0x1000326f  c  jump thunk
+0x10003274  c  jump thunk
+0x10003283  c  jump thunk
+0x1000328d  c  jump thunk
+0x10003297  c  jump thunk
+0x1000329c  c  jump thunk
+0x100032a1  c  jump thunk
+0x100032a6  c  jump thunk
+0x100032ab  c  jump thunk
+0x100032b0  c  jump thunk
+0x100032b5  c  jump thunk
+0x100032ba  c  jump thunk
+0x100032bf  c  jump thunk
+0x100032c4  c  jump thunk
+0x100032ce  c  jump thunk
+0x100032d3  c  jump thunk
+0x100032d8  c  jump thunk
+0x100032dd  c  jump thunk
+0x100032ec  c  jump thunk
+0x100032f6  c  jump thunk
+0x100032fb  c  jump thunk
+0x10003300  c  jump thunk
+0x10003305  c  jump thunk
+0x1000330a  c  jump thunk
+0x1000330f  c  jump thunk
+0x10003314  c  jump thunk
+0x10003319  c  jump thunk
+0x1000331e  c  jump thunk
+0x10003323  c  jump thunk
+0x10003328  c  jump thunk
+0x1000332d  c  jump thunk
+0x10003337  c  jump thunk
+0x10003341  c  jump thunk
+0x10003346  c  jump thunk
+0x1000334b  c  jump thunk
+0x10003350  c  jump thunk
+0x10003355  c  jump thunk
+0x1000335a  c  jump thunk
+0x1000335f  c  jump thunk
+0x10003369  c  jump thunk
+0x1000336e  c  jump thunk
+0x10003373  c  jump thunk
+0x10003378  c  jump thunk
+0x10003387  c  jump thunk
+0x1000338c  c  jump thunk
+0x10003391  c  jump thunk
+0x10003396  c  jump thunk
+0x1000339b  c  jump thunk
+0x100033a0  c  jump thunk
+0x100033a5  c  jump thunk
+0x100033af  c  jump thunk
+0x100033b4  c  jump thunk
+0x100033be  c  jump thunk
+0x100033c3  c  jump thunk
+0x100033cd  c  jump thunk
+0x100033d2  c  jump thunk
+0x100033d7  c  jump thunk
+0x100033dc  c  jump thunk
+0x100033e1  c  jump thunk
+0x100033e6  c  jump thunk
+0x100033f0  c  jump thunk
+0x100033f5  c  jump thunk
+0x100033ff  c  jump thunk
+0x10003404  c  jump thunk
+0x10003409  c  jump thunk
+0x1000340e  c  jump thunk
+0x10003413  c  jump thunk
+0x10003418  c  jump thunk
+0x1000341d  c  jump thunk
+0x10003422  c  jump thunk
+0x10003427  c  jump thunk
+0x10003431  c  jump thunk
+0x10003436  c  jump thunk
+0x1000343b  c  jump thunk
+0x1000344a  c  jump thunk
+0x1000344f  c  jump thunk
+0x10003454  c  jump thunk
+0x10003459  c  jump thunk
+0x1000345e  c  jump thunk
+0x10003468  c  jump thunk
+0x1000346d  c  jump thunk
+0x10003477  c  jump thunk
+0x1000347c  c  jump thunk
+0x10003481  c  jump thunk
+0x10003490  c  jump thunk
+0x10003495  c  jump thunk
+0x1000349a  c  jump thunk
+0x100034a4  c  jump thunk
+0x100034a9  c  jump thunk
+0x100034bd  c  jump thunk
+0x100034c7  c  jump thunk
+0x100034cc  c  jump thunk
+0x100034d6  c  jump thunk
+0x100034db  c  jump thunk
+0x100034e5  c  jump thunk
+0x100034ea  c  jump thunk
+0x100034ef  c  jump thunk
+0x100034f4  c  jump thunk
+0x100034f9  c  jump thunk
+0x10003503  c  jump thunk
+0x10003508  c  jump thunk
+0x10003512  c  jump thunk
+0x10003517  c  jump thunk
+0x1000351c  c  jump thunk
+0x10003526  c  jump thunk
+0x10003530  c  jump thunk
+0x10003535  c  jump thunk
+0x1000353a  c  jump thunk
+0x10003544  c  jump thunk
+0x10003549  c  jump thunk
+0x1000354e  c  jump thunk
+0x1000355d  c  jump thunk
+0x10003562  c  jump thunk
+0x10003567  c  jump thunk
+0x10003571  c  jump thunk
+0x10003576  c  jump thunk
+0x1000357b  c  jump thunk
+0x10003580  c  jump thunk
+0x10003585  c  jump thunk
+0x1000358a  c  jump thunk
+0x1000358f  c  jump thunk
+0x10003599  c  jump thunk
+0x100035a3  c  jump thunk
+0x100035a8  c  jump thunk
+0x100035ad  c  jump thunk
+0x100035b7  c  jump thunk
+0x100035bc  c  jump thunk
+0x100035c1  c  jump thunk
+0x100035c6  c  jump thunk
+0x100035d5  c  jump thunk
+0x100035df  c  jump thunk
+0x100035e4  c  jump thunk
+0x100035e9  c  jump thunk
+0x100035f3  c  jump thunk
+0x100035f8  c  jump thunk
+0x100035fd  c  jump thunk
+0x10003602  c  jump thunk
+0x10003607  c  jump thunk
+0x10003611  c  jump thunk
+0x10003616  c  jump thunk
+0x1000361b  c  jump thunk
+0x10003625  c  jump thunk
+0x1000362a  c  jump thunk
+0x1000362f  c  jump thunk
+0x10003634  c  jump thunk
+0x10003639  c  jump thunk
+0x1000363e  c  jump thunk
+0x10003643  c  jump thunk
+0x10003648  c  jump thunk
+0x1000364d  c  jump thunk
+0x10003652  c  jump thunk
+0x10003657  c  jump thunk
+0x1000365c  c  jump thunk
+0x10003661  c  jump thunk
+0x10003666  c  jump thunk
+0x1000366b  c  jump thunk
+0x10003670  c  jump thunk
+0x10003675  c  jump thunk
+0x1000367f  c  jump thunk
+0x10003684  c  jump thunk
+0x10003689  c  jump thunk
+0x1000368e  c  jump thunk
+0x10003698  c  jump thunk
+0x100036a2  c  jump thunk
+0x100036a7  c  jump thunk
+0x100036ac  c  jump thunk
+0x100036b1  c  jump thunk
+0x100036b6  c  jump thunk
+0x100036bb  c  jump thunk
+0x100036c0  c  jump thunk
+0x100036c5  c  jump thunk
+0x100036cf  c  jump thunk
+0x100036d4  c  jump thunk
+0x100036d9  c  jump thunk
+0x100036e3  c  jump thunk
+0x100036f2  c  jump thunk
+0x100036f7  c  jump thunk
+0x100036fc  c  jump thunk
+0x10003701  c  jump thunk
+0x10003706  c  jump thunk
+0x1000370b  c  jump thunk
+0x10003710  c  jump thunk
+0x10003715  c  jump thunk
+0x1000371a  c  jump thunk
+0x1000371f  c  jump thunk
+0x10003724  c  jump thunk
+0x10003729  c  jump thunk
+0x1000372e  c  jump thunk
+0x10003733  c  jump thunk
+0x10003738  c  jump thunk
+0x1000373d  c  jump thunk
+0x10003742  c  jump thunk
+0x10003747  c  jump thunk
+0x10003751  c  jump thunk
+0x10003756  c  jump thunk
+0x1000375b  c  jump thunk
+0x10003760  c  jump thunk
+0x10003765  c  jump thunk
+0x1000376a  c  jump thunk
+0x1000376f  c  jump thunk
+0x10003774  c  jump thunk
+0x10003779  c  jump thunk
+0x1000377e  c  jump thunk
+0x10003783  c  jump thunk
+0x10003788  c  jump thunk
+0x1000378d  c  jump thunk
+0x10003792  c  jump thunk
+0x10003797  c  jump thunk
+0x1000379c  c  jump thunk
+0x100037a1  c  jump thunk
+0x100037a6  c  jump thunk
+0x100037b0  c  jump thunk
+0x100037b5  c  jump thunk
+0x100037bf  c  jump thunk
+0x100037c4  c  jump thunk
+0x100037c9  c  jump thunk
+0x100037ce  c  jump thunk
+0x100037d3  c  jump thunk
+0x100037d8  c  jump thunk
+0x100037dd  c  jump thunk
+0x100037e2  c  jump thunk
+0x100037e7  c  jump thunk
+0x100037ec  c  jump thunk
+0x100037f6  c  jump thunk
+0x100037fb  c  jump thunk
+0x10003805  c  jump thunk
+0x1000380a  c  jump thunk
+0x1000380f  c  jump thunk
+0x10003819  c  jump thunk
+0x1000381e  c  jump thunk
+0x10003828  c  jump thunk
+0x1000382d  c  jump thunk
+0x1000383c  c  jump thunk
+0x10003841  c  jump thunk
+0x10003846  c  jump thunk
+0x1000384b  c  jump thunk
+0x10003850  c  jump thunk
+0x10003864  c  jump thunk
+0x10003869  c  jump thunk
+0x1000386e  c  jump thunk
+0x1000387d  c  jump thunk
+0x10003882  c  jump thunk
+0x10003896  c  jump thunk
+0x100038a0  c  jump thunk
+0x100038a5  c  jump thunk
+0x100038aa  c  jump thunk
+0x100038af  c  jump thunk
+0x100038b4  c  jump thunk
+0x100038c3  c  jump thunk
+0x100038c8  c  jump thunk
+0x100038cd  c  jump thunk
+0x100038dc  c  jump thunk
+0x100038e1  c  jump thunk
+0x100038e6  c  jump thunk
+0x100038eb  c  jump thunk
+0x100038f0  c  jump thunk
+0x100038f5  c  jump thunk
+0x100038fa  c  jump thunk
+0x100038ff  c  jump thunk
+0x10003904  c  jump thunk
+0x10003909  c  jump thunk
+0x1000390e  c  jump thunk
+0x10003913  c  jump thunk
+0x10003918  c  jump thunk
+0x1000391d  c  jump thunk
+0x10003922  c  jump thunk
+0x10003927  c  jump thunk
+0x10003931  c  jump thunk
+0x1000393b  c  jump thunk
+0x10003940  c  jump thunk
+0x10003945  c  jump thunk
+0x1000394a  c  jump thunk
+0x10003954  c  jump thunk
+0x1000395e  c  jump thunk
+0x10003968  c  jump thunk
+0x10003972  c  jump thunk
+0x10003977  c  jump thunk
+0x10003981  c  jump thunk
+0x10003986  c  jump thunk
+0x1000398b  c  jump thunk
+0x10003990  c  jump thunk
+0x10003995  c  jump thunk
+0x1000399f  c  jump thunk
+0x100039a4  c  jump thunk
+0x100039a9  c  jump thunk
+0x100039ae  c  jump thunk
+0x100039b3  c  jump thunk
+0x100039b8  c  jump thunk
+0x100039bd  c  jump thunk
+0x100039c2  c  jump thunk
+0x100039c7  c  jump thunk
+0x100039cc  c  jump thunk
+0x100039d6  c  jump thunk
+0x100039db  c  jump thunk
+0x100039e0  c  jump thunk
+0x100039e5  c  jump thunk
+0x100039ea  c  jump thunk
+0x100039ef  c  jump thunk
+0x100039f4  c  jump thunk
+0x100039fe  c  jump thunk
+0x10003a03  c  jump thunk
+0x10003a0d  c  jump thunk
+0x10003a12  c  jump thunk
+0x10003a17  c  jump thunk
+0x10003a1c  c  jump thunk
+0x10003a21  c  jump thunk
+0x10003a26  c  jump thunk
+0x10003a30  c  jump thunk
+0x10003a35  c  jump thunk
+0x10003a3a  c  jump thunk
+0x10003a44  c  jump thunk
+0x10003a49  c  jump thunk
+0x10003a4e  c  jump thunk
+0x10003a53  c  jump thunk
+0x10003a58  c  jump thunk
+0x10003a5d  c  jump thunk
+0x10003a62  c  jump thunk
+0x10003a67  c  jump thunk
+0x10003a6c  c  jump thunk
+0x10003a71  c  jump thunk
+0x10003a76  c  jump thunk
+0x10003a7b  c  jump thunk
+0x10003a80  c  jump thunk
+0x10003a85  c  jump thunk
+0x10003a8a  c  jump thunk
+0x10003a8f  c  jump thunk
+0x1000aa9e  a  passes uninitialised locals [ebp-0x64] and [ebp-4] to 0x100cbc6b (the three differences are all stored to [ebp-0x60])
+0x100139ff  a  calls 0x100c2ae5 (reads uninitialised stack; its garbage comes from the caller's frame)
+0x10019fe1  a  copies four locals that sscanf (0x100fd710, '%f %f %f %f') may leave unwritten (uninitialised stack)
+0x1001a23e  a  uses locals that sscanf (0x100fd710) may leave unwritten (uninitialised stack)
+0x1001a4fa  a  when the text has no ';' (or sscanf stops early) it passes its uninitialised 100-byte stack buffer [ebp-0x78] to 0x100b8d5c
+0x1001a706  a  reads its text with sscanf("%[^,],%[^,],%[^,]") into fixed stack buffers: a line with fewer fields leaves buffers unwritten that stricmp then reads, and a long field overflows into the frame (also uses an 80-bit asin result, which alone would have been interpreted)
+0x10020055  a  reads the never-written local [ebp-4] (uninitialised stack)
+0x10021e8c  a  passes the never-written locals [ebp-0x8c], [ebp-0x94], [ebp-8] to Sim_100246b3 as the camera target (uninitialised stack)
+0x100232d7  a  uninitialised stack (miss path reads target [ebp-0x2c] at 0x10023d35; 0x1009cf67 gets the never-built segment [ebp-0xdc] at 0x10023add)
+0x1002a8a4  b  rule: ret N (stdcall or callee pops)
+0x1002a8b0  b  rule: ret N (stdcall or callee pops)
+0x1003cfd6  c  not attempted: Windows API + indirect calls
+0x1003f3f8  a  caller of left-out 0x1009d200 at 0x1003fc14
+0x10040af8  c  not attempted: plain
+0x10042125  b  rule: ret N (stdcall or callee pops)
+0x10048f02  a  caller of left-out 0x1009d200 at 0x10049464 (chain to 0x1005bb7a)
+0x1004954e  a  overflow into the frame (sprintf of runtime message strings into [ebp-0x40]: 40+ chars overwrite [ebp-0x18], read at the end; 64+ reach the saved ebp/return)
+0x10055048  a  when the input device [0x1015fdf4] is not open it still reads the local word [ebp-4] that only the device's +0x18 routine writes (uninitialised stack)
+0x1005621b  a  passes its own 0x194-byte stack buffer to Windows (import [0x10ac5860], joystick caps) - Windows pointer-to-frame call, excluded by rule
+0x100567cb  a  passes its own stack buffers (0x194-byte caps, 0x34-byte position record) to Windows (imports [0x10ac5860] / [0x10ac585c], joystick caps / position) - Windows pointer-to-frame calls, excluded by rule
+0x1005ab44  a  on the path where the node has no name at this level it passes the uninitialised local [ebp-0x10] to its own recursive call
+0x1005bb7a  a  uninitialised stack ([ebp-0xc0]/[ebp-0xa8] written only in one switch case at 0x1005bee8 yet passed to 0x1004bce5 after the loop; [ebp-0x84] read at 0x1005c4f0 written only by the 0x1004d330 cases)
+0x1005cd4a  a  caller of left-out 0x1005bb7a (uninitialised stack) at 0x1005cde1
+0x10062b7c  a  copies the localised HUD labels (loaded at run time) into 0x10/0x14-byte stack buffers with strcpy; a label of 20+ characters runs into the screen x and the saved frame pointer, so the shown text then depends on the original's frame bytes (C proven equal for labels up to 19; spec and C kept in src/sim/unsorted_1006/w10_hud.c, not hooked)
+0x10063529  a  calls 0x100648a0 / 0x10064d05, which use an uninitialised local as the palette index
+0x10064364  a  when the first shape ([0x109e8484]) does not load, the heading text uses the uninitialised local [ebp-0xc] (_ftol of stack garbage into sprintf)
+0x100648a0  a  as 0x10064d05, for a kind other than 0..2 the on-screen branch uses the uninitialised local [ebp-0x14] as the palette index
+0x10064d05  a  for a kind other than 0..2 the on-screen branch uses the uninitialised local [ebp-0x14] as the palette index
+0x100663c0  a  calls 0x10066907 (left out: uninitialised-stack chain through 0x100687a3)
+0x10066907  a  calls 0x100688a3 / 0x100689c0, which call 0x100687a3 (reads uninitialised locals)
+0x1006788c  a  calls 0x10067ec6 (uninitialised stack; its garbage comes from the caller's frame)
+0x10067ec6  a  when both units are of kind 9 (or neither is), the killer [ebp-4] it passes to Sim_1006c161 is never set (uninitialised stack)
+0x100680dd  a  calls 0x10067ec6 (uninitialised stack; its garbage comes from the caller's frame)
+0x100687a3  a  reads uninitialised locals [ebp-0x18]/[ebp-0x1c]/[ebp-4] (compared with 0x1012b600 before they are written)
+0x100688a3  a  calls 0x100687a3 which reads uninitialised locals; C + spec kept, proven 1500
+0x100689c0  a  calls 0x100687a3 (reads uninitialised locals)
+0x1006e22c  a  calls 0x100663c0 (left out: uninitialised-stack chain through 0x100687a3)
+0x10070eb5  a  overflow into the frame (sprintf of a runtime message into [ebp-0x7c] at 0x1007234d: 92+ chars overwrite the unit pointer [ebp-0x20] used afterwards, 124+ reach the saved ebp/return)
+0x1007581a  a  uninitialised stack (strncpy of a label longer than the width into [ebp-0x104] leaves no NUL; strchr(' ') at 0x10076201 then scans unwritten stack when the label has no space)
+0x100782a9  a  calls 0x100b66a0, which tests and divides by an uninitialised local
+0x1007ea30  a  LoadModule with a parameter block on the stack
+0x1007f35c  a  SendMessageA with a stack record [ebp-0x1814] (Windows only reads it)
+0x1007fa74  b  rule: register arguments
+0x1007fe6f  c  not attempted: Windows API + indirect calls
+0x10080372  b  rule: ret N (stdcall or callee pops)
+0x100805d6  c  not attempted: indirect calls
+0x10080c57  c  not attempted: indirect calls
+0x10081286  c  not attempted: indirect calls
+0x10081416  c  not attempted: indirect calls
+0x100815e8  a  COM method +0x1c gets a stack out-pointer [ebp-0x10]
+0x1008181e  c  not attempted: indirect calls
+0x100819e2  a  passes a stack DDPIXELFORMAT to the DirectDraw method GetPixelFormat (+0x54), which fills it
+0x10081a7a  c  not attempted: indirect calls
+0x10081e1d  c  not attempted: indirect calls
+0x100821b1  c  not attempted: Windows API + indirect calls + x87
+0x10082790  b  rule: register arguments
+0x10084feb  b  rule: SEH / fs: segment
+0x1008667c  b  rule: SEH / fs: segment
+0x100867a2  b  rule: ret N (stdcall or callee pops)
+0x10089066  a  as 0x1008950e, the leaf path returns a value from the uninitialised local [ebp-4]
+0x1008950e  a  on the leaf path (no children) its return value comes from the uninitialised local [ebp-4]
+0x100918e6  a  hands the renderer ([0x1014cb4c]) stack vertices whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x1009596a
+0x1009221d  a  hands the renderer ([0x1014cb4c]) stack vertices at ebp-0x90 whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x100918e6
+0x1009353e  a  hands the renderer ([0x1014cb4c]) stack vertices with fields it never sets (+8, +0x18: uninitialised stack)
+0x100945b8  a  hands the renderer ([0x1014cb4c]) a stack array of four 0x24-byte vertices with fields it never sets (+8, +0x18, and +0x14 of three vertices: uninitialised stack)
+0x1009596a  a  hands the renderer ([0x1014cb4c]) four stack vertices whose fields +8, +0x14, +0x18 it never sets (uninitialised stack), as 0x1009353e
+0x1009d200  a  caller of left-out 0x1005cd4a at 0x1009d41a (chain to 0x1005bb7a)
+0x1009ef50  a  calls 0x100ad96e (left out: uninitialised-stack chain through 0x100ac9ab)
+0x1009fada  a  hands the renderer ([0x109e3d30]) a 0x1200-byte stack vertex buffer whose vertices have bytes it never sets (+0x17 and others: uninitialised stack)
+0x100a0063  a  uses the many locals of an unchecked sscanf (0x100fd710) of a file line (uninitialised stack when the line is short)
+0x100a0880  a  builds four 0x58-byte stack vertices (only +0xc..+0x1c and +0x2c set) and hands them to the clipper / renderer path 0x100a0512 -> 0x100a0339; the unset fields (+0..+8, +0x31..+0x57) are uninitialised stack
+0x100a0def  c  not attempted: indirect calls + x87
+0x100a539e  a  calls 0x1009fada (passes uninitialised stack to the renderer)
+0x100a65e7  a  at 0x100a695f it copies the local [ebp-0x78] into [ebp-0x2c] before [ebp-0x78] is ever written (uninitialised stack read)
+0x100ac9ab  a  builds 0x58-byte stack vertices (only +0xc..+0x1c and +0x2c set) in its 0x57b0-byte frame buffer and hands them to 0x100ac738 (clip / render path): uninitialised stack, as 0x100a0880
+0x100ad96e  a  calls 0x100ac9ab (uninitialised stack; its garbage comes from the caller's frame)
+0x100b48de  a  strcpy's model and sub-model names (32-byte slots of the loaded model) into a 16-byte stack buffer right below its loop counter and model count; a name of 16+ characters overwrites them in the original, which C cannot reproduce without the same frame
+0x100b66a0  a  tests the uninitialised local [ebp-0x10] on the first loop pass (and divides by it)
+0x100b82a0  c  not attempted: Windows API + indirect calls
+0x100b8834  b  rule: ret N (stdcall or callee pops)
+0x100b8d6c  a  stores the word [ebp-0x10] through its first argument on a path that never writes it (uninitialised stack)
+0x100b8f30  b  rule: SEH / fs: segment
+0x100b8fb1  b  rule: cpuid / rdtsc / segment registers
+0x100b9dde  a  fgets may leave its 256-byte stack buffer unwritten before strstr reads it, and [ebp-4] is read when strstr fails (uninitialised stack)
+0x100ba7d5  c  not attempted: plain (wrapped by a hook that lets the original run)
+0x100be0f0  a  calls 0x100c2ae5 (reads uninitialised stack; its garbage comes from the caller's frame)
+0x100c0158  a  for a selection kind other than 0x200/0x400 it passes the uninitialised local [ebp-0x14] to 0x100aa863
+0x100c2ae5  a  reads the local [ebp-0xc] that Sim_1002dda9 / Sim_100c2851 leave unwritten when they find nothing (Sim_100c292c can still say hit): uninitialised stack
+0x100c7120  a  uninitialised stack (type 0x100 path never writes [ebp-0x28] / [ebp-0x70..-0x7c] before cmp at 0x100c786d and the 0x100d2669 call; 0x400 path the same when 0x100cba68 returns 0)
+0x100db78b  a  strcpy of record names into the 12-byte stack buffer [ebp-0x98] can overflow into [ebp-0x80], used afterwards
+0x100dcc12  c  not attempted: x87
+0x100e2aa3  a  uninitialised stack (strncpy(buf [ebp-0x94], name, 16) leaves no NUL for a 16-char name; strupr at 0x100e2c3f and the fprintf %s read on into unwritten locals)
+0x100e440b  b  rule: register arguments
+0x100e4463  b  rule: register arguments
+0x100e4780  b  rule: cpuid / rdtsc / segment registers
+0x100e4c2c  b  rule: cpuid / rdtsc / segment registers
+0x100e5477  b  rule: cpuid / rdtsc / segment registers
+0x100e5d25  b  round 9 left out: hand-written assembly, not C: `push es` / `push ds; pop es` (segment registers), shld/shrd
+0x100e6279  b  rule: cpuid / rdtsc / segment registers
+0x100e6b49  b  rule: cpuid / rdtsc / segment registers
+0x100e84a8  b  rule: cpuid / rdtsc / segment registers
+0x100e84d1  b  rule: cpuid / rdtsc / segment registers
+0x100e84f0  b  rule: cpuid / rdtsc / segment registers
+0x100e85cb  b  rule: cpuid / rdtsc / segment registers
+0x100e86a1  b  rule: cpuid / rdtsc / segment registers
+0x100e90a3  b  rule: cpuid / rdtsc / segment registers
+0x100e91dc  b  rule: cpuid / rdtsc / segment registers
+0x100e95e0  b  rule: cpuid / rdtsc / segment registers
+0x100e96a7  b  rule: cpuid / rdtsc / segment registers
+0x100e96c6  b  rule: cpuid / rdtsc / segment registers
+0x100e9b9e  b  rule: cpuid / rdtsc / segment registers
+0x100e9cd1  b  rule: cpuid / rdtsc / segment registers
+0x100ea87d  b  rule: cpuid / rdtsc / segment registers
+0x100ea9f5  b  rule: cpuid / rdtsc / segment registers
+0x100eac78  b  rule: cpuid / rdtsc / segment registers
+0x100ead0a  b  rule: cpuid / rdtsc / segment registers
+0x100eae93  b  rule: cpuid / rdtsc / segment registers
+0x100eb070  b  rule: cpuid / rdtsc / segment registers
+0x100eb14f  b  rule: cpuid / rdtsc / segment registers
+0x100eb4eb  b  rule: cpuid / rdtsc / segment registers
+0x100eb6e8  b  rule: cpuid / rdtsc / segment registers
+0x100eba29  b  rule: cpuid / rdtsc / segment registers
+0x100ecb3b  b  rule: cpuid / rdtsc / segment registers
+0x100ecbf3  b  rule: cpuid / rdtsc / segment registers
+0x100ecc19  b  rule: cpuid / rdtsc / segment registers
+0x100ecce0  b  rule: cpuid / rdtsc / segment registers
+0x100eccf3  b  rule: cpuid / rdtsc / segment registers
+0x100ecd13  b  rule: cpuid / rdtsc / segment registers
+0x100ecea6  b  rule: cpuid / rdtsc / segment registers
+0x100ecedd  b  rule: cpuid / rdtsc / segment registers
+0x100ecfec  b  rule: cpuid / rdtsc / segment registers
+0x100ed02e  b  rule: cpuid / rdtsc / segment registers
+0x100ed1f5  b  rule: cpuid / rdtsc / segment registers
+0x100ed226  b  rule: cpuid / rdtsc / segment registers
+0x100ed253  b  rule: cpuid / rdtsc / segment registers
+0x100ed2d5  b  rule: cpuid / rdtsc / segment registers
+0x100ed300  b  rule: cpuid / rdtsc / segment registers
+0x100ed327  b  rule: register arguments
+0x100ed36f  c  not attempted: plain
+0x100ed388  c  not attempted: plain
+0x100ed3ce  b  rule: register arguments
+0x100ed414  b  rule: register arguments
+0x100ed491  b  rule: cpuid / rdtsc / segment registers
+0x100ed6aa  b  rule: cpuid / rdtsc / segment registers
+0x100ed70b  b  rule: cpuid / rdtsc / segment registers
+0x100ed743  b  rule: cpuid / rdtsc / segment registers
+0x100ed765  b  rule: cpuid / rdtsc / segment registers
+0x100ed788  b  rule: cpuid / rdtsc / segment registers
+0x100ed7bc  b  rule: cpuid / rdtsc / segment registers
+0x100ed7e6  b  rule: cpuid / rdtsc / segment registers
+0x100ed831  b  rule: cpuid / rdtsc / segment registers
+0x100ed879  b  rule: cpuid / rdtsc / segment registers
+0x100ed8c3  b  rule: cpuid / rdtsc / segment registers
+0x100ed8d6  b  rule: cpuid / rdtsc / segment registers
+0x100ed938  b  rule: cpuid / rdtsc / segment registers
+0x100eda16  b  rule: cpuid / rdtsc / segment registers
+0x100edc8d  b  rule: cpuid / rdtsc / segment registers
+0x100ede11  b  rule: cpuid / rdtsc / segment registers
+0x100ef51c  b  rule: cpuid / rdtsc / segment registers
+0x100ef545  b  rule: cpuid / rdtsc / segment registers
+0x100ef564  b  rule: cpuid / rdtsc / segment registers
+0x100ef649  b  rule: cpuid / rdtsc / segment registers
+0x100ef727  b  rule: cpuid / rdtsc / segment registers (wrapped by a hook that lets the original run)
+0x100f01ad  b  rule: cpuid / rdtsc / segment registers
+0x100f01cc  b  rule: cpuid / rdtsc / segment registers
+0x100f01ea  b  rule: cpuid / rdtsc / segment registers
+0x100f0205  b  rule: cpuid / rdtsc / segment registers (wrapped by a hook that lets the original run)
+0x100f0727  b  rule: cpuid / rdtsc / segment registers (wrapped by a hook that lets the original run)
+0x100f0865  b  rule: cpuid / rdtsc / segment registers (wrapped by a hook that lets the original run)
+0x100f094e  b  rule: cpuid / rdtsc / segment registers
+0x100f1abb  b  rule: cpuid / rdtsc / segment registers
+0x100f1b73  b  rule: cpuid / rdtsc / segment registers
+0x100f1b99  b  rule: cpuid / rdtsc / segment registers
+0x100f1c60  b  rule: cpuid / rdtsc / segment registers
+0x100f1c73  b  rule: cpuid / rdtsc / segment registers
+0x100f1c93  b  rule: cpuid / rdtsc / segment registers (wrapped by a hook that lets the original run)
+0x100f1e10  b  rule: cpuid / rdtsc / segment registers
+0x100f1e47  b  rule: cpuid / rdtsc / segment registers
+0x100f1f52  b  rule: cpuid / rdtsc / segment registers
+0x100f1f86  b  rule: cpuid / rdtsc / segment registers
+0x100f1fb0  b  rule: cpuid / rdtsc / segment registers
+0x100f2134  b  rule: cpuid / rdtsc / segment registers
+0x100f2d3c  b  rule: cpuid / rdtsc / segment registers
+0x100f2f01  b  rule: cpuid / rdtsc / segment registers
+0x100f9e9a  b  rule: cpuid / rdtsc / segment registers
+0x100f9eb7  b  rule: cpuid / rdtsc / segment registers
+0x100f9edf  b  rule: cpuid / rdtsc / segment registers
+0x100f9fd4  b  rule: cpuid / rdtsc / segment registers
+0x100fc610  c  C runtime library (MSVC 5)
+0x100fca04  c  C runtime library (MSVC 5)
+0x100fcb08  c  C runtime library (MSVC 5)
+0x100fcb30  c  C runtime library (MSVC 5)
+0x100fcc74  c  C runtime library (MSVC 5)
+0x100fda40  c  C runtime library (MSVC 5)
+0x100fdac0  c  C runtime library (MSVC 5)
+0x100fed29  c  C runtime library (MSVC 5)
+0x100fef05  c  C runtime library (MSVC 5)
+0x100ff644  c  C runtime library (MSVC 5)
+0x100ff6e0  c  C runtime library (MSVC 5)
+0x100ff6f4  c  C runtime library (MSVC 5)
+0x100ff6fd  c  C runtime library (MSVC 5)
+0x100ff790  c  C runtime library (MSVC 5)
+0x100ff7a4  c  C runtime library (MSVC 5)
+0x100ff7ad  c  C runtime library (MSVC 5)
+0x100ff860  c  C runtime library (MSVC 5)
+0x10100000  c  C runtime library (MSVC 5)
+0x10100044  c  C runtime library (MSVC 5)
+0x101001c0  c  C runtime library (MSVC 5)
+0x10100202  c  C runtime library (MSVC 5)
+0x1010026a  c  C runtime library (MSVC 5)
+0x10100296  c  C runtime library (MSVC 5)
+0x10100375  c  C runtime library (MSVC 5)
+0x101007c0  c  C runtime library (MSVC 5)
+0x10100900  c  C runtime library (MSVC 5)
+0x10100fd0  c  C runtime library (MSVC 5)
+0x10101a90  c  C runtime library (MSVC 5)
+0x10101af7  c  C runtime library (MSVC 5)
+0x10101b88  c  C runtime library (MSVC 5)
+0x10101c60  c  C runtime library (MSVC 5)
+0x10101c77  c  C runtime library (MSVC 5)
+0x10101cc0  c  C runtime library (MSVC 5)
+0x10101cd5  c  C runtime library (MSVC 5)
+0x10101cec  c  C runtime library (MSVC 5)
+0x10101d05  c  C runtime library (MSVC 5)
+0x10101d5e  c  C runtime library (MSVC 5)
+0x10101d6b  c  C runtime library (MSVC 5)
+0x10101da9  c  C runtime library (MSVC 5)
+0x10101e50  c  C runtime library (MSVC 5)
+0x10101e8e  c  C runtime library (MSVC 5)
+0x10101ec4  c  C runtime library (MSVC 5)
+0x10101efe  c  C runtime library (MSVC 5)
+0x10101f05  c  C runtime library (MSVC 5)
+0x10102035  c  C runtime library (MSVC 5)
+0x10102061  c  C runtime library (MSVC 5)
+0x101020a0  c  C runtime library (MSVC 5)
+0x10102891  c  C runtime library (MSVC 5)
+0x101028a6  c  C runtime library (MSVC 5)
+0x10102aac  c  C runtime library (MSVC 5)
+0x10102f00  c  C runtime library (MSVC 5)
+0x101033f0  c  C runtime library (MSVC 5)
+0x10103aa0  c  C runtime library (MSVC 5)
+0x10103ab0  c  C runtime library (MSVC 5)
+0x10103ad0  c  C runtime library (MSVC 5)
+0x10103b00  c  C runtime library (MSVC 5)
+0x10103b60  c  C runtime library (MSVC 5)
+0x10103ba0  c  C runtime library (MSVC 5)
+0x10105970  c  C runtime library (MSVC 5)
+0x101061fe  c  C runtime library (MSVC 5)
+0x101064e0  c  C runtime library (MSVC 5)
+0x101073f0  c  C runtime library (MSVC 5)
+0x10107670  c  C runtime library (MSVC 5)
+0x101083c0  c  C runtime library (MSVC 5)
+0x10108640  c  C runtime library (MSVC 5)
+0x10108660  c  C runtime library (MSVC 5)
+0x10108680  c  C runtime library (MSVC 5)
+0x101090d0  c  C runtime library (MSVC 5)
+0x101095d0  c  C runtime library (MSVC 5)
+0x101099a0  c  C runtime library (MSVC 5)
+0x1010a4b0  c  C runtime library (MSVC 5)
+0x1010aa60  c  C runtime library (MSVC 5)
+0x1010b7c0  c  C runtime library (MSVC 5)
+0x1010ce6a  c  C runtime library (MSVC 5)
+0x1010ce70  c  C runtime library (MSVC 5)
+0x1010ce76  c  C runtime library (MSVC 5)
+0x1010cf60  c  C runtime library (MSVC 5)
+0x1010d390  c  C runtime library (MSVC 5)

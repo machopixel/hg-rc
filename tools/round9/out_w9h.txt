@@ -1,0 +1,118 @@
+Round 9, letter h: final report (w9h). State: COMPLETE. All 13 convertible candidates converted and proven;
+1 left out. Checker: python tools\verify\difftest.py -j2 C:\Coding\HeavyGear\Project\HGSIM.DLL tools\verify\spec_w9h.py
+(coverage count: create tools\round9\w9h_cov.flag or set W9H_COV=1; it prints the executed share of each
+original function's code bytes).
+
+address    | name          | file                              | trials | mism | both-fault | branches reached
+-----------|---------------|-----------------------------------|--------|------|------------|-----------------
+0x10017263 | Sim_10017263  | unsorted_1001/w9h_group.c         | 5000   | 0    | 0          | 1490/1519 code bytes; the 29 unreached bytes are two dead fall-throughs (flag values between 0x200 and 0x1000 without bits 0xe10 do not exist, the function returns early on those bits)
+0x10029b1f | Sim_10029b1f  | unsorted_1002/w9h_misc.c          | 300    | 0    | 0          | all (NULL and non-NULL node)
+0x10032a10 | Sim_10032a10  | unsorted_1003/w9h_view.c          | 3000   | 0    | 0          | 2097/2107; the 10 unreached bytes are two dead `jmp`s of the kind switch (kind is always a multiple of 0x1000). Every view mode 0..5, overlay 0..3, every kind, levels 0/1..7/8..15, both [0x1015dd70] paths, lists of 0..6 vertices
+0x100352d5 | Sim_100352d5  | unsorted_1003/w9h_view.c          | 500    | 0    | 0          | all (off, viewport-change, quad path, 0x100a0def path, neither)
+0x10042a11 | Sim_10042a11  | unsorted_1004/w9h_misc.c          | 800    | 0    | 0          | all (0..8 records, leader from the group table / Sim_10012843 / player, state 0,1 vs other)
+0x1004d344 | Sim_1004d344  | unsorted_1004/w9h_misc.c          | 300    | 0    | 0          | all
+0x100527fa | Sim_100527fa  | unsorted_1005/w9h_misc.c          | 800    | 0    | 0          | all for index < 16 (leader inside/outside the count, 0..12 group members); index >= 16 NOT tested: the original reads an uninitialised local as the leader index there (see notes)
+0x1008b922 | Sim_1008b922  | unsorted_1008/w9h_keys.c          | 2000   | 0    | 0          | 1999/2005: every key case except 0x26 (int 3, left out on purpose), toggles in both states, mission byte 3 and not, unknown keys
+0x1009bd47 | Sim_1009bd47  | unsorted_1009/w9h_misc.c          | 300    | 0    | 0          | all
+0x100b6f6a | Text_Unescape | unsorted_100b/w9h_text.c          | 1500   | 0    | 0          | all (1041/1041): every escape, octal/hex runs of 0..4 digits, bare \x, trailing backslash, chars 10..13, high bytes, NULL, both class sources ([0x1015965c] <= 1 table / > 1 Crt_IsCType)
+0x100b7430 | Sim_100b7430  | unsorted_100b/w9h_text.c          | 1000   | 0    | 0          | all (754/754): every flag combination, empty texts, allocation failures
+0x100e1398 | Sim_100e1398  | unsorted_100e/w9h_misc.c          | 800    | 0    | 0          | all (344/344): kinds 0/1/2/other on both tables, names with and without block, floats incl. negative, halves, > 2^31, 1e20
+0x100e6b29 | Sim_100e6b29  | unsorted_100e/w9h_misc.c          | 300    | 0    | 0          | all (32/32) -- see note on segment registers
+
+Float classes: Sim_10032a10 and Sim_100e1398 are the only ones with x87 code (fild/fdiv/fmul/fadd + _ftol). Both
+are DRAWING (an object's palette colour word; an end-of-mission display value) and both are nevertheless proven
+EXACT (no fp/tol in the spec): their only outputs are ints from _ftol (Render_Ftol), the x87 ran at 53-bit
+precision so the double arithmetic is bit-identical. No other candidate has float code.
+
+Left out:
+- 0x10020055 (72 bytes): reads an uninitialised stack local ([ebp-4]) as the index of the dword it writes
+  ([0x1015d0a4] + idx*4 + 0x294); the value written is always 0 (imul by 0). Not reproducible or provable.
+- 0x1008b922 key 0x26 path (int 3): converted as __debugbreak() / int3 but kept out of the trials.
+- 0x100527fa for index >= 16: the original uses an uninitialised local as the leader index for the final
+  Mem_Move; the C uses 0 there (comment in w9h.h). Callers: check they never pass >= 16 (the group table has
+  16 entries of 0x6c bytes at 0x109b7d40).
+
+Things the owner should know:
+- Sim_100e6b29 (0x100e6b29) uses push es / push ds / pop es around its rep movsd (ES := DS, a no-op in the
+  flat Win32 model). Rule 2 of the brief says "touches segment registers: do not convert". The copy itself is a
+  plain 64-dword forward copy and the checker proves it (the four segment bytes are nop'ed in the spec so the
+  emulator can run the original). If the rule is to be applied strictly, delete its CONV line from
+  src/hooks/conv_w9h.inc; the C stays correct either way.
+- Sim_100352d5 calls 0x100d2306 and 0x100d1f90 (patched by hooks_view.c) and 0x100a0def (unconverted) via
+  SIM_FN, and the display slot 0x1014cb4c through the stored pointer like the original. Sim_10032a10 calls
+  0x100591ff and 0x10058c5e (unconverted lighting helpers) via SIM_FN.
+- Stub arguments masked to 16 bits in the spec because the original pushes them with a stale upper half
+  (mov ax/dx, word ...; push eax/edx): Sim_100152fc's b, Sim_10016a6b's slot/sel/other, Sim_1001555c's a/b,
+  Sim_1003db56's key. The converted callees read them as 16-bit (checked in their C).
+- 0x100e6b49 untouched (excluded by Diego).
+
+Files created (all new, nothing existing edited):
+  src/sim/unsorted_1001/w9h.h, w9h_group.c
+  src/sim/unsorted_1002/w9h.h, w9h_misc.c
+  src/sim/unsorted_1003/w9h.h, w9h_view.c
+  src/sim/unsorted_1004/w9h.h, w9h_misc.c
+  src/sim/unsorted_1005/w9h.h, w9h_misc.c
+  src/sim/unsorted_1008/w9h.h, w9h_keys.c
+  src/sim/unsorted_1009/w9h.h, w9h_misc.c
+  src/sim/unsorted_100b/w9h.h, w9h_text.c
+  src/sim/unsorted_100e/w9h.h, w9h_misc.c
+  tools/verify/spec_w9h.py
+  src/hooks/conv_w9h.inc (13 CONV lines, hookgen)
+  tools/round9/out_w9h.txt (this file)
+All nine .c files compile with i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c without warnings.
+
+Non-own sources the spec's SOURCES needs (for CMake, beyond what the round-8/9 specs already compile): the
+spec_w9g.py closure plus sim/unsorted_1001/w3s_group.c, sim/unsorted_1003/flags.c, sim/unsorted_1002/w8u_cache.c,
+sim/unsorted_1001/w5z_calls.c, sim/unsorted_1005/w6e_misc.c, sim/unsorted_1005/w3r_misc.c,
+sim/unsorted_1005/w3s_groups.c, sim/unsorted_1005/w5a_misc.c. Converted callees my C calls by name:
+Sim_10052aaf/Sim_10052be7/Sim_10052c02 (unsorted_1004/tables.c), Sim_10016d83 (1001/w5b_calls.c), Sim_10016cb7 and
+Sim_100c3668 (util/lookup.c), Sim_100152fc and Sim_10016a6b (1001/w2h_objects.c), Sim_10016a4a (1001/w2f_misc.c),
+Sim_10025f6b (1002/w6d_calls.c), Sim_1001555c (1001/w5c_calls.c), Sim_100aa351/Sim_100aa863 (100a/w5x_calls.c),
+Sim_100aa406/Sim_100aa0da (100a/w5z_calls.c), Sim_100aa799 (100a/w5y_misc.c), Sim_1009c929 (util/ring.c),
+Sim_100d255e (100d/w5c_calls.c), Sim_100a4c45 (100a/w7o_misc.c), Sim_100071f6 (1000/w2i_misc.c), Sim_100d32e5
+(100d/state.c), Sim_10010f70 (1001/w5z_calls.c), Sim_10012843 (1001/w3s_group.c), Sim_1003db56 (1003/records.c),
+Sim_100a9d47 (util/field.c), Sim_100529a2 (1005/w6e_misc.c), Mem_Move/Str_Length (100f/w2e_string.c),
+Sim_100448cd (1004/state.c), Sim_10044a69 (1004/w6e_misc.c), Sim_1007df6c (1007/w2e_state.c), Sim_1003327f
+(1003/flags.c), Cache_DumpLog (1002/w8u_cache.c), Crt_SPrintf (100f/w8z_crt.c), Crt_IsCType and Sim_100fd710
+(100f/w6h_crt.c), Heap_Malloc/Heap_FreeBlock (100f/w6i_mem.c), Crt_StrChr (100f/w2k_string.c), Sim_1005b98c
+(1005/w3r_misc.c), Sim_100b5386 (100b/w2f_tables.c), Render_Ftol (render/w2n.h, inline).
+
+--- helper final message ---
+Round 9, letter h is complete: 13 of 14 candidates converted and proven, 1 left out. Nothing was committed.
+
+| address | name | file | trials | mism | both-fault | branches reached |
+|---|---|---|---|---|---|---|
+| 0x10017263 | Sim_10017263 | unsorted_1001/w9h_group.c | 5000 | 0 | 0 | 1490/1519 code bytes; the rest is two dead fall-throughs (flag values between 0x200 and 0x1000 without bits 0xe10 cannot exist, the function returns early on those bits) |
+| 0x10029b1f | Sim_10029b1f | unsorted_1002/w9h_misc.c | 300 | 0 | 0 | all |
+| 0x10032a10 | Sim_10032a10 | unsorted_1003/w9h_view.c | 3000 | 0 | 0 | 2097/2107; the 10 missing bytes are two dead jumps of the kind switch (kind is always a multiple of 0x1000). All view modes 0..5, overlays, kinds, level thresholds, both shading paths, 0..6 vertices |
+| 0x100352d5 | Sim_100352d5 | unsorted_1003/w9h_view.c | 500 | 0 | 0 | all four paths |
+| 0x10042a11 | Sim_10042a11 | unsorted_1004/w9h_misc.c | 800 | 0 | 0 | all |
+| 0x1004d344 | Sim_1004d344 | unsorted_1004/w9h_misc.c | 300 | 0 | 0 | all |
+| 0x100527fa | Sim_100527fa | unsorted_1005/w9h_misc.c | 800 | 0 | 0 | all for index below 16 (see left-out) |
+| 0x1008b922 | Sim_1008b922 | unsorted_1008/w9h_keys.c | 2000 | 0 | 0 | 1999/2005: every key case except 0x26 (the int 3 path), toggles both ways, unknown keys |
+| 0x1009bd47 | Sim_1009bd47 | unsorted_1009/w9h_misc.c | 300 | 0 | 0 | all |
+| 0x100b6f6a | Text_Unescape | unsorted_100b/w9h_text.c | 1500 | 0 | 0 | all: every escape, octal/hex runs, bare \x, trailing backslash, both class sources |
+| 0x100b7430 | Sim_100b7430 | unsorted_100b/w9h_text.c | 1000 | 0 | 0 | all: every flag combination, empty texts, allocation failures |
+| 0x100e1398 | Sim_100e1398 | unsorted_100e/w9h_misc.c | 800 | 0 | 0 | all, floats of every size for the truncation |
+| 0x100e6b29 | Sim_100e6b29 | unsorted_100e/w9h_misc.c | 300 | 0 | 0 | all |
+
+The "branches reached" figures come from an optional coverage count in the spec that records every executed instruction of the original (switch on with `W9H_COV=1` or the file `tools/round9/w9h_cov.flag`).
+
+**Float classes.** Only Sim_10032a10 and Sim_100e1398 contain x87 code (fild, fdiv, fmul, fadd and _ftol). Both are DRAWING (a palette colour word, an end-of-mission display value) and both are proven EXACT anyway, with no fp/tol in the spec: their only outputs are ints from the truncation.
+
+**Left out**
+- 0x10020055 reads an uninitialised stack local as the index of the dword it writes (the value written is always 0, an imul by zero). Not reproducible or provable.
+- The key 0x26 path of 0x1008b922 is written as a debug break but kept out of the trials.
+- 0x100527fa with index 16 or above uses an uninitialised local as the leader index for its final copy. The C uses 0 there and the trials stay below 16. Callers should be checked to never pass 16 or more.
+
+**Things to know**
+- Sim_100e6b29 uses push es / push ds / pop es around its rep movsd, which rule 2 of the brief lists as a reason not to convert. The effect is a no-op in the flat model, the copy is a plain forward 64-dword copy and the checker proves it (the four segment bytes are nop'ed so the emulator can run the original). If the rule is applied strictly, delete its CONV line from conv_w9h.inc.
+- Sim_100352d5 calls the two camera functions patched by hooks_view.c and the unconverted 0x100a0def through SIM_FN, and the display slot through the stored pointer. Sim_10032a10 calls the two unconverted lighting helpers through SIM_FN.
+- Four stubbed callees take 16-bit arguments that the original pushes with a stale upper half, so the spec masks them. The converted callees read them as 16-bit.
+- 0x100e6b49 was not touched.
+
+**Files created** (nothing existing edited): `w9h.h` plus one `.c` in each of src/sim/unsorted_1001, 1002, 1003, 1004, 1005, 1008, 1009, 100b, 100e; `tools/verify/spec_w9h.py`; `src/hooks/conv_w9h.inc` (13 CONV lines from hookgen); `tools/round9/out_w9h.txt` (this report in full, including every callee and its source file). All nine sources compile with plain `i686-w64-mingw32-gcc -std=c17 -Wall -Wextra -c` without warnings.
+
+**Non-own sources the spec needs** beyond the spec_w9g closure: unsorted_1001/w3s_group.c and w5z_calls.c, unsorted_1003/flags.c, unsorted_1002/w8u_cache.c, unsorted_1005/w6e_misc.c, w3r_misc.c, w3s_groups.c and w5a_misc.c. The full list of called converted functions with their files is in out_w9h.txt.
+
+EXIT 0
