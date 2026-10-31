@@ -23,6 +23,8 @@ A new plugin, `HGVK.DLL`, replaces DX5DRAW. It implements the `/3dfx` contract (
 
 - Window: SDL3 wraps the game window (HWND from `FirstDevice`, offset +0x4c) and Vulkan presents to it.
 - 3D: `Render` batches triangles into a Vulkan pipeline. All render modes map to a handful of pipeline states (texture/no texture, flat/gouraud, colour key, alpha blend).
+- 1.2's .TEX textures (round 31): a texture offered with the description's flag +0x18 is made with alpha from its palette's top byte (alpha (15 - top 4 bits) * 17, no colour key), as 1.2's DX5DRAW makes a 16-bit ARGB texture; it is made at `PreloadTexture` and keeps its alpha when made again. It blends in the blending modes and is solid in the others. The mode numbers stay 1.0's (1.2's renderers renumbered them; see DECISIONS.md, round 31).
+- 1.2's particles (round 32): their squares carry no depth (z 1, 1/z 1 from the template), which 1.2's renderer did not need. The sim calls `SetState(0x48470001, 1)` before each particle square or beam quad and `SetState(0x48470001, 0)` after it (our own state code, sent from `src/sim/fx`). While it is on, `Render` marks its draws "painter": they use a second set of pipelines without depth test or depth write, so they show over what was drawn before them in the frame and are not hidden by the ground, as in 1.2. Everything else keeps the depth test.
 - 2D: `LockDisplay` returns a 640x480 RGB565 buffer, `UnlockDisplay` uploads it, `RefreshDisplay` composites and presents. The HUD drawing calls are also repeated at full resolution (see hud.md).
 - Output is a 32-bit swapchain. The 3D view renders at the window resolution.
 

@@ -10,6 +10,7 @@
 #include "../unsorted_100a/w5b.h"
 #include "../unsorted_100a/w5x.h"
 #include "../unsorted_100a/w5y.h"
+#include "../fx/w32.h"
 
 #define ADDR(a) ((uint32_t)(uintptr_t)SIM_PTR(uint8_t, a))
 #define NODE(obj) ((void *)(uintptr_t)U32(obj, 0x552))
@@ -193,6 +194,11 @@ void __cdecl Sim_10092956(uint32_t arg, const uint8_t *rec, uint32_t param)
 {
     uint8_t *obj;
 
+    /* 1.2 (round 32): the laser particle system instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007b956(arg, rec, param);
+        return;
+    }
     if ((int32_t)(G32(0x1017cc24) + 1) >= GS32(0x1017cc20))
         return;
     obj = Sim_10090c7d(ADDR(0x10002707), ADDR(0x1000158c), arg, 1);
@@ -335,6 +341,11 @@ void __cdecl Sim_100941c3(float x, float y, float z, float sx, float sy, float s
     uint8_t *obj;
     int i;
 
+    /* 1.2 (round 32): the skate dust particles instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007e25c(x, y, z, sx, sy, sz);
+        return;
+    }
     obj = Effect_Start(x, y, z, ADDR(0x1000139d), ADDR(0x1000107d));
     if (obj == 0)
         return;
@@ -362,6 +373,11 @@ void __cdecl Sim_100949e8(float x, float y, float z, float sx, float sy, float s
     uint8_t *obj;
     int i;
 
+    /* 1.2 (round 32): the smoke particles instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007f8a9(x, y, z, sx, sy, sz);
+        return;
+    }
     obj = Effect_Start(x, y, z, ADDR(0x10001677), ADDR(0x1000394f));
     if (obj == 0)
         return;
@@ -388,6 +404,11 @@ void __cdecl Sim_10094fcb(float x, float y, float z, float sx, float sy, float s
     uint8_t *obj;
     int i, k;
 
+    /* 1.2 (round 32): the grenade particle explosion instead */
+    if (W32_PARTICLES()) {
+        Sim12_100805dc(x, y, z, sx, sy, sz);
+        return;
+    }
     obj = Effect_Start(x, y, z, ADDR(0x10001816), ADDR(0x1000257c));
     if (obj == 0)
         return;
@@ -452,6 +473,11 @@ void __cdecl Sim_10095e0a(float x, float y, float z, float sx, float sy, float s
     float step[3], acc[3];
     uint8_t *obj;
 
+    /* 1.2 (round 32): the missile particle explosion instead */
+    if (W32_PARTICLES()) {
+        Sim12_10082556(x, y, z, sx, sy, sz);
+        return;
+    }
     obj = Effect_Start(x, y, z, ADDR(0x10002ce8), ADDR(0x10002801));
     if (obj == 0)
         return;

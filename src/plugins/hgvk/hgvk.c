@@ -220,11 +220,30 @@ EXPORT unsigned GetSocketCaps(void)
     return 0;
 }
 
+#define HGVK_STATE_PAINTER 0x48470001u   /* "HG" 1; the sim's W32_STATE_PAINTER */
+static int g_painter;
+
 EXPORT int SetState(unsigned code, unsigned value)
 {
-    HgvkLog("SetState(0x%x, 0x%x)", code, value);
+    /* each distinct call once: 1.2's sky band sets a state every frame (round 31) */
+    static unsigned seen[16][2];
+    static int nSeen;
+    int i;
+
+    for (i = 0; i < nSeen && !(seen[i][0] == code && seen[i][1] == value); i++)
+        ;
+    if (i == nSeen && nSeen < 16) {
+        seen[nSeen][0] = code;
+        seen[nSeen][1] = value;
+        nSeen++;
+        HgvkLog("SetState(0x%x, 0x%x)", code, value);
+    }
     if (code == 4)
         g_linear = (value & 0x20000) != 0;
+    /* round 32: our own state, set by the sim around 1.2's particle squares (src/sim/fx), which carry no depth:
+       draw them in painter's order, as 1.2's renderer drew everything */
+    if (code == HGVK_STATE_PAINTER)
+        g_painter = value != 0;
     return 0;
 }
 
@@ -277,7 +296,41 @@ static const ModeInfo g_modes[19] = {
 static HgvkVertex *g_scratch;
 static int g_scratchCap;
 
-/* The texture argument is a pointer to a pointer to {w, h, pixels8, palette, key}. */
+/*
+ * Textures offered with the description's flag +0x18 (1.2's .TEX textures, round 31): their pixel pointers, so a
+ * texture keeps its alpha when it is made again (after a palette change) from a description without the flag, as
+ * 1.2's renderer keeps the format it chose when the texture was first offered. The sim loads HGVK.DLL again with
+ * every mission, so the list starts empty with each one.
+ */
+#define ALPHA_KEYS 8192
+static const void *g_alphaKeys[ALPHA_KEYS];
+
+static unsigned AlphaSlot(const void *key)
+{
+    return (unsigned)(((uintptr_t)key >> 4) * 2654435761u) % ALPHA_KEYS;
+}
+
+static void AlphaMark(const void *key)
+{
+    unsigned i = AlphaSlot(key), n;
+
+    for (n = 0; n < ALPHA_KEYS && g_alphaKeys[i] != NULL && g_alphaKeys[i] != key; n++)
+        i = (i + 1) % ALPHA_KEYS;
+    if (n < ALPHA_KEYS)
+        g_alphaKeys[i] = key;
+}
+
+static int AlphaMarked(const void *key)
+{
+    unsigned i = AlphaSlot(key), n;
+
+    for (n = 0; n < ALPHA_KEYS && g_alphaKeys[i] != NULL; n++, i = (i + 1) % ALPHA_KEYS)
+        if (g_alphaKeys[i] == key)
+            return 1;
+    return 0;
+}
+
+/* The texture argument is a pointer to a pointer to {w, h, pixels8, palette, key} (1.2: and +0x14, +0x18 flag). */
 static HgvkTexture *GetTexture(const void *texArg, int keyed)
 {
     const uintptr_t *indirect = (const uintptr_t *)texArg;
@@ -299,12 +352,15 @@ static HgvkTexture *GetTexture(const void *texArg, int keyed)
     if (w <= 0 || h <= 0 || w > 4096 || h > 4096 || pixels == NULL || palette == NULL)
         return NULL;
 
+    if (!IsBadReadPtr(t, 0x1c) && t[6] == 1)
+        AlphaMark(pixels);
     tex = Vk_FindTexture(pixels);
     if (tex != NULL)
         return tex;
     if (IsBadReadPtr(pixels, (UINT_PTR)w * h) || IsBadReadPtr(palette, 256 * 4))
         return NULL;
-    tex = Vk_CreateTexture(pixels, w, h, pixels, palette, keyed ? t[4] : -1);
+    tex = Vk_CreateTexture(pixels, w, h, pixels, palette,
+                           AlphaMarked(pixels) ? HGVK_KEY_ALPHA : keyed ? t[4] : -1);
     if (tex == NULL)
         HgvkLog("Render: could not create a %dx%d texture", w, h);
     return tex;
@@ -470,8 +526,9 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
                 g_scratch[i].iz = nearest;
     }
 
-    Vk_AddDraw(m->topology, m->blend, (m->clamp ? 1 : 0) | (g_linear ? 2 : 0), m->keyed, texture,
-               g_scratch, out);
+    /* a texture with alpha (1.2's .TEX) is not colour-keyed: it blends in the modes with blending, else is opaque */
+    Vk_AddDraw(m->topology, m->blend, (m->clamp ? 1 : 0) | (g_linear ? 2 : 0),
+               Vk_TextureHasAlpha(texture) ? 0 : m->keyed, g_painter, texture, g_scratch, out);
     return 0;
 }
 
@@ -501,10 +558,21 @@ EXPORT int RenderRefresh(void)
     return 0;
 }
 
+/*
+ * 1.2's renderer makes a texture when it is offered, in the format the description asks for: with the flag +0x18 a
+ * 16-bit ARGB one (round 31). Such a texture is made here, so later draws (whose descriptions may lack the flag)
+ * find it; other textures are still made on first use.
+ */
 EXPORT int PreloadTexture(void *tex, int keyed)
 {
-    (void)tex;
-    (void)keyed;
+    const uintptr_t *indirect = (const uintptr_t *)tex;
+    const int *t;
+
+    if (tex != NULL && !IsBadReadPtr(indirect, sizeof(*indirect)) && Vk_IsReady()) {
+        t = (const int *)*indirect;
+        if (t != NULL && !IsBadReadPtr(t, 0x1c) && t[6] == 1)
+            GetTexture(tex, keyed);
+    }
     return 1;
 }
 

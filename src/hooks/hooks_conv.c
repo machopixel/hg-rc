@@ -403,6 +403,8 @@
 #include "../sim/unsorted_100a/w8x.h"
 #include "../sim/unsorted_100a/w8y.h"
 #include "../sim/unsorted_100b/w8y.h"
+#include "../sim/render/w31.h"
+#include "../sim/fx/w32.h"
 #include "../sim/unsorted_100c/w8z.h"
 #include "../sim/unsorted_100d/w8z.h"
 #include "../sim/unsorted_100e/w8z.h"
@@ -486,6 +488,7 @@
 #include "../sim/unsorted_1005/w27.h"
 #include "../sim/platform/w28.h"
 #include "../sim/unsorted_1002/w29.h"
+#include "../sim/render/w30.h"
 #include "../sim/unsorted_1007/w10.h"
 #include "../sim/unsorted_1007/w10d.h"
 #include "../sim/unsorted_100c/w10d.h"
@@ -619,6 +622,8 @@
 #include "conv_w28.inc"
 #include "conv_w28_all.inc"
 #include "conv_w29.inc"
+#include "conv_w30.inc"
+#include "conv_w32.inc"
 #undef CONV
 
 #define CONV(rva_, name_, ...) \
@@ -712,6 +717,8 @@ static const HookDesc g_convHooks[] = {
 #include "conv_w28.inc"
 #include "conv_w28_all.inc"
 #include "conv_w29.inc"
+#include "conv_w30.inc"
+#include "conv_w32.inc"
 };
 #undef CONV
 
@@ -805,6 +812,8 @@ static const char *const g_convFiles[] = {
 #include "conv_w28.inc"
 #include "conv_w28_all.inc"
 #include "conv_w29.inc"
+#include "conv_w30.inc"
+#include "conv_w32.inc"
 };
 #undef CONV
 
@@ -908,6 +917,13 @@ static const HookDesc g_fpuLogHooks[] = {
  * HooksAudio_SdlSound) hooks_audio.c installs HGSIM's sound functions with SDL3 (sim/sound/sdl_sound.c), so the CONV entries of those
  * addresses, the sound start trace (0xE0D9) and the FPU log tap (0x39C00) are left out here.
  */
+void HooksConv_OnSimExit(void)
+{
+    if (g_w31Tex)
+        DebugPrintf("HGSIM.DLL: textures this mission: %u .TEX, %u .XEL fallback, %u not found\n",
+                    (unsigned)g_w31TexLoaded, (unsigned)g_w31TexFallback, (unsigned)g_w31TexMissing);
+}
+
 void HooksConv_OnSimLoaded(HMODULE sim)
 {
     enum { MAX_OFF = 16 };
@@ -939,6 +955,10 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     }
     sdlaudio = HooksAudio_SdlSound();   /* the one decision hooks_audio.c uses too */
     sdlplat = Hooks_SdlPlatform();      /* round 28: conv_w28.inc only with the SDL3 platform */
+    g_w8yPatch = !noconv && Hooks_VulkanRenderer(); /* round 31: 1.2's Patch folder with Vulkan only */
+    g_w31Tex = g_w8yPatch;              /* round 31: 1.2's .TEX textures, with Vulkan in 3D mode */
+    g_w31TexLoaded = g_w31TexFallback = g_w31TexMissing = 0;
+    DebugPrintf("HGSIM.DLL: Patch folder and .TEX textures %s\n", g_w8yPatch ? "on (Vulkan)" : "off");
     LogFpuControlWord("at sim load");
     g_frameTapCalls = 0;
     if (!sdlaudio)

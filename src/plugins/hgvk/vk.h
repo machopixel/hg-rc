@@ -33,15 +33,23 @@ void Vk_Shutdown(void);
 int Vk_IsReady(void);
 
 HgvkTexture *Vk_FindTexture(const void *key);
-/* palette: 256 entries 0x00RRGGBB. keyIndex < 0: no colour key. */
+/*
+ * palette: 256 entries 0x00RRGGBB. keyIndex < 0: no colour key. keyIndex HGVK_KEY_ALPHA: the palette's top byte
+ * is a transparency, as 1.2's renderer reads it for a texture whose description has the flag +0x18 (its 16-bit
+ * ARGB textures): alpha (15 - top 4 bits) * 17, no colour key.
+ */
+#define HGVK_KEY_ALPHA (-2)
 HgvkTexture *Vk_CreateTexture(const void *key, int w, int h, const uint8_t *pixels,
                               const uint32_t *palette, int keyIndex);
+/* Whether the texture was made with HGVK_KEY_ALPHA. */
+int Vk_TextureHasAlpha(const HgvkTexture *t);
 void Vk_DropTexture(const void *key);
 /* Drops every cached texture at the end of the current frame (the texture palette changed). */
 void Vk_RequestDropAllTextures(void);
 
 /* sampler: bit 0 clamp, bit 1 linear filter. */
-void Vk_AddDraw(int topology, int blend, int sampler, int keyed, HgvkTexture *tex,
+/* painter != 0: drawn without depth test or write, in submission order (1.2's particles, round 32) */
+void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, HgvkTexture *tex,
                 const HgvkVertex *verts, int count);
 
 /*

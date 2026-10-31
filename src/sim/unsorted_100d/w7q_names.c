@@ -1,3 +1,4 @@
+#include "../render/w31.h"
 #include "w7q.h"
 #include "../unsorted_1000/w2h.h"
 #include "../unsorted_1000/w2f.h"
@@ -15,8 +16,8 @@ typedef int(__stdcall *W7qHeapFreeFn)(uint32_t heap, uint32_t flags, uint32_t bl
 
 #define IAT_HEAPFREE 0x10ac5634u
 
-/* The name of group number n (0x300 bytes apart from 0x10a51ac0). */
-#define W7Q_GROUP_NAME(n) SIM_PTR(char, 0x10a51ac0u + (uint32_t)(n) * 0x300u)
+/* The name of group number n (its first frame in the texture name table, round 31: w31.h). */
+#define W7Q_GROUP_NAME(n) ((char *)W31_NAME((n), 0))
 /* The group number word of entry i of the table 0x10ac1b00 (0xe bytes each). */
 #define W7Q_ENTRY_GROUP(i) (*SIM_PTR(s16a, 0x10ac1b00u + (uint32_t)(i) * 0xeu))
 

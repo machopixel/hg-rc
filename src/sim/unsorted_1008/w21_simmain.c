@@ -1,7 +1,9 @@
 #include <string.h>
 
 #include "w21.h"
+#include "../render/w31.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
 #include "../../platform/sim_platform.h"
 
 #ifdef _MSC_VER
@@ -74,6 +76,9 @@ static void W21_Heaps(const uint8_t *memStatus)
             C2(0x100bc280, 9, G32(0x101c514c));
     }
     G32(0x1017b8f8) = G32(0x1017b900);
+    /* round 31: 1.2 (0x1006fcfc) notes the time here; its texture preload stops 30 s after (Vulkan only) */
+    if (g_w31Tex)
+        g_w31TexStart = Plat_TicksMs();
 }
 
 // FUNCTION: HGSIM 0x10084feb
@@ -297,13 +302,13 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             C2(0x100fd7e0, G32(0x1017ed8c), S(0x1014b4bc));
             for (i = 0; (int32_t)i < 0x200; i++) {
                 NETPOLL();
-                G32(0x1015dafc) = S(0x10a51ac0) + i * 0x300u;
+                G32(0x1015dafc) = (uint32_t)(uintptr_t)W31_NAME(i, 0); /* round 31: the moved table */
                 for (j = 0; (int32_t)j < 0x20; j++) {
-                    if ((int8_t)U8(GBYTES(G32(0x1015dafc)), 0) == 0)
+                    if (*(const int8_t *)(uintptr_t)G32(0x1015dafc) == 0) /* a pointer into our table now */
                         break;
                     G32(0x1017b950) += 1;
                     C3(0x100fd7e0, G32(0x1017ed8c), S(0x1014b4d0), G32(0x1015dafc));
-                    G32(0x1015dafc) += 0x18;
+                    G32(0x1015dafc) += W31_FRAME_SIZE;
                 }
             }
             C3(0x100fd7e0, G32(0x1017ed8c), S(0x1014b4e4), G32(0x1017b950));
@@ -347,7 +352,10 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             C2(0x100085b7, P(mission), 0);
         }
         NETPOLL();
-        C0(0x100908b3);
+        /* 1.2 (0x1006fae1, round 32) sets up the effect pool after the display and renderer set-up below, once the
+           3D mode is known (its particle layout and the particle types' textures depend on it) */
+        if (!g_w31Tex)
+            C0(0x100908b3);
         C0(0x1001db6a);
         NETPOLL();
         C0(0x1008988f);
@@ -396,6 +404,8 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             }
             CI1(0x109e3d28, P(drv));
         }
+        if (g_w31Tex)
+            C0(0x100908b3);
         if (SimPlat_GetDeviceCaps(dc, 0x18) == -1 || G32(0x1015e9bc) == 1) {
             LOGSTEP(0x1014b5d0);
             C1(0x100d3877, 0);

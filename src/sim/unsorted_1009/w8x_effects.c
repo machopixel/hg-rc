@@ -1,4 +1,5 @@
 #include "w8x.h"
+#include "../fx/w32.h"
 #include "w2g.h"
 #include "w2j.h"
 #include "../unsorted_1000/w2j.h"
@@ -93,17 +94,22 @@ void __cdecl Sim_100908b3(void)
         Sim_100aa351(node);
         Sim_100aa406(node);
         SIM_PTR(u32a, 0x10216b80)[i] = i;
-        e = W8X_ADDR(0x10217c20) + (uint32_t)i * 0x57e;
+        e = W8X_ADDR(0x10217c20) + (uint32_t)i * W32_REC_SIZE;
         U32(e, 8) = i;
         U32(e, 0xc) = 0;
-        U32(e, 0x552) = (uint32_t)(uintptr_t)node;
-        U32(e, 0x556) = 0;
-        U32(e, 0x55a) = 0;
+        U32(e, W32_REC_OBJ) = (uint32_t)(uintptr_t)node;
+        U32(e, W32_REC_UPDATE) = 0;
+        U32(e, W32_REC_DRAW) = 0;
         U32(e, 0) = 0;
         U32(e, 4) = 0;
-        U32(e, 0x57a) = 0;
-        for (j = 0; j < 0x20; j++) {
-            uint32_t p = e + (uint32_t)j * 0x2a;
+        U32(e, W32_REC_ARG) = 0;
+        /* 1.2 (0x1007986e): particle records, 16 particles of 0x32 bytes and the dword +0x3fa -1 */
+#ifndef W32S_MUTATE /* the checker's negative check only: +0x3fa left as it was */
+        if (W32_PARTICLES())
+            U32(e, 0x3fa) = 0xffffffffu;
+#endif
+        for (j = 0; j < (W32_PARTICLES() ? 0x10 : 0x20); j++) {
+            uint32_t p = e + (uint32_t)j * (W32_PARTICLES() ? 0x32u : 0x2au);
 
             U32(p, 0x1a) = 0;
             U32(p, 0x16) = 0;
@@ -113,6 +119,8 @@ void __cdecl Sim_100908b3(void)
     }
     G32(0x10215ae8) = G32(0x1017cc20) - 1;
     Sim_100905e8();
+    if (W32_PARTICLES())
+        Sim12_100790be();   /* 1.2: the particle types' textures */
 }
 
 // FUNCTION: HGSIM 0x10091223
@@ -323,6 +331,11 @@ void __cdecl Sim_10092f9d(float x, float y, float z, float vx, float vy, float v
     int32_t r;
     int i;
 
+    /* 1.2 (round 32): the shockwave particles instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007c1a1(x, y, z, vx, vy, vz, k);
+        return;
+    }
     if (!((int32_t)(G32(0x1017cc24) + 1) < GS32(0x1017cc20)) || k == 0)
         return;
     dist = Sim_10084a94((float)((double)x - (double)FL(G32(0x1014cae0), 0)),

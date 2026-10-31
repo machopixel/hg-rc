@@ -233,3 +233,8 @@ SPECS = [
     dict(name='PluginDisp_FillRect', orig=0x10087820, c='PluginDisp_FillRect', gen=g_fill, trials=500),
     dict(name='PluginDisp_Lock', orig=0x10087a0c, c='PluginDisp_Lock', gen=g_lock, trials=300),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES + ['../tools/verify/plat_stub.c'] if x not in SOURCES]
+SPECS = w31_wrap(SPECS, {'Render_PreloadTextures'})

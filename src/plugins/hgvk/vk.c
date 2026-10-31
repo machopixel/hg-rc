@@ -66,12 +66,13 @@ struct HgvkTexture {
     VkDeviceMemory memory;
     VkImageView view;
     VkDescriptorSet set;
+    int alpha;         /* made with HGVK_KEY_ALPHA */
     HgvkTexture *next; /* hash chain */
 };
 
 typedef struct Draw {
     uint32_t first, count;
-    uint8_t topology, blend, sampler, keyed;
+    uint8_t topology, blend, sampler, keyed, painter;
     HgvkTexture *tex;
 } Draw;
 
@@ -134,6 +135,7 @@ static struct {
     VkDescriptorSetLayout textureLayout, samplerLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline pipelines[3][2]; /* [topology][blend] */
+    VkPipeline painterPipelines[3][2]; /* the same without depth test or write: 1.2's particles (round 32) */
     VkPipeline overlayPipeline;  /* 2D overlay: blended, no depth test */
     VkSampler samplers[4];
     VkDescriptorSet samplerSets[4];
@@ -402,6 +404,11 @@ HgvkTexture *Vk_FindTexture(const void *key)
     return NULL;
 }
 
+int Vk_TextureHasAlpha(const HgvkTexture *t)
+{
+    return t != NULL && t->alpha;
+}
+
 HgvkTexture *Vk_CreateTexture(const void *key, int w, int h, const uint8_t *pixels,
                               const uint32_t *palette, int keyIndex)
 {
@@ -422,10 +429,15 @@ HgvkTexture *Vk_CreateTexture(const void *key, int w, int h, const uint8_t *pixe
         unsigned idx = pixels[i];
         uint32_t c = palette[idx];
 
-        rgba[i] = ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16) |
-                  (idx == (unsigned)keyIndex ? 0u : 0xff000000u);
+        if (keyIndex == HGVK_KEY_ALPHA)
+            rgba[i] = ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16) |
+                      ((15u - ((c >> 28) & 15u)) * 17u << 24);
+        else
+            rgba[i] = ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16) |
+                      (idx == (unsigned)keyIndex ? 0u : 0xff000000u);
     }
     t->key = key;
+    t->alpha = keyIndex == HGVK_KEY_ALPHA;
     if (CreateImageTexture(t, w, h, rgba, 1)) {
         DestroyImageTexture(t);
         free(t);
@@ -879,6 +891,13 @@ static int CreatePipelines(void)
             pi.renderPass = g.renderPass;
             TRY(vk.vkCreateGraphicsPipelines(g.device, VK_NULL_HANDLE, 1, &pi, NULL,
                                              overlay ? &g.overlayPipeline : &g.pipelines[t][b]));
+            if (!overlay) {
+                /* painter's order, as 1.2's renderer drew everything (it had no depth buffer): for 1.2's particle
+                   squares, which carry no depth (round 32) */
+                ds.depthTestEnable = VK_FALSE;
+                ds.depthWriteEnable = VK_FALSE;
+                TRY(vk.vkCreateGraphicsPipelines(g.device, VK_NULL_HANDLE, 1, &pi, NULL, &g.painterPipelines[t][b]));
+            }
         }
     }
     return 0;
@@ -965,6 +984,8 @@ void Vk_Shutdown(void)
         for (i = 0; i < 6; i++) {
             if (g.pipelines[i / 2][i % 2] != VK_NULL_HANDLE)
                 vk.vkDestroyPipeline(g.device, g.pipelines[i / 2][i % 2], NULL);
+            if (g.painterPipelines[i / 2][i % 2] != VK_NULL_HANDLE)
+                vk.vkDestroyPipeline(g.device, g.painterPipelines[i / 2][i % 2], NULL);
         }
         if (g.overlayPipeline != VK_NULL_HANDLE)
             vk.vkDestroyPipeline(g.device, g.overlayPipeline, NULL);
@@ -1218,7 +1239,7 @@ fail:
 
 /* ---- Frame -------------------------------------------------------------- */
 
-void Vk_AddDraw(int topology, int blend, int sampler, int keyed, HgvkTexture *tex,
+void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, HgvkTexture *tex,
                 const HgvkVertex *verts, int count)
 {
     Draw *last;
@@ -1246,7 +1267,7 @@ void Vk_AddDraw(int topology, int blend, int sampler, int keyed, HgvkTexture *te
 
     last = g.drawCount ? &g.draws[g.drawCount - 1] : NULL;
     if (last != NULL && last->topology == topology && last->blend == blend &&
-        last->sampler == sampler && last->keyed == keyed && last->tex == tex) {
+        last->sampler == sampler && last->keyed == keyed && last->painter == painter && last->tex == tex) {
         last->count += (uint32_t)count;
     } else {
         Draw *d;
@@ -1267,6 +1288,7 @@ void Vk_AddDraw(int topology, int blend, int sampler, int keyed, HgvkTexture *te
         d->blend = (uint8_t)blend;
         d->sampler = (uint8_t)sampler;
         d->keyed = (uint8_t)keyed;
+        d->painter = (uint8_t)(painter != 0);
         d->tex = tex;
     }
     g.vertCount += (uint32_t)count;
@@ -1527,7 +1549,7 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
 
     for (i = 0; i < g.drawCount; i++) {
         const Draw *d = &g.draws[i];
-        VkPipeline pipe = g.pipelines[d->topology][d->blend];
+        VkPipeline pipe = d->painter ? g.painterPipelines[d->topology][d->blend] : g.pipelines[d->topology][d->blend];
         HgvkTexture *tex = d->tex != NULL ? d->tex : &g.white;
 
         if (pipe != bound) {

@@ -1250,3 +1250,334 @@ and the shipped data, no play run.
   path segment's bytes and [ebp-0x2c] with -1: 20000 trials exact, coverage 1018/1021 (the 3 not run: the near-miss
   counter). Negative check `W29_NEG=1` (the fixed cut 1.0 higher) caught, 2461 of 20000. Hooked in `conv_w29.inc`.
 - Expected hook line: 2360 of 2362 (options 1 / 2), 2350 of 2352 (option 3).
+
+## Round 30: the HUD's 2D drawing library in C (2026-10-30)
+
+Diego: "do 1" (convert the drawing routines so the HUD no longer needs the original DLL's code).
+- **Converted** (`src/sim/render/w30_vfx.c`, hooked by `conv_w30.inc`), each from its hand-written assembly: line
+  0x100ef727 (outcode clipping with the 0.32 fixed-point rounding of all 16 cases, x- / y-major, diagonal and
+  straight stepping), pane wipe 0x100f0865, shape 0x100f0205 (row skipping above the pane, left / right cuts that
+  switch the run-length decoder's mode as the original's), unclipped shape 0x100f0727, character 0x100f1c93,
+  string 0x100f1e10, and the 8-bit set's 1-bit font character 0x100f2d3c with its string 0x100f2f01.
+- **Proof:** `tools/verify/spec_w30_vfx.py`, random windows / panes / ends / shapes / fonts, the whole buffer
+  compared: line 30000 trials (not run: only the mode-1 / mode-2 drawing, dead because any mode but 0 returns -3,
+  and two unreachable jumps), wipe 3000, shape 20000, unclipped shape 5000, character 10000, string 5000, 1-bit
+  character 10000, its string 5000; all exact; planted bugs (W30*_MUTATE) caught. The checker loads a flat 32-bit
+  descriptor table for these routines (they push / pop ES; Unicorn has none by default).
+- **Unset read:** the line routine returns ([ebp-0x34] >= 1) also for horizontal and vertical lines, where that flag
+  is never written. No caller reads the line's result (the converted callers drop it; the string routine and the
+  dead ellipse do not use it either); the C returns 0 there, and the checker seeds the original's slot with 0.
+- **Not reproduced:** a font of height 0 makes the original's row counter wrap and draw until it faults (no font
+  has that); the C draws nothing. The generator uses heights of at least 1.
+- **0x100f2d3c is the 8-bit set's routine:** it writes one byte per cell (the colour byte [0x10157598]), not
+  RGB565; converted exactly, with its quirks (clip offsets in bytes for 1-bit data, the chunk length after the
+  first 8 bits not capped, the byte row counter). It gets no full-resolution copy.
+- **Left out:** the ellipse 0x100f094e has no callers (dead).
+- **Full resolution:** the logic of hooks_hud.c moved into the entry points (`w30_hud.c`): W30_Line / W30_Shape /
+  W30_ShapeRaw / W30_Wipe / W30_Char run the converted routine on a scratch buffer when the pane draws into the
+  renderer's HUD buffer and hand the drawing to HGVK.DLL's HudApi, as before; the string routine calls W30_Char, so
+  text gets full resolution per character. hooks_hud.c no longer patches the DLL: it only supplies the HUD
+  interface (GetModuleHandle / GetProcAddress of HGVK.DLL) and the scratch / bitmap memory through g_w30HudApi /
+  g_w30Scratch / g_w30Cells. "nohudhi" and option 3 leave them unset (640x480 HUD only). No Windows call in the
+  sim code.
+- Expected hook line: 2368 of 2370 (options 1 / 2), 2358 of 2360 (option 3).
+
+## Round 31: 1.2 ports start; round B, the Patch folder (2026-10-30)
+
+Diego: "okay, i want to bring shots and weapons changes" (from version 1.2, GameRip_12, 1998-07-23). Analysis of
+the shot group (1.0 vs 1.2, addresses and the 1.2 object record's -4 field shift mapped): the beam has no change;
+the main shot only adds a force-feedback jolt (no effect without the force-feedback library; AFTER_DLL.md); the
+grenade adds a bounce-dust call; the visible change is 1.2's new particle explosions, which need a particle system
+(PartSpec.ini), 1.2's .TEX texture path and its Patch folder. Order chosen by Diego: B (Patch folder) -> T (.TEX
+textures) -> C (PartSpec.ini) -> D (particle core, Vulkan transparency) -> E (explosions) -> F (other effects).
+Picks: when no .TEX exists, fall back to the 1.0 .XEL (round T); the whole 1.2 patch folder is used; 1.2 data and
+textures only with the Vulkan renderer, option 3 and noconv stay the 1.0 reference.
+
+Round B:
+- **Ported:** 1.2's file loader 0x100a2bc9 is 1.0's 0x100ba7d5 with two file opens put first,
+  "Patch\name.ext<language letter>" and "Patch\name.ext", each read as 1.0's file of the same kind (its asserts at
+  1.2's syscache.c lines 0x44f / 0x479); the rest (1.0's two loose files, the pack, the search path) is unchanged.
+  `Sim_100ba7d5` does the same when `g_w8yPatch` is set.
+- **Deliberate deviation:** `g_w8yPatch` is set at sim load only with the Vulkan renderer (`Hooks_VulkanRenderer`:
+  HG_RENDERER=hgvk or the first word of hgrc.cfg; hooks_conv.c). 1.2 always looks in Patch; here option 3 never
+  does, so it keeps the 1.0 data (Diego's pick). noconv runs the untouched original.
+- **Left out:** 1.2's second Patch reader 0x100a3a92 has no callers in 1.2 (dead).
+- **Proof:** `tools/verify/spec_w8y.py`, new spec `Sim_100ba7d5_patch`: the C with the Patch folder on against the
+  1.0 original given the file the C finds in Patch as its own file of that kind (no Patch file / the language file /
+  the plain file); difftest's new spec options `pre_c` (C-side setup) and `log_map` (the C's Patch paths and 1.2
+  assert lines brought to the 1.0 form) do the mapping. 4000 trials, 0 mismatches; coverage of the C function
+  177/178; planted bug (W31B_MUTATE: the language file passed over) caught (709 mismatches). The plain spec still
+  passes (Patch off).
+- **Data:** GameRip_12\patch copied whole into Project\Patch (1379 files; not in the repo). Its 88 BWD files use
+  no chunk types 1.0 lacks; their changes are values: the mission tables name one boulder colour table per boulder
+  (boulde01-36, shipped in Patch) instead of the shared "boulders", one scene's music track, the gear sheet
+  GEARSHT1's HGXP / HGBT record mix, small byte edits. Nothing found that needs unported 1.2 code; values tuned
+  for 1.2 code can only show in play.
+
+Round T1 (1.2's .TEX world textures; Diego: "Everything vulkan if we can"; standing rule from 2026-10-30 20:26:
+"everything to be 1.2, unless is a bug we have fixed"):
+- **Texture name table moved** out of the DLL into `g_w31TexNames` (src/sim/render/w31.h, w31_tex.c) in 1.2's
+  layout: 512 groups x 32 frames of 0x1c bytes (1.0: 0x18 at 0x10a51ac0; the luma table sits 0x20 bytes after
+  it, so it cannot grow in place). Every user points at it: w2j (anim), w3q (registration), w2m (preload), w2h
+  (reset; also clears the new +0x14 as 1.2's 0x10001ef7), w2l, w7l (release, 1.2 releases with the 1.0 type even
+  for a .TEX image), w2n (getter, submitters), w7q (group names), w21 (the sim main's walk and its pointer
+  [0x1015dafc], now a real pointer into our table). AFTER_DLL.md notes it.
+- **.TEX mode** (`W31_TexMode`: `g_w31Tex`, set by the hook layer with the Vulkan renderer, and the 3D mode
+  [0x1017b940]; 1.2 sets its flag 0x10105048 from the 3D mode): registration loads nothing (1.2 0x1000189d);
+  the preload loads every image as .TEX, mirrors its rows, offers it with its own palette and the description's
+  new flag +0x18, and stops 30 s after the mission load began (1.2 0x10001b4c; start time taken where 1.2's sim
+  main takes it, after the heaps); the getter of the three submitters is 1.2's 0x10002391 (`W31_GetTexImage`)
+  with the texture's palette (1.2 0x100010d9 / 0x100012c5 / 0x10001513), the description's flag set by the
+  second and third in 3D mode.
+- **Not a deviation: render mode.** 1.2's second and third submitters ask for mode 8 where 1.0 asks for 6. 1.2's
+  dx5draw.dll renumbered the modes: its mode 8 sets exactly the render states 1.0's mode 6 set (texture with
+  colour key, states 0x10000 / 0x40000 / 0 / 0x400000 at 1.2's 0-based state indexes 0 / 4 / 2 / 6 = 1.0's 1 / 5 /
+  3 / 7), and its modes 5 and 6 draw nothing. Our renderers keep 1.0's numbering, so the C sends 6 = 1.2's look.
+  Every later 1.2 port has to map 1.2's mode numbers to 1.0's.
+- **Bug fix (1.2): missing textures.** 1.2's archive is 1.0's; in 3D mode 1.2 only tries .TEX, and 268 textures
+  exist only as .XEL. 31 of them are named in texture / material lists, 4 in lists missions use (OCONWALL,
+  OGROUNDA, OGROUNDC in mission 1, TIMSPLAN in mission 30): 1.2 loads nothing for them and the polygons are not
+  drawn. Here a missing .TEX falls back to the 1.0 .XEL (game palette), recorded in the frame's +0x14 (0 = .XEL,
+  1 = .TEX), which 1.2 only ever clears (Diego's pick 1a).
+- **1.2's CACHE.INI** is needed: 1.0's has `tex 0 0`, a hash size of 0, and filing the first .TEX divides by zero
+  (Sim_100b9b3f). Project\CACHE.INI is 1.2's (`tex 1023 4000000`); the 1.0 file kept as CACHE.INI.bak-20261030.
+- **Not ported (inactive for our renderers):** 1.2's vertex-colour branch for 3DFX / PowerVR plugins ([0x1014b954]
+  from the plugin's name), the "grid" command line word ([0x1014a5f0]) and the "16bit" / "8bit" words that force the
+  .TEX flag. The description's +0x14 is 0 here (1.2 leaves it unset; no renderer reads it).
+- **Vertex alpha (1.2):** 1.2's second submitter (0x100012c5) no longer forces the vertex alpha to 0xff (only its
+  3DFX / PowerVR branch does): the callers' alpha (0x40, 0x80, the global [0x101cfc8c]) now shows, as in 1.2. With
+  the Vulkan renderer (`g_w31Tex`).
+- **Texture transparency (1.2, HGVK):** 56 of 1.2's .TEX files (the effect textures, but also trees OTREES01/03/04,
+  shrubs, cactus, the WXFLGR set, smoke) carry a transparency in each palette colour's top byte. 1.2's dx5draw makes
+  a texture offered with the description's flag +0x18 a 16-bit ARGB one: alpha 15 - (top byte >> 4), no colour
+  key; it chooses the format when the texture is first offered (the preload). HGVK does the same (alpha
+  (15 - top 4 bits) * 17, no colour key; made at PreloadTexture, its pixel pointer remembered so it keeps its alpha
+  when made again; drawn without the colour-key discard: it blends in the blending modes, whose pipelines write no
+  depth, and is solid in the others). Colours keep 8 bits (1.2's 4 bits were a limit of its texture format).
+- **Render modes renumbered in 1.2:** 1.2's renderers take 21 modes, 1.0's 0..4 unchanged, 1.0's 5..18 as 7..20 (1.2's
+  5 and 6 draw nothing): 1.2 code sends 8 for 1.0's 6, 0xf for 0xd, 0x12 for 0x10. Ported 1.2 code sends 1.0's
+  numbers (our renderers keep them).
+- **Kept from 1.0 on purpose:** .TEX only with the Vulkan renderer (Diego's pick 3a: option 3 and noconv stay the
+  1.0 reference).
+- **Checker:** the nine 1.0 specs of the table's users run the C on our table through a mapping step
+  (tools/verify/w31_map.py: the 1.0 table into ours before the C run, back after it; pointers into it in the
+  logs). Two generators now keep to the table's groups and records (outside them the original reads memory next
+  to its table, other data once the table is ours), and the anim spec (0x10006a2f) no longer runs out of
+  instructions in every trial (600 both-faults since round 2j: it checked nothing; now 600 real trials, exact).
+- **Checker against 1.2's code:** difftest runs 1.2's DLL relocated to 0x20000000 in the same machine ('orig12',
+  'to12', 'from12'); tools/verify/spec_w31_tex.py proves the .TEX paths against 1.2's functions: W31_GetTexImage
+  (0x10002391) 3000 trials, registration (0x1000189d) 3000, preload (0x10001b4c) 400, the submitters (0x100010d9,
+  0x100012c5, 0x10001513) 2000 each, all exact; the .XEL fallback against 1.0's getter 2000, exact; planted bug
+  (W31T_MUTATE: the row mirror leaves the last row) caught (373 mismatches). The 1.0 specs still pass with the
+  Vulkan switch off.
+- **T2 next:** 1.2 also moved the two file textures (sky / ground items, 1.0 0x100a2a66, 0x100a0880, 0x100a0def)
+  to .TEX; they keep their 1.0 .XEL until then.
+- **1.2 content in Project** (Diego: "I want all the content from the patch included"; not in the repo): the Patch
+  folder, CACHE.INI, INPUTW.MAP (1.2's walk / run keys) and SPLASH\STRINGS.TXT, each 1.0 file kept as
+  *.bak-20261030. PARTSPEC.INI and SKYGND.PAR follow with the rounds that read them (1.2 ships two different copies
+  of each); HG.IFR with a rumble round. Not copied: CHARINFO.HG1, CURRENT.CCT, HGSND.CFG (Diego's own state) and
+  DLLFILE.INI (our renderer).
+
+Round T2 (1.2's sky / cloud file textures; Diego: "yes"):
+- **Ported (.TEX mode, `W31_TexMode`):** the file-texture preload (1.0 0x100a2a66 -> 1.2 0x1008fd87), the cloud layer
+  (0x100a0880 -> 0x1008da61) and the sky band (0x100a0def -> 0x1008dff3) load their textures as .TEX (rows not
+  mirrored, unlike the world textures) and describe them with the texture's own palette; the band's corners move to
+  the far end (z 0x7f7fc99e, 1/z 1; HGVK draws z <= 1 and z >= 1e9 alike, as backdrop), its palette set only when it
+  is drawn; before the clouds 1.2 sets render state 0xc (its numbering; 1.0's 0xd: 1.2's SetState codes are 1.0's
+  minus 1) to 1 unless the display kind [0x1014cb1c] is 1 - its dx5draw does nothing with that state, nor do ours
+  (HGVK now logs each distinct SetState once). The descriptions are ours (`g_w31FileTex`, 7 dwords, flag 0); the
+  handles [0x101cfc90] / [0x101cfcb8] point at them. Correction: the cloud layer has no 1.2 geometry change (an
+  unnormalised diff of its shifted stack offsets suggested one).
+- **Bug fix (1.2):** its preload describes a file texture only when it loads it there and gives it the palette from a
+  local set only on that path (stack garbage when the image was loaded before); here the description is filled from
+  the image every time.
+- **Every description HGVK gets has the flag:** w3r_draw's (0x100d1e10) now uses the 7-dword form with flag 0 (1.0's 5
+  dwords left HGVK reading the stack as the flag; 1.2's version still passes 5).
+- **SKYGND.PAR:** 1.2 reads it from the game folder by fopen (not through the cache, so not from Patch); Project has
+  1.2's (1.0's kept as SKYGND.PAR.bak-20261030). All 28 sky / horizon textures it names exist as .TEX. 1.2 appended
+  terrain light fields per mission (hambient, l1, l2, gl) that its reader turns into light directions; our reader
+  (w12_sky.c) reads the earlier fields unchanged and ignores the rest until a lighting round ports them.
+- **Log:** per mission, "HGSIM.DLL: textures this mission: N .TEX, N .XEL fallback, N not found" (hook layer at sim
+  exit; counters `g_w31TexLoaded` / `g_w31TexFallback` / `g_w31TexMissing`).
+- **"bad rhw" (HGVK's count of unusable 1/z):** round T changes no vertex position or 1/z HGVK reads (textures,
+  palettes, vertex alpha, and the band's z, which HGVK treats as before), so that count does not come from it.
+- **Checker:** tools/verify/v12_common.py runs an existing 1.0 spec against 1.2's version (the two listings aligned,
+  their absolute addresses paired: globals copied across, stubs hooked at 1.2's callees too). spec_w31_sky.py (clouds,
+  4000 trials) and spec_w31_skyband.py (sky band, 6000) on the round-22 generators, and spec_w31_tex.py's file
+  preload (2000), all exact against 1.2; planted bugs (W31S_MUTATE: the file palette one entry late, the band's far
+  depth one bit off) caught. The round-22 / w2m / w3r 1.0 specs still pass with the switch off. The sky spec keeps
+  [0x1012ba50] at its real 4.0 (1.2's copy is read-only; the 1.0 spec also tries -10.0).
+
+## Round 32: 1.2's particle effects, rounds C-F (2026-10-30)
+
+Diego: "can you analyse 1 to 4? and do them in batch?" (C PartSpec.ini, D particle core, E explosions, F other
+effects; one build and one test at the end). Analysis: tools/v12/particles.md. 1.2 replaced 1.0's effect objects
+by particle systems in the same pool; every new 1.2 function is `Sim12_<1.2 address>` and every new 1.2 global
+`g_w32_<1.2 address>` (src/sim/fx). All of it runs only in 1.2 mode, `W32_PARTICLES()` = `W31_TexMode()` (Vulkan
+renderer and 3D mode, as the .TEX textures); option 3 and noconv keep 1.0.
+
+Round C (PartSpec.ini):
+- **Ported:** the particle type table (1.2 0x1011e700, 22 types of 0x1e bytes, its initial image), the settings
+  reader (0x10078e34: Red, Green, Blue, Intensity, Size, Lock, Order, Loop and Texture00.. from
+  <current folder>\PartSpec.ini, through the new platform calls `Plat_IniInt` / `Plat_IniString`) and the type
+  setup (0x100790be: each type gets a free texture record of 0x100..0x1ff and its textures registered; in 2D mode
+  every type is reset). Project\PARTSPEC.INI is 1.2's root copy (1.0 has none).
+- **Checker:** spec_w32_partspec.py against 1.2's code: reader 3000 trials, setup 1500, exact; planted bug
+  (W32C_MUTATE: one texture short) caught by both (1321 / 1142 mismatches).
+
+Round D (particle core):
+- **The pool in 1.2's layout:** 1.2 keeps 1.0's effect pool (1000 records, same globals) with records of 0x406 bytes
+  (1.0 0x57e) holding 16 particles of 0x32 bytes; the node / update / draw / argument dwords move from +0x552 / +0x556 /
+  +0x55a / +0x57a to +0x332 / +0x336 / +0x33a / +0x366, the type at +0x402. 1.2's records fit in 1.0's area, so the
+  addresses stay; the size and offsets follow the mode (`W32_REC_SIZE` / `_OBJ` / `_UPDATE` / `_DRAW` / `_ARG`).
+  Switched: 0x10090513, 0x10090cc8 (w2l), 0x10090581, 0x10090c7d (w2g), 0x10090e23, 0x10090f17 (w3o), the setup
+  0x100908b3 (w8x: also +0x3fa = -1, 16 particles of 0x32 cleared, then the type setup 0x100790be) and the effects
+  switch 0x10090d15, converted now (src/sim/fx/w32_pool.c, hook `conv_w32.inc`).
+- **1.2 additions in the draw dispatcher 0x10090f17 (1.2 0x10079eee):** it first notes Sim_100448ff() == 1 in
+  0x1014b58c, and a system whose type has Lock gets bit 2 of +0x10 after its draw.
+- **Particle draw (1.2 0x10078c29, src/sim/fx/w32_draw.c):** each visible particle a square (corners at x -+ size/2,
+  y +- size/2) with texture coordinates from a random corner of 1.2's table 0x1011e998, sorted far to near by the C
+  library qsort (comparison 0x10078be0) when the system has a texture record, the record's frame set from the
+  particle (1.2 0x1000204c = 1.0 Sim_1000716a), then the polygon routine [0x1014cb4c].
+- **1.2's polygon changes:** the queued polygon 0x100a539e (1.2 0x1009185b) returns for no polygon, keeps only the
+  low byte of the polygon's light dword +0x3c as the vertex light and puts its other three bytes in the vertex's
+  specular colour (+0x18, under the fog byte); the polygon routine 0x1009ef50 (1.2 0x1008bd80) gives the flat-colour
+  polygons (0xa000) 1/z. HGVK does not use the specular colour yet (the lighting round decides).
+- **Not ported:** 1.2's 0x10077a07 / 0x10077b21 (nothing calls them, nothing holds their address); the particle
+  families 0x1008139b and 0x10083679 (same).
+- **Checker:** the seven changed 1.0 pool functions, 0x100a539e and 0x1009ef50 still pass their 1.0 specs with the
+  switch off (spec_w2g / w3o / w8x only needed the new files in their build lists). Against 1.2's code:
+  spec_w32_pool.py per-frame pass 300 trials and draw dispatcher 300, spec_w32_switch.py the switch (also against
+  1.0, 600 each), spec_w32_setup.py the setup 300, spec_w32_draw.py the particle draw 3000, spec_w32_driver.py the
+  queued polygon 2000, spec_w32_polyroutine.py the polygon routine 3000; all exact. Planted bugs caught: W32F_MUTATE
+  (Lock ignored, 3), W32P_MUTATE (record not freed, 263 / 242), W32S_MUTATE (+0x3fa left, 255), W32D_MUTATE (frame not
+  set, 1242), W32V_MUTATE (specular red / blue swapped, 1185), W32R_MUTATE (1/z left, 1053). The other four pool
+  functions (0x10090513, 0x10090cc8, 0x10090581, 0x10090c7d) are 1.0's code with only the record size and the four
+  offsets changed: their listings align instruction for instruction (tools/v12: the aligned listings).
+- **Tools:** tools/v12/funcmap.py pairs 1.2 functions with 1.0's by identical listings (1513 of 2392;
+  tools/v12/funcmap.json), tools/v12/funcfind.py lists the closest 1.0 functions for the others.
+
+Round E (explosions; in progress):
+- **How the families are switched:** each converted 1.0 spawn starts with `if (W32_PARTICLES())` and hands its
+  arguments to its 1.2 replacement (the same arguments; one family takes one more), so every caller, converted or
+  still in the DLL, gets 1.2's effect. Pairs (1.0 -> 1.2): 0x10091085 -> 0x1007a0a6 (railgun), 0x1009201f ->
+  0x1007acf3 (accel), 0x10092956 -> 0x1007b956 (laser), 0x10092f9d -> 0x1007c1a1 (shockwave), 0x100939a3 -> 0x1007d342
+  (sparks / puffs), 0x100941c3 -> 0x1007e25c (skate), 0x100949e8 -> 0x1007f8a9 (smoke), 0x10094fcb -> 0x100805dc
+  (grenade), 0x10095e0a -> 0x10082556 (missile), 0x10096ac3 -> 0x10084362 (tracer). New 1.2 calls added in their
+  converted callers: grenade bounce dust 0x1008514d, debris smoke, 1.2's 16 extra shockwave calls; footsteps
+  (0x10086007, from 1.2's new 0x1003fbb7) and the gun effect (0x1007f19f, from 0x100d5485) with their callers (Diego:
+  "Both now").
+- **Shared code** (src/sim/fx/w32_family.c): 1.2 repeats its spawn prologue, frame advance, particle size and corner
+  template in every family; here each is one function (`W32_NewSystem`, `W32_ParticleFlags`, `W32_ParticleSize`,
+  `W32_SetTemplate`).
+- **Bug fix (1.2), pending Diego's review:** every 1.2 spawn marks 0x20 particles' frames (dword +0x30 + j * 0x32 =
+  -1) in a record that holds 16 particles of 0x32 bytes (record 0x406 bytes). j = 16..19 land in the spawn's own
+  record (+0x350, +0x382, +0x3b4, +0x3e6: the velocity, the corner template, two corner positions), which the spawn
+  or the next draw rewrites. j = 20..31 land in the NEXT pool record at +0x12 + k * 0x32, k = 0..11: the x position
+  of that record's particles 0..11 becomes 0xffffffff (a NaN). That record is almost always live: the pool hands out
+  free slots from the top of a stack filled in ascending order (setup 0x100908b3: [0x10216b80][i] = i, top = count
+  - 1; Sim_10090581 pops), so slots come out 999, 998, 997, ... and the record after a new system is the one spawned
+  just before it, usually still on screen. Its particles' x turns NaN, they fail the projection and are no longer
+  drawn: in 1.2 each new effect wipes out the previous effect's particles (for a beam, rec +0x12 is its end's x,
+  recopied every update: one bad frame). For the last slot (999) 1.2 writes past its pool. Here 16 particles are
+  marked; the checker builds the C with `W32_LOOP32` (1.2's 0x20) so everything else is compared exactly.
+- **Tracer (type 12; 1.0 Sim_10096ac3):** spawn 0x10084362, update 0x10083dde, draw 0x10083e8a
+  (src/sim/fx/w32_tracer.c). Checker: spec_w32_tracer.py (tools/verify/w32_common.py: 1.2-only specs, the globals
+  paired by tools/v12/globalmap.json) 3000 / 1500 / 3000 trials, exact; planted bug W32E_MUTATE (size one bigger)
+  caught (2182). Sim_10096ac3's 1.0 spec still passes with the switch off (2000).
+- **Tools:** funcmap.py also pairs globals (tools/v12/globalmap.json, 13398, from the identical functions); the
+  checker's closure() adds the platform stub when a file calls the platform layer.
+- **Missile (type 10; 1.0 Sim_10095e0a), grenade (8; Sim_10094fcb), bounce dust (17..20; new), smoke (7;
+  Sim_100949e8), gun (6; called from 0x100d5485 once it is ported):** src/sim/fx/w32_explode.c. Every explosion spawn
+  shares the in-sight test and prologue (`W32_InSight`, `W32_Explosion`: 1.2 repeats them verbatim in each spawn,
+  differing only in type, speed scale and the two velocity divisors: tracer and missile 8 / 8, grenade 256 / 16,
+  smoke and gun 256 / 8). The grenade shot (w10_shot.c) now calls the bounce dust where 1.2's does (the bounce branch,
+  shot start, the bounced velocity, 2 and the shot's ground kind +0x8e; the shot record's layout is the same in both
+  versions); 1.2's other changes to the grenade shot are gameplay (the weapons round).
+- **Faithful structure (Diego: "the new C code as close as possible to the original"):** each 1.2 function is
+  ported line for line; only blocks 1.2 repeats verbatim in every family (the in-sight test, the spawn prologue,
+  the frame advance, the size scaling, the corner template) are written once as helpers, since they are one inline
+  function in 1.2's source in all likelihood. Two-loop functions stay two loops; values 1.2 computes and never uses
+  are computed (and marked) where they cost nothing, and its no-op projection calls are kept (they call the
+  projection, which counts).
+- **Reproduced (1.2): the smoke's corner colour.** 1.2's smoke / gun draw colours a particle's first corner from the
+  256-entry colour table (1.2 0x10152a60, ours 0x10185760) indexed by the polygon flags. For a textured type the
+  flags are group | 0x7000 (group 0x100..0x1ff), so 1.2 reads 0x1016ee60..0x1016f25c, about 115 KB past the table.
+  No 1.2 code refers to anything between 0x10164d6c and 0x10186eec; that span is the scene-object table (1.2
+  0x10164d40, ours 0x101a2100, an exact pair in tools/v12/globalmap.json; 0x402 records of 0x88 bytes: name, parent,
+  flags, node, ...), so the colour comes from bytes of scene-object records 302..310. That is deterministic for a
+  mission (whatever those records hold, zeros when the mission has fewer objects), so it is reproduced: the C turns
+  1.2's address into the same position in our scene-object table. (A first version kept the type's colour as a
+  bug fix; replaced by this after the coordinator's rule: find the mechanism, reproduce a deterministic value.)
+  Checker: the scene-object table is paired like the other globals; the planted bug W32C_MUTATE (one byte off) is
+  caught on its own (1463 mismatches).
+- **Checker:** spec_w32_explode.py, all exact against 1.2: tracer, missile, grenade, dust (spawn 3000 / update 1500 /
+  draw 3000 trials each), smoke and gun spawns 3000 each, their update 1500 and draw 3000 (36 both-fault: huge
+  2D sizes run both out of instructions). Planted bugs caught in every function (W32X_MUTATE: scale / one frame
+  longer; W32E / W32M_MUTATE: size one step bigger). Lesson: the listing diff hides constants and filtered views can
+  hide an imul (the dust's * 2000); every family is now checked with a constant scan too.
+
+Round F (other effects):
+- **Skate dust (type 5; 1.0 Sim_100941c3), shockwave (4; Sim_10092f9d), sparks / puffs (13..16; Sim_100939a3):**
+  src/sim/fx/w32_explode.c. The skate particles animate along one of two frame rows (1.2 0x1018ef80 = ours
+  0x10215b20; each particle keeps a pointer to its row); the shockwave flies 8 particles out at random angles (k * 80
+  speed, k * 181 frames, k the 7th argument); the sparks pick their update by the mode (2D: by kind; 3D: the dust's)
+  and, in 3D, their type by the shot's ground kind, a new 8th argument: our sparks caller (Sim_1006c161's helper)
+  passes the shot's +0x8e as 1.2 does (the shot record's layout is the same in both versions).
+- **Beams: railgun (0; Sim_10091085), accelerator (2; Sim_1009201f), laser (3; Sim_10092956):** src/sim/fx/w32_beam.c.
+  The systems follow their shot record (+0x366) and draw its two projected ends as two quads (5 wide, then 2..3),
+  across or up and down by the larger extent (|dx| = |dy| or unordered take 1.2's own paths); the frame advances
+  twice per draw and 1.2 adds 0x7000 after each, so a stopped animation keeps drawing. The laser keeps 1.0's sound
+  calls (1.2 makes the same ones). The railgun's impact calls our 0x100246b3 (1.0's), as our 1.0 railgun does; 1.2's
+  changed impact (0x1001b3a1) waits for the weapons round.
+- **Debris smoke (new in 1.2):** our debris update (Sim_10029421, w8u_debris.c) spawns 1.2's smoke along the piece's
+  move each frame it has not come to rest (1.2 0x1001ef21's new else branch); 1.2's whole update is otherwise 1.0's.
+- **Pending Diego:** 1.2's network-only branch in the part-destroyed function (16 shockwaves and a reworked tally,
+  1.2 0x1005ab68 / 0x10059e9d; [0x1015ec58] is the network flag); footsteps (1.2 0x1003fbb7, its unit-animation
+  rework) and the gun trigger (1.2 0x100bb425): both read 1.2's moved object fields and need a layout map first.
+- **Checker:** spec_w32_explode.py (skate 3000 / 1500 / 3000, shockwave 3000 / 1500 / 3000, sparks spawn 3000, its
+  four updates 1500 / 1500 / 600 / 600, draw 1500), spec_w32_beam.py (spawns 2000 each, updates 2000, the accelerator
+  draw 4000, the laser's 1000, the quad helper 2000), spec_w32_debris.py (1.2's debris update 3000): all exact
+  against 1.2, planted bugs caught (only the railgun's one-line draw and the quad helper have none of their own; the
+  helper is covered through the accelerator draw's). Every 1.0 function edited still passes its 1.0 spec with the
+  switch off: Sim_10095e0a, 10094fcb, 100949e8, 100941c3, 10092956 (spec_w6f), 10092f9d (w8x), 10091085, 1009201f
+  (w2g), the grenade shot 0x100225c7 (15000), Sim_1006c161 (6000), Sim_10029421 (1500), Sim_10096ac3 (2000). The 1.0
+  specs link stand-ins for 1.2's spawns (tools/verify/w32_smoke_stub.c), which never run with the switch off.
+
+Round 32, first option 2 test (Diego: "game crashed"):
+- **Cause:** crash.log's fatal fault is in W32_Explosion (HG.exe+0x83242), reading block = node +0x8c of pool record
+  999 (0x10312f8a = 0x10217c20 + 999 * 0x406) whose node (+0x332) was 0. The pool had been built in 1.0's layout:
+  our sim main (1.0's order) runs the pool setup 0x100908b3 before it sets the 3D mode ([0x1017b940] = 1 when
+  [0x1017b944]), so `W32_PARTICLES()` (Vulkan and 3D mode) was false at setup and true afterwards; the first spawn
+  took slot 999 with 1.2's record size and found no node there.
+- **Fix (1.2's own order):** 1.2's sim main (0x1006fae1) calls the pool setup (0x1007986e) after the display and
+  renderer set-up, once the 3D mode is known, and sets its .TEX flag 0x10105048 just before it. Our sim main now does
+  the same in 1.2 mode (`g_w31Tex`); 1.0 mode keeps 1.0's place. Round D had missed this move in the sim main.
+  SimMain's 1.0 spec still passes (4000).
+- **Also fixed:** an older hook (hooks_view.c "SetParticles", which forces the effects on) owns 0x10090d15 and called
+  the DLL's 1.0 original, so the round-D conversion of the switch was skipped at install ("bytes differ"). The view
+  hook now calls the converted Sim_10090d15 (the 1.0 original frees with 1.0's record size); conv_w32.inc has no
+  entries.
+- **Not from this round:** the log's earlier, handled faults at HG.exe+0x17576e .. (writes to 0x98009800 and the
+  like) are outside the sim, in the statically linked library code; the game ran on past them.
+
+Round 32, grenade dust not seen (Diego: "I dont see dust on grenade bounce"; his choice, option a: "replicate 1.2 and
+we will fix it from there if is not good enough"):
+- **Cause:** the counters from his run (177 bounces, 176 dust systems, 4888 draws) show the dust is made and drawn.
+  1.2's particle squares carry no depth (corners keep z 1 and 1/z 1 from the template); 1.2's renderer had no depth
+  buffer and drew in the game's order. HGVK gives such a polygon the previous polygon's depth, so the ground hid it.
+- **Change (a deviation at the renderer boundary, Vulkan only):** the particle draw Sim12_10078c29 and the beam quad
+  helper Sim12_10086810 call the renderer's SetState (slot 0x109e3d40) with our own code 0x48470001 (W32_STATE_PAINTER),
+  1 before the polygon call and 0 after. HGVK draws polygons sent while it is on with pipelines that have no depth test
+  and no depth write, in the order they come. Nothing else changes: other polygons keep the depth test, and 1.0 mode
+  never sends the code.
+- **Checked:** Sim12_10078c29 3000/3000 and the beam functions 0x10086810, 0x1007a379, 0x1007a092, 0x1007afdc pass
+  against 1.2 with the new call given a bare ret (v12_common.painter_slot); the planted bugs are still caught.
+  spec_w32_draw ignores the test counters g_w32Count while they exist.
+- **Result (Diego: "that worked"):** the dust shows. That run: 96 grenade bounces, 85 dust systems in sight, 2384 dust
+  draws, 2197 systems made, none refused, 150210 particle squares; HGVK logged SetState(0x48470001, 1/0); no new
+  fault (crash.log unchanged since 09:05); all 188 .TEX textures found; the only skipped hooks are the two usual ones
+  (0x585c4, 0xac603).
+- **Counters removed** after that run (w10_shot.c, w32_explode.c, w32_family.c, w32_draw.c, w32.h, hooks_conv.c, and
+  spec_w32_draw's ignore); the code is back to what the checker passed. Rebuilt (option 4).
+

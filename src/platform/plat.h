@@ -48,6 +48,20 @@ uint32_t Plat_TicksMs(void);
  */
 uint32_t Plat_CurrentDir(char *out, uint32_t size);
 
+/* ---- settings files (.ini: [section] key=value) --------------------------------------------------------- */
+
+/*
+ * The whole number of key in section of the settings file path, or def when there is none (Windows:
+ * GetPrivateProfileIntA, which reads a leading decimal number with an optional sign). Linux: a reader of its own.
+ */
+uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def);
+/*
+ * The text of key in section of path into out (size bytes, with the end zero), or def when there is none;
+ * returns the length copied (Windows: GetPrivateProfileStringA).
+ */
+uint32_t Plat_IniString(const char *path, const char *section, const char *key, const char *def, char *out,
+                        uint32_t size);
+
 /* ---- libraries (the renderer plugins) ---------------------------------------------------------------------- */
 
 /* Loads a library by its file name; 0 when it does not load. Windows: LoadLibraryA. Linux: the plugin's shared

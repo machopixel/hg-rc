@@ -1,12 +1,14 @@
 #include "w3r.h"
 #include "w2m.h"
+#include "w31.h"
 #include "../util/access.h"
 
 // FUNCTION: HGSIM 0x100d1e10
 void __cdecl Render_SubmitVerts_100d1e10(void *surface, void *pixels, short width, short height, int count, void *verts, int unused1, int unused2)
 {
-    RenderTexture tex;
-    RenderTexture *handle = &tex;
+    /* round 31: 1.2's 7-dword description, flag 0 (HGVK reads the flag; the 1.0 layout left it to the stack) */
+    W31Texture tex;
+    W31Texture *handle = &tex;
 
     (void)unused1;
     (void)unused2;
@@ -29,6 +31,8 @@ void __cdecl Render_SubmitVerts_100d1e10(void *surface, void *pixels, short widt
     tex.height = height;
     tex.pixels = pixels;
     tex.palette = GBYTES(0x10185760);
+    tex.unset14 = 0;
+    tex.flag = 0;
     /* tex.key stays unset, as in the original */
     RENDER_SLOT(int(__cdecl *)(int, void *, void *, int, void *), 0x109e3d30)(GS32(0x1017b940) != 0 ? 6 : 2, surface, verts, count, &handle);
 }

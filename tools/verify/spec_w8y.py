@@ -1371,6 +1371,7 @@ def g_ba7d5(ctx):
     fails(ctx, 0.08, 12)    # allocation failures, for the three assert paths
     ST['active'] |= {0x100fe970}
     data = bytes(r.getrandbits(8) for _ in range(r.choice([0, 4, 40])))
+    ST['w31data'] = data
     rets(0x100fd820, *[r.choice([0, 0, stream(ctx, data)]) for _ in range(r.choice([1, 2, 3, 5]))])
     rets(0x100fe970, len(data))
     for k in range(4, 9):
@@ -1410,6 +1411,78 @@ def g_ba7d5(ctx):
     else:
         w32(ctx, 0x1017d600, 0)
     return [namebuf, cstr(ctx, ext), r.choice([0, zbuf(ctx, 8)])]
+
+
+def g_ba7d5_patch(ctx):
+    """Round 31: Sim_100ba7d5 with 1.2's Patch folder on (g_w8yPatch). 1.2 (0x100a2bc9) is 1.0 with two opens put
+    first, "Patch\\name.ext<letter>" and "Patch\\name.ext", each read like 1.0's file of the same kind. The C runs
+    against the 1.0 original given the file the C finds in Patch as its own file of that kind:
+      A: neither Patch file: the C's opens are two failures, then the original's;
+      B: Patch\\name.ext<letter>: both get it at their first open;
+      C: only Patch\\name.ext: both get a failure, then it.
+    log_map drops (A) or renames (B, C) the C's Patch paths and its 1.2 assert lines (0x44f, 0x479)."""
+    args = g_ba7d5(ctx)
+    r = ctx.rng
+    opens = (ST['rets'][0x100fd820] * 12)[:12]       # long enough that the C's two extra opens do not wrap
+    case = r.choice('AABC')
+    ST['w31case'] = case
+    if case == 'A':
+        rets(0x100fd820, *opens)
+        ST['w31c'] = [0, 0] + opens
+    else:
+        s = stream(ctx, ST['w31data'])
+        rets(0x100fd820, *([s] if case == 'B' else [0, s]))
+        ST['w31c'] = list(ST['rets'][0x100fd820])
+    return args
+
+
+def w31_pre_c(m):
+    ST['rets'][0x100fd820] = ST['w31c']
+    m.uc.mem_write(m.syms['g_w8yPatch'], struct.pack('<I', 1))
+
+
+W31_FMT = '%s\\%s.%s'
+
+
+W31_PRE = 'Patch' + chr(92)
+
+
+def _w31_forms(v):
+    """(the Patch format, the Patch prefix, 1.0's format) in v's type"""
+    if isinstance(v, bytes):
+        return W31_FMT.encode(), W31_PRE.encode(), b'%s.%s'
+    return W31_FMT, W31_PRE, '%s.%s'
+
+
+def _w31_patchy(e):
+    """an entry of the C's Patch tries: a text that is a Patch path (the search path 0x100bae0a uses the same
+    format, so the format alone does not tell)"""
+    for v in e[1]:
+        if isinstance(v, (bytes, str)) and v.startswith(_w31_forms(v)[1]):
+            return True
+    return False
+
+
+def _w31_text(v, patchy):
+    if patchy and isinstance(v, (bytes, str)):
+        fmt, pre, fmt10 = _w31_forms(v)
+        if v == fmt:
+            return fmt10
+        return v[len(pre):] if v.startswith(pre) else v
+    return v
+
+
+def w31_log_map(log_o, log_c):
+    out = []
+    for e in log_c:
+        patchy = _w31_patchy(e)
+        if ST['w31case'] == 'A' and patchy:
+            continue
+        a = tuple(_w31_text(v, patchy) for v in e[1])
+        if e[0] == 'stub_100ff860':
+            a = tuple({0x44f: 0x442, 0x479: 0x46c}.get(v, v) if isinstance(v, int) else v for v in a)
+        out.append((e[0], a))
+    return log_o, out
 
 
 def g_bcd61(ctx):
@@ -1651,6 +1724,8 @@ SPECS = [
     spec('Sim_100ba304', 0x100ba304, g_ba304, 4000, void=True, api=HEAP_API),
     spec('Sim_100baff4', 0x100baff4, g_baff4, 800, api=HEAP_API),
     spec('Sim_100ba7d5', 0x100ba7d5, g_ba7d5, 4000, api=HEAP_API),
+    dict(name='Sim_100ba7d5_patch', orig=0x100ba7d5, c='Sim_100ba7d5', gen=g_ba7d5_patch, trials=4000,
+         api=HEAP_API, pre_c=w31_pre_c, log_map=w31_log_map, ignore_syms={'g_w8yPatch': 4}),
     spec('Sim_100bc610', 0x100bc610, g_bc610, 600, api=HEAP_API),
     spec('Sim_100bc70d', 0x100bc70d, g_bc70d, 4000, api=HEAP_API),
     spec('Sim_100bca49', 0x100bca49, g_bca49, 800, api=HEAP_API),
@@ -1706,6 +1781,9 @@ def begin(ctx, *stubs):
 # round 25 negative check: W25_NEG=1 builds the C with W25C_MUTATE (Sim_100ba7d5 files a pack item one byte longer)
 if os.environ.get('W25_NEG'):
     CFLAGS = CFLAGS + ['-DW25C_MUTATE']
+# round 31 negative check: W31_NEG=1 builds the C with W31B_MUTATE (Sim_100ba7d5 passes over Patch\name.ext<letter>)
+if os.environ.get('W31_NEG'):
+    CFLAGS = CFLAGS + ['-DW31B_MUTATE']
 # round 27 negative check: W27_NEG=1 builds the C with W27L_MUTATE (Sim_100b69d0's table starts with room for 99
 # pairs, not 100)
 if os.environ.get('W27_NEG'):

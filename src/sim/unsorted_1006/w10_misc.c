@@ -1,3 +1,4 @@
+#include "../fx/w32.h"
 #include "w10.h"
 #include "w3o.h"
 #include "w6e.h"
@@ -388,6 +389,12 @@ static void W10_6Sparks(uint32_t unit, int32_t part, const uint8_t *shot, int32_
     if (node == 0 || U32(unit, 0) == 0xa)
         return;
     Sim_100a9cfb(node, (uint32_t *)&x, (uint32_t *)&y, (uint32_t *)&z);
+    /* 1.2 (0x1005bfca, round 32): the sparks particles, also given the shot's ground kind +0x8e */
+    if (W32_PARTICLES()) {
+        Sim12_1007d342(x, y, z, W10_6F(shot, 0x18), W10_6F(shot, 0x1c), W10_6F(shot, 0x20), type,
+                       (int32_t)U32(shot, 0x8e));
+        return;
+    }
     Sim_100939a3(x, y, z, W10_6F(shot, 0x18), W10_6F(shot, 0x1c), W10_6F(shot, 0x20), type);
 }
 

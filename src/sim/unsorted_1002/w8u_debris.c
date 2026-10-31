@@ -1,3 +1,4 @@
+#include "../fx/w32.h"
 #include <string.h>
 #include "w8u.h"
 #include "w2i.h"
@@ -101,14 +102,18 @@ void __cdecl Sim_10029421(int index)
     double ticks, sum;
     int bounced = 0, fast;
     float mx, my, mz, rx, ry, rz;
+    uint32_t ox, oy, oz, nx, ny, nz;  /* 1.2: [ebp-0x38], [ebp-0x40], [ebp-0x44]; the node after the move */
 
     if (U32(e, 4) == 0)
         return;
     model = BYTES(Sim_100a9b71((void *)(uintptr_t)U32(e, 4)));
     radius = Sim_1000946e(model, &x, &y, &z);
     x = U32(e, 0x24);
+    ox = x;
     y = U32(e, 0x28);
+    oy = y;
     z = U32(e, 0x2c);
+    oz = z;
     y = Bits_OfFloat((float)((double)Float_OfBits(y) - (double)radius / (double)GFL(0x10111290)));
     vy = W8U_F(e, 0xc);
     fast = (double)vy > (double)GFL(0x10111294);
@@ -166,5 +171,16 @@ void __cdecl Sim_10029421(int index)
     if (bounced) {
         G32(0x1015dc40) = G32(0x1015dc40) - 1;
         Sim_1002990f(index);
+    } else if (W32_PARTICLES()) {
+        /* 1.2 (0x1001ef21, round 32): smoke along the piece's move this frame */
+        Sim_100a9cfb((void *)(uintptr_t)U32(e, 4), &nx, &ny, &nz);
+        Sim12_1007f8a9(Float_OfBits(ox), Float_OfBits(oy), Float_OfBits(oz),
+#ifdef W32D2_MUTATE /* the checker's negative check only */
+                       Float_OfBits(nx),
+#else
+                       (float)((double)Float_OfBits(nx) - (double)Float_OfBits(ox)),
+#endif
+                       (float)((double)Float_OfBits(ny) - (double)Float_OfBits(oy)),
+                       (float)((double)Float_OfBits(nz) - (double)Float_OfBits(oz)));
     }
 }

@@ -111,11 +111,14 @@ def g_716a(ctx):
     for i in range(n):
         a = 0x10ac1b00 + 14 * i
         wb(ctx, a, rnd_bytes(ctx, 14))
-        w16(ctx, a, r.choice([0, 1, 2, 3, r.getrandbits(16), 0xffff]))
+        # round 31: only groups of the table (0..5 seeded); a group outside it reads memory next to the table,
+        # which is other data once the table is ours (w31_map.py)
+        w16(ctx, a, r.choice([0, 1, 2, 3, 4, 5]))
         w16(ctx, a + 8, r.choice([0, 1, 5, 0x7fff, 0x8000, 0xffff, r.getrandbits(16)]))
-    wb(ctx, 0x10a51ac0 - 0x300, bytes(r.choice([0, 0, 1, r.getrandbits(8), 0x80]) for _ in range(0x300 * 6)))
+    wb(ctx, 0x10a51ac0, bytes(r.choice([0, 0, 1, r.getrandbits(8), 0x80]) for _ in range(0x300 * 6)))
+    # round 31: records of the 14-byte table only (a record outside it names a group outside the texture table)
     index = r.choice([r.randrange(0, n), r.randrange(0, n), r.randrange(0, n), 0, n - 1,
-                      r.randrange(0, n) | (r.getrandbits(16) << 16), r.getrandbits(32), 0xffff])
+                      r.randrange(0, n) | (r.getrandbits(16) << 16), r.randrange(0, 0x200), 0x1ff])
     value = r.choice([r.randrange(0, 0x20), r.randrange(0, 0x20), 0x1f, 0x20, 0x21, r.getrandbits(16),
                       r.getrandbits(32), r.randrange(0, 4) | (r.getrandbits(16) << 16)])
     return [index, value]
@@ -791,3 +794,8 @@ SPECS = [
     spec('Sim_100c4966', 0x100c4966, g_c4966, 800),
     spec('Sim_100cb9f3', 0x100cb9f3, g_cb9f3),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES if x not in SOURCES]
+SPECS = w31_wrap(SPECS, {'Sim_1000716a'})

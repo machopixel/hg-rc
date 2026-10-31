@@ -173,3 +173,8 @@ def g(ctx):
 
 
 SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, trials=300 if NEG else 4000)]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES + ['../tools/verify/plat_stub.c'] if x not in SOURCES]
+SPECS = w31_wrap(SPECS, None)

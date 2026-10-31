@@ -1,3 +1,4 @@
+#include "../render/w31.h"
 #include "w2l.h"
 #include "../util/access.h"
 
@@ -11,7 +12,7 @@ void __cdecl Sim_1000716a(int index, unsigned value)
         v = 0;
     if (S16(entry, 8) < 0)
         return;
-    if ((int8_t)*SIM_PTR(uint8_t, 0x10a51ac0u + (uint32_t)((int32_t)S16(entry, 0) * 0x300) + v * 0x18) == 0)
+    if ((int8_t)W31_NAME(S16(entry, 0), v)[0] == 0)
         return;
     U16(entry, 2) = (uint16_t)v;
     U32(entry, 0xa) = 0;

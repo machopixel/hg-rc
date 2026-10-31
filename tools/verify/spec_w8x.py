@@ -1157,3 +1157,11 @@ SPECS = [
     spec('Sim_100a4933', 0x100a4933, g_4933, 800),
     spec('Sim_100a4d8e', 0x100a4d8e, g_4d8e, 500, void=True),
 ]
+
+# round 32: the pool layout follows W31_TexMode() (off here: the 1.0 layout)
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', 'sim/fx/w32_partspec.c', '../tools/verify/plat_stub.c',
+                                 'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2f_records.c', 'sim/unsorted_100f/w2e_string.c',
+                                 'sim/unsorted_1000/w2h_reset.c', 'sim/unsorted_1004/state.c'] if x not in SOURCES]
+
+# round 32: the 1.0 effect spawns call 1.2's in 1.2 mode (off here): stand-ins, and the mode switch
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]

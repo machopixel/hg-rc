@@ -1245,3 +1245,6 @@ SPECS = [
     spec('Sim_10046f7f', 0x10046f7f, g_46f7f, 300),
     spec('Sim_10046fe5', 0x10046fe5, g_46fe5, 400, api=HEAP_API),
 ]
+
+# round 32: the debris update calls 1.2's smoke in 1.2 mode (off here): a stand-in, and the mode switch
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]

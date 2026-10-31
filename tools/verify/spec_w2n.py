@@ -137,9 +137,10 @@ def _hook(m):
             elif stub == 'drv':
                 emit(uc, [I(3), I(a[0]), I(a[2])] + log_vertices(uc, a[1], a[0], skip18=True))
             elif stub == 'load':
-                emit(uc, [I(4), I(a[0]), I(a[1]), I(a[2])])
+                name = _w31_addr(a[0])      # round 31: a name in our table as the 1.0 table's address
+                emit(uc, [I(4), I(name), I(a[1]), I(a[2])])
                 pool = ST['pool']
-                h = ((a[0] * 2654435761) + ST['seed']) & 0xffffffff
+                h = ((name * 2654435761) + ST['seed']) & 0xffffffff
                 k = (h >> 8) % (len(pool) + 2)
                 ret = pool[k] if k < len(pool) else 0
             elif stub == 'sw':
@@ -353,7 +354,11 @@ def tex_tables(ctx):
     for i in range(0x200):
         flag = r.choice([1, 1, 1, 0, 3, 0x8001, 0xfffe])
         w6 = r.choice([1, 1, 1, 0, 0x100, r.getrandbits(16)])
-        struct.pack_into('<hhhHhhh', recs, i * 14, r.randrange(0, ngroups), r.choice([r.randrange(0, 32), r.randrange(0, 32), -1, 31]), 0, w6, r.choice([r.randrange(0, 5), -2, -1]), 0, 0)
+        # round 31: frame -1 only after group 0 (it is the last frame of the group before; before group 0 it is
+        # memory next to the table, other data once the table is ours: w31_map.py)
+        grp = r.randrange(0, ngroups)
+        frm = r.choice([r.randrange(0, 32), r.randrange(0, 32), -1 if grp > 0 else 0, 31])
+        struct.pack_into('<hhhHhhh', recs, i * 14, grp, frm, 0, w6, r.choice([r.randrange(0, 5), -2, -1]), 0, 0)
     wb(ctx, 0x10ac1b00, recs)
     for g in range(ngroups):
         names = bytearray(0x300)
@@ -388,7 +393,8 @@ def g_getimage(ctx):
     begin(ctx)
     tex_tables(ctx)
     wh = ctx.buf(8)
-    idx = r.choice([r.randrange(0, 0x30), r.randrange(0, 0x200), r.randrange(0x100, 0x120), 0x1ff, 0x200, 0x300, -1, -0x100, r.randrange(-300, 0), 0xff, 0x100])
+    # round 31: no negative record numbers (a record before the table names a group outside the texture table)
+    idx = r.choice([r.randrange(0, 0x30), r.randrange(0, 0x200), r.randrange(0x100, 0x120), 0x1ff, 0x200, 0x300, 0xff, 0x100])
     return [idx, wh, wh + 4]
 
 
@@ -407,7 +413,7 @@ def g_sub1(ctx):
     tex_tables(ctx)
     w32(ctx, 0x1017b940, r.choice([0, 1, 3]))
     n = r.choice([0, 1, 2, 3, 3, 3, 4, 5, 8, 20])
-    return [r.randrange(-0x100, 0x100) if r.random() < 0.8 else r.randrange(-0x120, 0x140), n, verts36(ctx, n)]
+    return [r.randrange(-0x100, 0x100) if r.random() < 0.8 else r.randrange(-0x100, 0x140), n, verts36(ctx, n)]
 
 
 def g_sub2(ctx):
@@ -417,7 +423,7 @@ def g_sub2(ctx):
     tex_tables(ctx)
     w32(ctx, 0x1017b940, r.choice([0, 1, 3]))
     n = r.choice([0, 1, 2, 3, 3, 3, 4, 5, 8, 20])
-    return [r.randrange(-0x100, 0x100) if r.random() < 0.8 else r.randrange(-0x120, 0x140), n, verts36(ctx, n), r.choice([0, 0, 1, 0x100, -1])]
+    return [r.randrange(-0x100, 0x100) if r.random() < 0.8 else r.randrange(-0x100, 0x140), n, verts36(ctx, n), r.choice([0, 0, 1, 0x100, -1])]
 
 
 def g_sub3(ctx):
@@ -426,7 +432,7 @@ def g_sub3(ctx):
     tex_tables(ctx)
     w32(ctx, 0x1017b940, r.choice([0, 1, 3]))
     n = r.choice([0, 1, 2, 3, 3, 3, 4, 5, 8, 20])
-    return [r.randrange(0, 0x200) if r.random() < 0.8 else r.randrange(-3, 0x230), n, verts36(ctx, n)]
+    return [r.randrange(0, 0x200) if r.random() < 0.8 else r.randrange(0, 0x230), n, verts36(ctx, n)]
 
 
 def g_ptrs(ctx):
@@ -515,3 +521,8 @@ SPECS = [
     dict(name='Render_SubmitClipped_100ac738', orig=0x100ac738, c='Render_SubmitClipped_100ac738', gen=g_clipped, trials=1000, void=True, fp=True),
     dict(name='Sim_100ad1f3', orig=0x100ad1f3, c='Sim_100ad1f3', gen=g_model, trials=1000, void=True, fp=True),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES + ['../tools/verify/plat_stub.c'] if x not in SOURCES]
+SPECS = w31_wrap(SPECS, None)

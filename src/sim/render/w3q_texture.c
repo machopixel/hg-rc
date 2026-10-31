@@ -1,10 +1,10 @@
 #include "w3q.h"
 #include "w2m.h"
+#include "w31.h"
 #include "../unsorted_1000/w2h.h"
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
 
-#define NAME_TABLE 0x10a51ac0 /* groups of 32 records of 0x18 bytes: name, word +0x12, image +0x14 */
 
 // FUNCTION: HGSIM 0x10006ba7
 int __cdecl Sim_10006ba7(const char *name, int group, int value)
@@ -32,7 +32,8 @@ int __cdecl Sim_10006ba7(const char *name, int group, int value)
     }
     if (name == 0 || group < 0 || group >= 0x200)
         return -1;
-    if (G32(0x1015ec58) == 0) {
+    /* 1.2 (0x1000189d) loads nothing here in 3D mode: the preload loads the .TEX images */
+    if (G32(0x1015ec58) == 0 && !W31_TexMode()) {
         image = (uint8_t *)RENDER_LOAD(local, (void *)(uintptr_t)G32(0x1014ceb8));
         if (G32(0x1017b954) != 0) {
             int width = S16(image, 0);
@@ -41,20 +42,21 @@ int __cdecl Sim_10006ba7(const char *name, int group, int value)
             G32(0x1015cff4) = G32(0x1015cff4) + (uint32_t)(width * height);
         }
     }
-    if ((signed char)GBYTES(NAME_TABLE)[(uint32_t)group * 0x300] != 0) {
+    if ((signed char)W31_NAME(group, 0)[0] != 0) {
         G32(0x1015cfe8) = 1;
         while (!found) {
             slot++;
             if (slot >= 0x20)
                 return -1;
-            if ((signed char)GBYTES(NAME_TABLE)[(uint32_t)group * 0x300 + (uint32_t)slot * 0x18] == 0)
+            if ((signed char)W31_NAME(group, slot)[0] == 0)
                 found = 1;
         }
     } else {
         G32(0x1015cfe8) = 0;
     }
-    U32(GBYTES(NAME_TABLE) + (uint32_t)group * 0x300 + (uint32_t)slot * 0x18, 0x14) = (uint32_t)(uintptr_t)image;
-    U16(GBYTES(NAME_TABLE) + (uint32_t)group * 0x300 + (uint32_t)slot * 0x18, 0x12) = (uint16_t)value;
-    Str_Copy((char *)GBYTES(NAME_TABLE) + (uint32_t)group * 0x300 + (uint32_t)slot * 0x18, local);
+    U32(W31_NAME(group, slot), W31_NAME_IMAGE) = (uint32_t)(uintptr_t)image;
+    U16(W31_NAME(group, slot), W31_NAME_VALUE) = (uint16_t)value;
+    U32(W31_NAME(group, slot), W31_NAME_KIND) = 0;
+    Str_Copy((char *)W31_NAME(group, slot), local);
     return 0;
 }

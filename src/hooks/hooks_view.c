@@ -16,6 +16,7 @@
 
 #include "hook.h"
 #include "../launcher/debug.h"
+#include "../sim/fx/w32.h"
 
 /* Polygon buffers. The original asks for a 1 MiB arena and 3000 sort entries. */
 #define POLY_ARENA_KIB 16384
@@ -406,7 +407,8 @@ static int __cdecl HookedSetTerrainTextures(int unused, int value)
 // FUNCTION: HGSIM 0x10090d15
 static int __cdecl HookedSetParticles(int value)
 {
-    return g_setParticles(value == -1 ? -1 : 1);
+    /* round 32: the converted switch (the DLL's original keeps 1.0's record size, wrong for 1.2's particle pool) */
+    return Sim_10090d15(value == -1 ? -1 : 1);
 }
 
 // FUNCTION: HGSIM 0x100585c4

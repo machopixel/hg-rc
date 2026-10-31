@@ -93,6 +93,8 @@ def closure(files):
                 continue
             if s in defs and defs[s] not in out:
                 todo.append(defs[s])
+            elif s.startswith('_Plat_') and '../tools/verify/plat_stub.c' not in out:
+                out.append('../tools/verify/plat_stub.c')    # round 32: the platform layer's checker stand-in
     return out
 
 

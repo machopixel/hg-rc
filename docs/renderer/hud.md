@@ -37,49 +37,31 @@ height at +8 and glyph offsets at +0x10 + 4 * code; a glyph is its width
 
 ## How it works
 
-`src/hooks/hooks_hud.c` wraps the five drawing functions in the table above.
-A wrapper checks that the pane draws into the buffer LockDisplay handed out,
-points the window at a scratch buffer, lets the original run (so every result
-and side effect is the game's own), puts the window back, and then, when the
-original reports it drew, hands the same drawing to HGVK.DLL through
-`HgvkHudApi` (`src/plugins/hgvk/hud_api.h`).
+Since round 30 the library's routines are C (`src/sim/render/w30_vfx.c`, proven exact against the originals) and
+their entry points (`src/sim/render/w30_hud.c`) do the full-resolution copy themselves: when a pane draws into the
+renderer's HUD buffer, the routine draws into a scratch buffer instead (so the 640x480 layer does not get it) and
+the same drawing is handed to HGVK.DLL through `HgvkHudApi` (`src/plugins/hgvk/hud_api.h`). `src/hooks/hooks_hud.c`
+only finds that interface and supplies the scratch and bitmap memory; it patches nothing.
 
-`src/plugins/hgvk/hud2d.c` keeps a premultiplied RGBA picture the size of the
-4:3 area of the window (`Hud_Frame`, once per frame) and draws into it:
-
-- A line: the hook lets the game's own line routine set its cells on a scratch
-  buffer and sends those exact cells as a bitmap, so slanted lines (radar field
-  of view) look exactly as in the original. Colour 0 draws nothing.
+- A line: the routine sets its cells on the cleared scratch buffer and those exact cells go over as a bitmap, so
+  slanted lines (radar field of view) look exactly as the original.
 - A wipe fills the pane's pixels; colour 0 clears them.
-- A shape or glyph is decoded (hooks_hud.c) into RGB565 cells and scaled with
-  nearest-cell sampling (`HUD_SMOOTH 0` in hud2d.c), so every cell stays a hard-edged
-  block like the old HUD and the menus. The game's own images are used as they are; the
-  plan is to replace them later.
-
-`vk.c` uploads the picture (`EnsureHud2`) and draws it 1:1 over the picture
-after the old overlay. Both overlays blend as premultiplied colour.
-
-Anything not wrapped still draws into the real 640x480 buffer, which is still
-shown under the new picture, so nothing the sim draws can go missing. Not
-wrapped: pixel write (0x100ef564), ellipse (0x100f094e), row copy
-(0x100f1e47), the two-byte text path (0x100f2d3c, 8-bit only) and anything
-that writes the buffer directly. F12 in a mission saves both pictures:
-`hgvk-hud.bmp` is what is left in the old buffer, `hgvk-hud2.bmp` is the full
-resolution picture, and `hgvk.log` counts what was drawn. Whatever shows up in
-`hgvk-hud.bmp` is the next thing to wrap.
+- A shape or glyph is decoded into RGB565 cells and scaled with nearest-cell sampling (`HUD_SMOOTH 0` in hud2d.c).
+- Text goes through the string routine, which calls the character entry point per character.
+- The 8-bit set's 1-bit font routine (0x100f2d3c / 0x100f2f01) writes bytes, not RGB565, and has no copy.
 
 ## Settings
 
-- `nohudhi` in `hgrc.cfg` (`dev.cmd` option C): leaves the hooks out, back to
-  the stretched 640x480 HUD.
-- The hooks are only installed with the Vulkan renderer.
+- `nohudhi` in `hgrc.cfg` (`dev.cmd` option C): no full-resolution copy, back to
+  the stretched 640x480 HUD (the converted routines still draw it).
+- The full-resolution copy is only on with the Vulkan renderer.
 
 ## How it was checked
 
-The shape, clipped shape and glyph decoders were compared against the original
-machine code run in an emulator (Unicorn): 220 random shapes, clip rectangles
-and fonts, every cell the original wrote matched what the hooks hand over. Lines
-and the scaling are checked by eye with F12.
+The converted routines are compared with the original machine code in the
+checker (`tools/verify/spec_w30_vfx.py`): tens of thousands of random windows,
+panes, lines, shapes and fonts, the whole 640x480 buffer exact (DECISIONS.md,
+round 30). The full-resolution copy and the scaling are checked by eye with F12.
 
 ## Not done
 

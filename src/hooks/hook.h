@@ -55,6 +55,8 @@ void HooksCore_OnSimLoaded(HMODULE sim);
 
 /* The small converted helper functions (hooks_conv.c). */
 void HooksConv_OnSimLoaded(HMODULE sim);
+/* Round 31: the mission's texture loads in .TEX mode (.TEX / .XEL fallback / none found) to the log. */
+void HooksConv_OnSimExit(void);
 
 /* The HUD at the window's resolution (hooks_hud.c), with the Vulkan renderer. */
 void HooksHud_OnSimLoaded(HMODULE sim);
@@ -72,6 +74,8 @@ int HooksAudio_SdlSound(void);
 int Hooks_SdlPlatform(void);
 /* Whether a word is in hgrc.cfg or hgrc_extra.cfg. */
 int Hooks_ConfigWord(const char *word);
+/* Whether the Vulkan renderer is in use: HG_RENDERER=hgvk, or (without HG_RENDERER) the first word of hgrc.cfg. */
+int Hooks_VulkanRenderer(void);
 void HooksAudio_OnSimLoaded(HMODULE sim);
 void HooksAudio_OnSimExit(void);
 

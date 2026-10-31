@@ -1,4 +1,5 @@
 #include "w2l.h"
+#include "../fx/w32.h"
 #include "../util/access.h"
 
 #define FIRST G32(0x1017cc28)
@@ -37,7 +38,7 @@ void *__cdecl Sim_10090513(int index)
     void *record = 0;
 
     if ((uint32_t)GS32(0x10215ae8) != (uint32_t)GS32(0x1017cc20) - 1u && index >= 0 && index < GS32(0x1017cc20)) {
-        record = SIM_PTR(uint8_t, 0x10217c20u + (uint32_t)index * 0x57e);
+        record = SIM_PTR(uint8_t, 0x10217c20u + (uint32_t)index * W32_REC_SIZE);
         GS32(0x10215ae8) = (int32_t)((uint32_t)GS32(0x10215ae8) + 1u);
         SIM_PTR(s32a, 0x10216b80)[GS32(0x10215ae8)] = index;
         Sim_1009044e(record);
@@ -49,7 +50,7 @@ void *__cdecl Sim_10090513(int index)
 void __cdecl Sim_10090cc8(int index)
 {
     if (index > 0 && index < GS32(0x1017cc20)) {
-        U32(SIM_PTR(uint8_t, 0x10217c20u + (uint32_t)index * 0x57e), 0x57a) = 0;
+        U32(SIM_PTR(uint8_t, 0x10217c20u + (uint32_t)index * W32_REC_SIZE), W32_REC_ARG) = 0;
         Sim_10090513(index);
     }
 }

@@ -1,4 +1,5 @@
 #include "w2g.h"
+#include "../fx/w32.h"
 #include "../simmem.h"
 #include "../unsorted_1003/w2g.h"
 #include "../unsorted_100a/w2g.h"
@@ -37,7 +38,7 @@ uint8_t *__cdecl Sim_10090581(int force)
     uint8_t *obj = 0;
 
     if (TOP >= 0) {
-        obj = SIM_PTR(uint8_t, 0x10217C20u + SIM_PTR(uint32_t, 0x10216B80)[TOP] * 0x57Eu);
+        obj = SIM_PTR(uint8_t, 0x10217C20u + SIM_PTR(uint32_t, 0x10216B80)[TOP] * W32_REC_SIZE);
         if (G32(0x1014B9B8) != 0 || force != 0) {
             Sim_100903e0(obj);
             TOP = TOP - 1;
@@ -54,9 +55,9 @@ uint8_t *__cdecl Sim_10090c7d(uint32_t a, uint32_t b, uint32_t c, int force)
     uint8_t *obj = Sim_10090581(force);
 
     if (obj != 0) {
-        U32(obj, 0x556) = a;
-        U32(obj, 0x55A) = b;
-        U32(obj, 0x57A) = c;
+        U32(obj, W32_REC_UPDATE) = a;
+        U32(obj, W32_REC_DRAW) = b;
+        U32(obj, W32_REC_ARG) = c;
     }
     return obj;
 }
@@ -91,6 +92,11 @@ void __cdecl Sim_10091085(uint32_t arg, int unused, uint32_t param)
     uint8_t *obj;
 
     (void)unused;
+    /* 1.2 (round 32): the railgun particle system instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007a0a6(arg, unused, param);
+        return;
+    }
     if ((int32_t)(G32(0x1017CC24) + 1) >= (int32_t)G32(0x1017CC20))
         return;
     obj = Sim_10090c7d(ADDR(0x10001433), ADDR(0x10002E78), arg, 1);
@@ -108,6 +114,11 @@ void __cdecl Sim_1009201f(uint32_t arg, int unused, uint32_t param, uint32_t par
     uint8_t *obj;
 
     (void)unused;
+    /* 1.2 (round 32): the accelerator particle system instead */
+    if (W32_PARTICLES()) {
+        Sim12_1007acf3(arg, unused, param, param2);
+        return;
+    }
     if ((int32_t)(G32(0x1017CC24) + 1) >= (int32_t)G32(0x1017CC20))
         return;
     obj = Sim_10090c7d(ADDR(0x10003049), ADDR(0x10002077), arg, 1);

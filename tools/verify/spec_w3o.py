@@ -699,6 +699,9 @@ def g_9cd36(ctx):
     return [seg, fbits(r.choice([rf(ctx), rpos(ctx), 0.0, 10.0, float('nan')]))]
 
 
+POOL_REC, POOL_UPD, POOL_DRAW = 0x57e, 0x556, 0x55a     # the effect pool record (round 32: 1.2 mode in spec_w32_pool.py)
+
+
 def rec_list_env(ctx):
     r = ctx.rng
     n = r.choice([0, 1, 3, 5, 8])
@@ -721,10 +724,10 @@ def rec_list_env(ctx):
         prev = nd
     w32(ctx, 0x1017cc28, first)
     for i in range(10):
-        base = 0x10217c20 + i * 0x57e
-        wb(ctx, base, bytes(r.getrandbits(8) for _ in range(0x57e)))
-        w32(ctx, base + 0x556, r.choice([0, stub('cb1'), stub('cb1')]))
-        w32(ctx, base + 0x55a, r.choice([0, stub('cb1')]))
+        base = 0x10217c20 + i * POOL_REC
+        wb(ctx, base, bytes(r.getrandbits(8) for _ in range(POOL_REC)))
+        w32(ctx, base + POOL_UPD, r.choice([0, stub('cb1'), stub('cb1')]))
+        w32(ctx, base + POOL_DRAW, r.choice([0, stub('cb1')]))
         w32(ctx, base + 8, r.randrange(0, 10))
     wb(ctx, 0x10216b80, bytes(0x400))
 
@@ -1027,3 +1030,8 @@ def make_specs():
 
 
 SPECS = make_specs()
+
+# round 32: the pool layout follows W31_TexMode() (off here: the 1.0 layout)
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', 'sim/fx/w32_partspec.c', '../tools/verify/plat_stub.c',
+                                 'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2f_records.c', 'sim/unsorted_100f/w2e_string.c',
+                                 'sim/unsorted_1000/w2h_reset.c', 'sim/unsorted_1004/state.c'] if x not in SOURCES]

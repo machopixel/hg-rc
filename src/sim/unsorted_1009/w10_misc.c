@@ -4,6 +4,7 @@
 #include "../util/access.h"
 #include "../util/util.h"
 #include "w2g.h"
+#include "../fx/w32.h"
 #include "../unsorted_1008/w3o.h"
 #include "../unsorted_100a/w5b.h"
 #include "../unsorted_100a/w5y.h"
@@ -42,6 +43,11 @@ void __cdecl Sim_10096ac3(uint32_t x, uint32_t y, uint32_t z, float vx, float vy
     float sx, sy, sz, px, py, pz;
     int i;
 
+    /* 1.2 (round 32): the tracer particle explosion instead */
+    if (W32_PARTICLES()) {
+        Sim12_10084362(*(float *)&x, *(float *)&y, *(float *)&z, vx, vy, vz);
+        return;
+    }
     if (!((int32_t)(G32(0x1017cc24) + 1u) < GS32(0x1017cc20)))     /* wraps like the original */
         return;
     obj = Sim_10090c7d(SIM_ADDR(0x100027fc), SIM_ADDR(0x10001785), 0, 0);

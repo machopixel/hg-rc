@@ -459,6 +459,8 @@ static void *W25_ReadFile(uint32_t f, char *name, char *ext, uint32_t *outSize, 
 
 /* round 28: called at the start of every file load when set (the loading animation's tick, W28_AnimPoll) */
 void(__cdecl *g_w8yLoadPoll)(void);
+/* round 31: 1.2's Patch folder first (only with the Vulkan renderer; the hook layer sets it at sim load) */
+int g_w8yPatch;
 
 // FUNCTION: HGSIM 0x100ba7d5
 void *__cdecl Sim_100ba7d5(char *name, char *ext, uint32_t *outSize)
@@ -482,6 +484,20 @@ void *__cdecl Sim_100ba7d5(char *name, char *ext, uint32_t *outSize)
     }
     *GBYTES(0x1017d5f8) = (uint8_t)W8Y_CALL_100b9dde();
     W8Y_CALL_100fc780(small, SIM_PTR(const char, 0x1015111c), ext, (int)(int8_t)*GBYTES(0x1017d5f8));
+    if (g_w8yPatch) {
+        /* 1.2 (0x100a2bc9): "Patch\name.ext<letter>", then "Patch\name.ext", before the 1.0 files */
+        W8Y_CALL_100fc780(path, "%s\\%s.%s", "Patch", name, small);
+        f = (uint32_t)(uintptr_t)Sim_100fd850(path, SIM_PTR(const char, 0x1015112c));
+#ifdef W31B_MUTATE /* the checker's negative check only: the language file is passed over */
+        f = 0;
+#endif
+        if (f != 0)
+            return W25_ReadFile(f, name, ext, outSize, 0x10151154, 0x10151130, 0x44f);
+        W8Y_CALL_100fc780(path, "%s\\%s.%s", "Patch", name, ext);
+        f = (uint32_t)(uintptr_t)Sim_100fd850(path, SIM_PTR(const char, 0x10151164));
+        if (f != 0)
+            return W25_ReadFile(f, name, ext, outSize, 0x1015118c, 0x10151168, 0x479);
+    }
     W8Y_CALL_100fc780(path, SIM_PTR(const char, 0x10151124), name, small);
     f = (uint32_t)(uintptr_t)Sim_100fd850(path, SIM_PTR(const char, 0x1015112c));
     if (f != 0)

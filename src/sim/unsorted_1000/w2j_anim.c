@@ -1,3 +1,4 @@
+#include "../render/w31.h"
 #include "w2j.h"
 #include "../util/access.h"
 
@@ -32,7 +33,7 @@ void __cdecl Sim_10006a2f(void)
             sign = v >> 31;
             v = ((((v ^ sign) - sign) & 0x1f) ^ sign) - sign; /* keeps the sign, the magnitude is taken modulo 32 */
             frame = (int16_t)v;
-            if ((int8_t)GBYTES(0x10a51ac0)[(int32_t)S16(entry, 0) * 0x300 + (int32_t)frame * 0x18] == 0)
+            if ((int8_t)W31_NAME(S16(entry, 0), frame)[0] == 0)
                 frame = 0;
         }
         if (U16(entry, 6) == 2 && frame < S16(entry, 2)) {

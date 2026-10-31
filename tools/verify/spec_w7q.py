@@ -847,3 +847,8 @@ SPECS = [
     spec('Sim_100dafa8', 0x100dafa8, g_dafa8, 800, api=HEAP_API),
     spec('Sim_100db259', 0x100db259, g_db259, 400),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES if x not in SOURCES]
+SPECS = w31_wrap(SPECS, {'Sim_100da14c'})

@@ -24,6 +24,7 @@
 #include "../unsorted_1009/w6g.h"
 #include "../unsorted_100a/w5y.h"
 #include "../unsorted_100b/w2j.h"
+#include "../fx/w32.h"
 
 typedef double(__cdecl *W10_2SFmodFn)(double x, double y);
 
@@ -161,6 +162,9 @@ void __cdecl Sim_100225c7(int idx)
             vx = (float)((double)vx / (double)GFL(0x1011123c));
             vz = (float)((double)vz / (double)GFL(0x1011123c));
             vy = -(float)((double)vy / (double)GFL(0x1011123c));
+            /* 1.2 (0x100191d7, round 32): dust where the grenade bounces, by the ground kind +0x8e */
+            if (W32_PARTICLES())
+                Sim12_1008514d(sx.f, sy.f, sz.f, vx, vy, vz, 2, (int32_t)U32(p, 0x8e));
         } else {
             vx = -vx;
             vz = -vz;

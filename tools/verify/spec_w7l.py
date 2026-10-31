@@ -1054,3 +1054,8 @@ SPECS = [
     dict(name='Sim_1003079c', orig=0x1003079c, c='Sim_1003079c', gen=g_079c, trials=500, void=True, api=API),
     dict(name='Sim_1003129f', orig=0x1003129f, c='Sim_1003129f', gen=g_129f, trials=500, void=True),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES if x not in SOURCES]
+SPECS = w31_wrap(SPECS, {'Sim_100071fb'})

@@ -1,3 +1,4 @@
+#include "../render/w31.h"
 #include "w2h.h"
 #include "../util/access.h"
 
@@ -9,11 +10,12 @@ void __cdecl Sim_10007020(void)
 
     for (group = 0; group < 0x200; group++) {
         for (i = 0; i < 0x20; i++) {
-            uint8_t *rec = GBYTES(0x10a51ac0 + (uint32_t)group * 0x300 + (uint32_t)i * 0x18);
+            uint8_t *rec = W31_NAME(group, i);
 
             U8(rec, 0) = 0;
             U16(rec, 0x10) = 0;
-            U32(rec, 0x14) = 0;
+            U32(rec, W31_NAME_IMAGE) = 0;
+            U32(rec, W31_NAME_KIND) = 0; /* 1.2 (0x10001ef7) clears its new +0x14 too */
         }
     }
     for (i = 0; i < 0x200; i++) {

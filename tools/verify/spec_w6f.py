@@ -607,3 +607,6 @@ SPECS = [
     spec('Sim_100999fc', 0x100999fc, g_999fc, 600),
     spec('Sim_1009b8d8', 0x1009b8d8, g_9b8d8, 500),
 ]
+
+# round 32: the 1.0 effect spawns call 1.2's in 1.2 mode (off here): stand-ins, and the mode switch
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]

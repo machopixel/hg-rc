@@ -669,3 +669,9 @@ SPECS = [
     spec('Str_LengthMax_1010b270', 0x1010b270, g_1010b270, 600),
     spec('Wstr_Length_1010b5a0', 0x1010b5a0, g_1010b5a0, 400),
 ]
+
+# round 32: the pool layout follows W31_TexMode() (off here: the 1.0 layout)
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c'] if x not in SOURCES]
+
+# round 32: the 1.0 effect spawns call 1.2's in 1.2 mode (off here): stand-ins, and the mode switch
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]

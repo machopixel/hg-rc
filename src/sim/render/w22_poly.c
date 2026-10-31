@@ -2,6 +2,7 @@
 
 #include "w22.h"
 #include "w2n.h"
+#include "w31.h"
 #include "../util/access.h"
 #include "../unsorted_1008/w8w.h"
 #include "../util/util.h"
@@ -24,11 +25,16 @@ typedef int(__cdecl *W22pDriverFn)(int32_t count, void *verts, uint32_t flags);
 // FUNCTION: HGSIM 0x100a539e
 void __cdecl Sim_100a539e(void *rec)
 {
-    int32_t count = S16(rec, 0), n;
+    int32_t count, n;
     uint32_t *src = (uint32_t *)(BYTES(rec) + 0x10);
     uint8_t *out = GBYTES(W22P_VERTS), *v = GBYTES(W22P_VERTS), *p;
-    uint32_t flags = U16(rec, 2), kind;
+    uint32_t flags, kind;
 
+    /* 1.2 (0x1009185b): no polygon, nothing drawn */
+    if (rec == 0 && W31_TexMode())
+        return;
+    count = S16(rec, 0);
+    flags = U16(rec, 2);
     for (n = count; n != 0; n--) {
         p = BYTES(*src++);
         W22P_FL(out, 0) = (float)S32(p, 0x18);
@@ -36,6 +42,22 @@ void __cdecl Sim_100a539e(void *rec)
         U32(out, 8) = U32(p, 8);
         U32(out, 0x1c) = U32(p, 0x20);
         U32(out, 0x20) = U32(p, 0x24);
+        if (W31_TexMode()) {
+            /* 1.2: the light is the low byte of +0x3c; its other three bytes go to the specular colour (red =
+               byte 1, green = byte 2, blue = byte 3) under the fog byte */
+            uint32_t c = U32(p, 0x3c);
+
+            U32(out, 0x10) = c & 0xff;
+#ifdef W32V_MUTATE /* the checker's negative check only: red and blue swapped */
+            U32(out, 0x18) = (uint32_t)U8(p, 0x2b) << 24 | (c >> 24 & 0xff) << 16 | (c >> 16 & 0xff) << 8 |
+                             (c >> 8 & 0xff);
+#else
+            U32(out, 0x18) = (uint32_t)U8(p, 0x2b) << 24 | (c >> 8 & 0xff) << 16 | (c >> 16 & 0xff) << 8 |
+                             (c >> 24 & 0xff);
+#endif
+            out += 0x24;
+            continue;
+        }
         U32(out, 0x10) = U32(p, 0x3c);
 #ifdef W22P_MUTATE /* the checker's negative check only */
         U32(out, 0x18) = (uint32_t)U8(p, 0x2b) << 16;
@@ -292,6 +314,11 @@ void __cdecl Sim_1009ef50(int32_t count, void *verts, uint32_t flags)
                 v[0x16] = (uint8_t)c;
                 U32(v, 0x10) = 0xff;
                 U32(v, 0x18) = 0xff000000u;
+#ifndef W32R_MUTATE /* the checker's negative check only: rhw left as it was */
+                /* 1.2 (0x1008bd80): rhw = 1 / z */
+                if (W31_TexMode())
+                    W22P_FL(v, 0xc) = (float)(1.0 / (double)W22P_FL(v, 8));
+#endif
             }
             W22p_Render(0x10, verts, count, 0);
             return;
@@ -442,7 +469,21 @@ void __cdecl Sim_100a0880(void)
     saved = G32(0x1014cb34);
     G32(0x1014cb34) = 0;
     n = Render_ClipPolygon(v, 4, G32(0x10185c50), 0x4caba950u);
-    if (n != 0) {
+    if (n != 0 && W31_TexMode()) {
+        /* round 31, T2: 1.2 (0x1008da61) loads the cloud texture as .TEX and describes it with its own palette */
+        if (G32(0x1017d100) == 0 && (int8_t)*GBYTES(0x1017d0b0) != 0) {
+            tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0b0), (uint32_t)(uintptr_t)W31_TypeTex(), 0));
+            G32(0x1017d100) = (uint32_t)(uintptr_t)tex;
+            if (tex != 0) {
+                g_w31TexLoaded++;
+                W31_DescribeFileTex(&g_w31FileTex[1], tex, 0x101cfcb8);
+            } else {
+                g_w31TexMissing++;
+            }
+        }
+        if (G32(0x1017d100) != 0)
+            W22P_CALL_100a0339(GBYTES(0x101cfcb8), GBYTES(0x101c76a0), (int32_t)n, 0);
+    } else if (n != 0) {
         if (G32(0x1017d100) == 0 && (int8_t)*GBYTES(0x1017d0b0) != 0) {
             tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0b0), G32(0x1014ceb8), 0));
             G32(0x1017d100) = (uint32_t)(uintptr_t)tex;
@@ -791,24 +832,58 @@ void __cdecl Sim_100a0def(void *view)
                 W22P_FL(pv + i * 0x24, 0) = (float)sw[i][0];
                 W22P_FL(pv + i * 0x24, 4) = (float)sw[i][1];
             }
-            if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
-                tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), G32(0x1014ceb8), 0));
-                G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
-                if (tex != 0) {
-                    G32(0x101ccc80) = (uint32_t)(int32_t)S16(tex, 0);
-                    G32(0x101ccc84) = (uint32_t)(int32_t)S16(tex, 2);
-                    G32(0x101ccc88) = (uint32_t)(uintptr_t)(tex + 4);
-                    G32(0x101cfc90) = (uint32_t)(uintptr_t)GBYTES(0x101ccc80);
+            if (W31_TexMode()) {
+                /* round 31, T2: 1.2 (0x1008dff3) puts the band at the far end (z 0x7f7fc99e, 1/z still 1) and loads
+                   its texture as .TEX in 3D mode, described with its own palette */
+                for (i = 0; i < 4; i++)
+                    U32(pv + i * 0x24, 8) = 0x7f7fc99eu;
+#ifdef W31S_MUTATE /* the checker's negative check only: the far depth one bit off */
+                U32(pv, 8) = 0x7f7fc99fu;
+#endif
+                if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
+                    tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), (uint32_t)(uintptr_t)W31_TypeTex(), 0));
+                    G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
+                    if (tex != 0) {
+                        void *palette = g_w31FileTex[0].palette;
+
+                        g_w31TexLoaded++;
+                        W31_DescribeFileTex(&g_w31FileTex[0], tex, 0x101cfc90);
+                        g_w31FileTex[0].palette = palette;   /* 1.2 sets the palette only when it draws */
+                    } else {
+                        g_w31TexMissing++;
+                    }
                 }
-            }
-            if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
-                G32(0x101ccc8c) = (uint32_t)(uintptr_t)GBYTES(0x10185760);
-                ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
+                if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
+                    g_w31FileTex[0].palette = (void *)(uintptr_t)(G32(0x1017d0fc) + 0xc);
+                    ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
+                } else {
+                    ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
+                }
             } else {
-                ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
+                if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
+                    tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), G32(0x1014ceb8), 0));
+                    G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
+                    if (tex != 0) {
+                        G32(0x101ccc80) = (uint32_t)(int32_t)S16(tex, 0);
+                        G32(0x101ccc84) = (uint32_t)(int32_t)S16(tex, 2);
+                        G32(0x101ccc88) = (uint32_t)(uintptr_t)(tex + 4);
+                        G32(0x101cfc90) = (uint32_t)(uintptr_t)GBYTES(0x101ccc80);
+                    }
+                }
+                if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
+                    G32(0x101ccc8c) = (uint32_t)(uintptr_t)GBYTES(0x10185760);
+                    ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
+                } else {
+                    ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
+                }
             }
         }
     }
-    if (G32(0x1017b940) != 0 && U32(G32(0x1015d1b8), 0x38) != 0)
+    if (G32(0x1017b940) != 0 && U32(G32(0x1015d1b8), 0x38) != 0) {
+        /* round 31, T2: 1.2 sets render state 0xc (its numbering; 1.0's 0xd) to 1 first, unless the display kind
+           [0x1014cb1c] is 1; neither 1.2's dx5draw nor our renderers act on that state */
+        if (W31_TexMode() && G32(0x1014cb1c) != 1)
+            ((int(__cdecl *)(uint32_t, uint32_t))(uintptr_t)G32(0x109e3d40))(0xd, 1);
         Sim_100a0880();
+    }
 }

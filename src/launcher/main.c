@@ -276,6 +276,7 @@ static int RunSim(HWND hwnd, LPSTR cmdLine, int arg3, int arg4)
     result = simMain(hSim, NULL, cmdLine, arg3, arg4, hwnd);
     DebugPrintf("Returned from Sim, retval=%d.\n", result);
     HooksDispProbe_OnSimExit();
+    HooksConv_OnSimExit();
     HooksDamageLog_OnSimExit();
     HooksUninit_OnSimExit();
     HooksAudio_OnSimExit();

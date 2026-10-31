@@ -56,6 +56,17 @@ uint32_t Plat_CurrentDir(char *out, uint32_t size)
     return (uint32_t)GetCurrentDirectoryA(size, out);
 }
 
+uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def)
+{
+    return (uint32_t)GetPrivateProfileIntA(section, key, (INT)def, path);
+}
+
+uint32_t Plat_IniString(const char *path, const char *section, const char *key, const char *def, char *out,
+                        uint32_t size)
+{
+    return (uint32_t)GetPrivateProfileStringA(section, key, def, out, size, path);
+}
+
 void *Plat_LoadLibrary(const char *name)
 {
     return (void *)LoadLibraryA(name);

@@ -24,6 +24,12 @@ ARGMEM = 0x00A00000     # argument buffers
 ARGSIZE = 0x00100000
 RET_ADDR = 0x00F00000
 STUB_BASE = 0x00F20000    # one 16-byte stub per imported Windows function
+# round 31: specs with 'orig12' run 1.2's code (GameRip_12/hgsim.dll, relocated here) in the same machine; its
+# imports get stubs of their own. Its pages are restored between trials like the 1.0 DLL's, but never compared:
+# a spec's 'from12' copies 1.2's results to the 1.0 / C side before the comparison (see run_spec).
+BASE12 = 0x20000000
+STUB_BASE12 = 0x00F40000
+V12_DLL = os.environ.get('DT_V12', os.path.join(HERE, '..', '..', '..', 'GameRip_12', 'hgsim.dll'))
 PAGE = 0x1000
 
 
@@ -67,7 +73,7 @@ class TrackedUc:
 
 
 class Machine:
-    def __init__(self, dll, csecs, syms):
+    def __init__(self, dll, csecs, syms, dll12=None):
         pe = pefile.PE(dll)
         self.base = pe.OPTIONAL_HEADER.ImageBase
         self.image = pe.get_memory_mapped_image()
@@ -106,7 +112,11 @@ class Machine:
         uc.mem_write(RET_ADDR, b'\xf4')
         uc.mem_write(syms['g_simBase'], struct.pack('<I', self.base))
         self.wr += [(STACK_TOP - STACK_SIZE, STACK_SIZE), (ARGMEM, ARGSIZE)]
+        self.api_tables = {}
         self.install_import_stubs(pe)
+        self.range12 = None
+        if dll12:
+            self.load12(dll12)
         self.snap0 = self.dump()
         self.dirty.clear()
 
@@ -115,9 +125,13 @@ class Machine:
     # fixed, repeatable value (a spec can supply its own answers in its `api` dict).
     CDECL_IMPORTS = {'USER32.dll!wsprintfA': 4}
 
-    def install_import_stubs(self, pe):
+    def install_import_stubs(self, pe, stub_base=STUB_BASE):
         table = json.load(open(os.path.join(HERE, 'winapi_args.json')))
-        self.api_names, self.api_log, self.api_n, self.api_handlers = [], [], 0, {}
+        if stub_base == STUB_BASE:
+            self.api_log, self.api_n, self.api_handlers = [], 0, {}
+        names = self.api_tables.setdefault(stub_base, [])
+        if stub_base == STUB_BASE:
+            self.api_names = names
         if not hasattr(pe, 'DIRECTORY_ENTRY_IMPORT'):
             return
         slots = []
@@ -125,17 +139,39 @@ class Machine:
             for i in d.imports:
                 key = d.dll.decode() + '!' + (i.name.decode() if i.name else 'ord%d' % i.ordinal)
                 slots.append((i.address, key))
-        self.raw.mem_map(STUB_BASE, (16 * len(slots) + PAGE - 1) & ~(PAGE - 1))
+        self.raw.mem_map(stub_base, (16 * len(slots) + PAGE - 1) & ~(PAGE - 1))
         for k, (iat, key) in enumerate(slots):
             nbytes = table.get(key, 0)
             code = b'\xc2' + struct.pack('<H', nbytes) if nbytes else b'\xc3'
-            self.raw.mem_write(STUB_BASE + 16 * k, code)
-            self.raw.mem_write(iat, struct.pack('<I', STUB_BASE + 16 * k))
-            self.api_names.append((key, (nbytes // 4) or self.CDECL_IMPORTS.get(key, 0)))
-        self.raw.hook_add(UC_HOOK_CODE, self._api_hook, None, STUB_BASE, STUB_BASE + 16 * len(slots) - 1)
+            self.raw.mem_write(stub_base + 16 * k, code)
+            self.raw.mem_write(iat, struct.pack('<I', stub_base + 16 * k))
+            names.append((key, (nbytes // 4) or self.CDECL_IMPORTS.get(key, 0)))
+        self.raw.hook_add(UC_HOOK_CODE, self._api_hook, None, stub_base, stub_base + 16 * len(slots) - 1)
+
+    def load12(self, dll12):
+        """1.2's DLL relocated to BASE12, its writable sections tracked, its imports stubbed (round 31)."""
+        pe = pefile.PE(dll12)
+        pe.relocate_image(BASE12)
+        image = pe.get_memory_mapped_image()
+        size = (pe.OPTIONAL_HEADER.SizeOfImage + PAGE - 1) & ~(PAGE - 1)
+        self.uc.mem_map(BASE12, size)
+        self.uc.mem_write(BASE12, image)
+        for sec in pe.sections:
+            if sec.Characteristics & 0x80000000:
+                lo = BASE12 + sec.VirtualAddress
+                hi = lo + ((max(sec.Misc_VirtualSize, sec.SizeOfRawData) + PAGE - 1) & ~(PAGE - 1))
+                self.wr.append((lo, min(hi, BASE12 + size) - lo))
+        self.range12 = (BASE12, BASE12 + size)
+        pe12 = pefile.PE(dll12)     # import slots at their unrelocated addresses, moved by hand
+        delta = BASE12 - pe12.OPTIONAL_HEADER.ImageBase
+        for d in getattr(pe12, 'DIRECTORY_ENTRY_IMPORT', []):
+            for i in d.imports:
+                i.address += delta
+        self.install_import_stubs(pe12, STUB_BASE12)
 
     def _api_hook(self, uc, addr, size, ud):
-        key, nargs = self.api_names[(addr - STUB_BASE) >> 4]
+        base = STUB_BASE12 if addr >= STUB_BASE12 else STUB_BASE
+        key, nargs = self.api_tables[base][(addr - base) >> 4]
         esp = uc.reg_read(UC_X86_REG_ESP)
         args = []
         for k in range(nargs):
@@ -315,8 +351,14 @@ def run_spec(m, spec, seed=1):
         pre_pages = {pg: m.page_now(pg) for pg in d0}
         pre_full = m.full_now()
         m.dirty.clear()
-        ro, vo = m.call(spec['orig'], args)
-        log_o = m.api_log
+        if 'orig12' in spec:    # round 31: 1.2's code, state mapped across by the spec
+            spec['to12'](m)
+            ro, vo = m.call(BASE12 + spec['orig12'] - 0x10000000, args)
+            log_o = m.api_log
+            spec['from12'](m)
+        else:
+            ro, vo = m.call(spec['orig'], args)
+            log_o = m.api_log
         d1 = {pg for pg in m.dirty if pg in m.pagemap}
         after_o = {pg: m.page_now(pg) for pg in d1}
         full_o = m.full_now()
@@ -325,8 +367,14 @@ def run_spec(m, spec, seed=1):
             m.raw.mem_write(pg << 12, pre_pages[pg] if pg in pre_pages else m.page_snap(pg))
         m.set_full(pre_full)
         m.dirty.clear()
+        if 'pre_c' in spec:     # spec 'pre_c'(m): C-side setup the original has no counterpart for (round 31)
+            spec['pre_c'](m)
         rc, vc = m.call(m.syms[spec['c']], args)
+        if 'post_c' in spec:    # spec 'post_c'(m): C-side state brought to the original's form (round 31)
+            spec['post_c'](m)
         log_c = m.api_log
+        if 'log_map' in spec:   # spec 'log_map'(log_o, log_c): the two call logs brought to one form (round 31)
+            log_o, log_c = spec['log_map'](log_o, log_c)
         d2 = {pg for pg in m.dirty if pg in m.pagemap}
         m.dirty.update(d0 | d1)     # every page this trial touched is put back to the snapshot before the next one
         after_c = {pg: m.page_now(pg) for pg in d2}
@@ -356,6 +404,8 @@ def run_spec(m, spec, seed=1):
         # spec 'ignore_addrs' {address: size}: original-side scratch only the OS reads (round 28 clip box)
         ignore += list(spec.get('ignore_addrs', {}).items())
         for pg in sorted(d0 | d1 | d2):
+            if m.range12 and m.range12[0] <= (pg << 12) < m.range12[1]:
+                continue        # 1.2's own pages: from12 copied what counts to the 1.0 / C side
             x, y = orig_page(pg), c_page(pg)
             for a, size in ignore:
                 lo, hi = max(a, pg << 12), min(a + size, (pg + 1) << 12)
@@ -410,6 +460,7 @@ def report_quiet(specfile, s, bad, bf, n, details, extra, cov):
         'round20' if base.startswith('spec_w20') else \
         'round21' if base.startswith('spec_w21') else \
         'round22' if base.startswith('spec_w22') else \
+        'round30' if base.startswith('spec_w30') else \
         'round29' if base.startswith('spec_w29') else \
         'round28' if base.startswith('spec_w28') else \
         'round27' if base.startswith('spec_w27') else \
@@ -420,7 +471,8 @@ def report_quiet(specfile, s, bad, bf, n, details, extra, cov):
         'sound' if base.startswith('spec_snd') else 'difftest'
     logdir = os.environ.get('DIFFTEST_LOGDIR') or os.path.join(root, 'buildlogs', sub)
     os.makedirs(logdir, exist_ok=True)
-    orig = s['orig'] if isinstance(s['orig'], int) else 0
+    orig = s.get('orig', s.get('orig12', 0))   # 'orig12': 1.2's address (round 31)
+    orig = orig if isinstance(orig, int) else 0
     key = '0x%08x' % orig if orig >= 0x10000000 else s['name']
     covtxt = ''
     if cov:
@@ -482,7 +534,9 @@ def main():
         sys.exit(1 if fails else 0)
     srcs = [os.path.join(SRC, p) for p in ns['SOURCES']]
     csecs, syms = build_c(srcs, ns.get('CFLAGS', ()))
-    m = Machine(dll, csecs, syms)
+    if os.environ.get('DT_SYM'):    # where a C symbol landed (for W10_COV over C code)
+        print('%s at 0x%x' % (os.environ['DT_SYM'], syms[os.environ['DT_SYM']]))
+    m = Machine(dll, csecs, syms, V12_DLL if any('orig12' in sp for sp in specs) else None)
     for sp in specs:
         for a in sp.get('nop', []):
             m.uc.mem_write(a, b'\x90')

@@ -205,6 +205,11 @@ uint32_t __cdecl Sim_100baff4(char *name, char *ext, uint32_t *outSize);
  */
 /* Round 28: when set, called at the start of every Sim_100ba7d5 file load (the loading animation's tick). */
 extern void(__cdecl *g_w8yLoadPoll)(void);
+/*
+ * Round 31: when set, Sim_100ba7d5 first tries 1.2's "Patch\name.ext<letter>" and "Patch\name.ext" (1.2 0x100a2bc9),
+ * before the 1.0 files. Set by the hook layer with the Vulkan renderer only (DECISIONS.md, round 31).
+ */
+extern int g_w8yPatch;
 void *__cdecl Sim_100ba7d5(char *name, char *ext, uint32_t *outSize);
 
 /*

@@ -735,6 +735,15 @@ add_executable(HG WIN32
     ../sim/platform/w28_cpu.c
     ../sim/platform/w28_plugin.c
     ../sim/unsorted_1002/w29_shot.c
+    ../sim/render/w30_vfx.c
+    ../sim/render/w30_hud.c
+    ../sim/render/w31_tex.c
+    ../sim/fx/w32_partspec.c
+    ../sim/fx/w32_pool.c
+    ../sim/fx/w32_draw.c
+    ../sim/fx/w32_family.c
+    ../sim/fx/w32_explode.c
+    ../sim/fx/w32_beam.c
     ../hooks/hooks_conv.c
     ../hooks/hooks_input.c
     ../hooks/hooks_audio.c

@@ -39,6 +39,8 @@
 "KERNEL32.dll!GetCPInfo": 8,
 "KERNEL32.dll!GetCommandLineA": 0,
 "KERNEL32.dll!GetCurrentDirectoryA": 8,
+"KERNEL32.dll!GetPrivateProfileIntA": 16,
+"KERNEL32.dll!GetPrivateProfileStringA": 24,
 "KERNEL32.dll!GetCurrentProcess": 0,
 "KERNEL32.dll!GetDriveTypeA": 4,
 "KERNEL32.dll!GetEnvironmentStrings": 0,

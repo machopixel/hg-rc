@@ -14,6 +14,17 @@ void Plat_RequestQuit(void) {}
 void Plat_CursorVisible(int visible) { (void)visible; }
 uint32_t Plat_TicksMs(void) { return 0; }
 uint32_t Plat_CurrentDir(char *out, uint32_t size) { (void)out, (void)size; return 0; }
+uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def)
+{
+    (void)path, (void)section, (void)key;
+    return def;
+}
+uint32_t Plat_IniString(const char *path, const char *section, const char *key, const char *def, char *out,
+                        uint32_t size)
+{
+    (void)path, (void)section, (void)key, (void)def, (void)out, (void)size;
+    return 0;
+}
 void *Plat_LoadLibrary(const char *name) { (void)name; return 0; }
 void *Plat_LibraryFunction(void *library, const char *name) { (void)library, (void)name; return 0; }
 void Plat_FreeLibrary(void *library) { (void)library; }

@@ -1,3 +1,4 @@
+#include "../render/w31.h"
 #include "w7l.h"
 #include "w3q.h"
 #include "../unsorted_100b/w6g.h"
@@ -15,11 +16,12 @@ void __cdecl Sim_100071fb(void)
 
     for (i = 0; i < 0x200; i++) {
         for (j = 0; j < 0x20; j++) {
-            uint8_t *entry = GBYTES(0x10a51ac0) + i * 0x300 + j * 0x18;
+            uint8_t *entry = W31_NAME(i, j);
 
-            if (U32(entry, 0x14) != 0) {
+            /* 1.2 (0x100020dd) releases with the 1.0 type even for a .TEX image (the cache keeps that one) */
+            if (U32(entry, W31_NAME_IMAGE) != 0) {
                 Sim_100bb2b0((const uint32_t *)entry, (const char *)(uintptr_t)G32(0x1014ceb8));
-                U32(entry, 0x14) = 0;
+                U32(entry, W31_NAME_IMAGE) = 0;
             }
             U8(entry, 0) = 0;
             U16(entry, 0x10) = 0;

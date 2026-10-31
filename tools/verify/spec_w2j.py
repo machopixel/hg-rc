@@ -131,7 +131,10 @@ def g_anim(ctx):
                               rg.choice([0, 0, 1, 5, -1, -0x8000]), last)
         else:
             ent = (rb(ctx, 9) + bytes([0x80 | rg.getrandbits(7)]) + rb(ctx, 4)) if rg.random() < 0.3 else struct.pack('<hhHHhI', 0, 0, rg.choice([0, 5]), 0 if rg.random() < 0.7 else 1,
-                                                                  rg.choice([0, -1]), rg.getrandbits(32))
+                                                                  rg.choice([0, -1]),
+                                                                  # round 31: a time near now (a random one made
+                                                                  # every trial run out of instructions on both sides)
+                                                                  (now - rg.randrange(0, 200)) & 0xffffffff)
             if rg.random() < 0.3:
                 ent = ent[:4] + b'\0\0' + ent[6:]
         table += ent
@@ -767,3 +770,8 @@ SPECS = [
     dict(name='Sim_10108710', orig=0x10108710, c='Sim_10108710', gen=g_flags, trials=600),
     dict(name='Sim_101091f0', orig=0x101091f0, c='Sim_101091f0', gen=g_none, trials=300),
 ]
+
+# round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
+exec(open('tools/verify/w31_map.py').read())
+SOURCES = SOURCES + [x for x in W31_SOURCES if x not in SOURCES]
+SPECS = w31_wrap(SPECS, {'Sim_10006a2f'})
