@@ -101,7 +101,11 @@ void __cdecl Sim_10017263(int index)
     for (i = 0; i < n; i++) {
         rec = list[i];
         if (S16(rec, 0x1a6) != 0) {
+#ifdef W9HG_MUTATE /* the checker's negative check only: kind 4 taken as kind 5 */
+            if (S16(rec, 0x1a6) != 5 && S16(rec, 0x1a6) != 4)
+#else
             if (S16(rec, 0x1a6) != 5)
+#endif
                 continue;
             if (Sim_100c3668(BYTES(U32(rec, 0x28))) != 0)
                 continue;

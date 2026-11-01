@@ -14,7 +14,9 @@ start (the checker needs the DLL to compare against).
   its 1.0 addresses through `g_simBase`. Exists because original code still shares that data. After: turn each table
   and global into ordinary C data with names and types, and drop `g_simBase` / `SIM_PREFERRED_BASE`.
 - **Layouts kept for original code.** Records keep their 1.0 shape (field offsets, padding, the 1.0 object record
-  with its +0x18 dword) because original functions read them. After: reshape freely.
+  with its +0x18 dword) because original functions read them. After: reshape freely. 1.2's objects lack that dword
+  (fields from +0x1c sit 4 bytes earlier); the 1.2 specs shift them for 1.2's run (w7l_order, w9h_group,
+  w16_range and others), a mapping step that goes with the checker.
 - **Texture table** (1.0 at 0x10a51ac0, 512 x 0x300; 1.2 layout 512 x 0x380, frames of 0x1c). Moved out of the DLL
   into our own memory with the 1.2 layout (round T), because the luma table at 0x10ab1ae0 sits right after it. The
   pointer the sim main loop keeps in it ([0x1015dafc], w21) goes with it. After: an ordinary table of ours in the
@@ -65,6 +67,21 @@ start (the checker needs the DLL to compare against).
   calls left in original functions, the launcher, the hooks and HGVK are listed in DECISIONS.md (rounds 27-28).
   After: fill the other platforms.
 - **Network code.** Parked, to be rewritten rather than converted (DECISIONS.md, network).
+- **Network transport: our own, no DirectPlay** (Diego, 2026-11-01: "we want to make the multiplatform, can't use
+  directplay"). The sim's network code keeps 1.2's message format byte for byte (the network round ports 1.2's
+  sim side as is); the transport under it (today DirectPlay through ANET2.DLL, loaded by the launcher; HGSHELL's
+  lobby uses it too) is replaced by our own, multiplatform. No play against the original 1.2 game. The options and
+  the reach of DirectPlay: DECISIONS.md, network round.
+  Diego's choice (2026-11-01): option 1, our own ANET2 stand-in (the ~35 dp functions the shell and the sim use) on
+  plain OS sockets (UDP) behind the platform layer, HG.EXE swapping the shell's ANET2 imports as for DirectDraw, the
+  original lobby unchanged; after the 1.2 network port, plan to Diego first.
+  Deferred (Diego, 2026-11-01: "only do the changes for hgsim, I don't want to rewrite the network library yet"):
+  the original ANET2.DLL stays for now; the read-only notes for the stand-in are tools/v12/anet2_shell.md.
+  Multiplayer testing waits until the whole game is done (Diego, 2026-11-01: "I wont tests multiplayer until the
+  whole game has been completed"): the network round's code (DECISIONS.md, network round) is so far only checked
+  against 1.2 in the checker; test it in real play then.
+  The stand-in's "player left" notice: the 2 bytes "d2" then the player's key word (the loop's NETLEFT_FIX
+  reads the key after the tag; Diego's option B).
 - **1.2 network changes to keep in the rewrite** (Diego: "do as 1.2 does, we can rework network later, but remember
   the change"):
   - Part destroyed (1.2 0x1005ab68, ported in round 32 in 1.2 mode): a kind-4 unit's part 2 destroyed by the local
@@ -81,6 +98,11 @@ start (the checker needs the DLL to compare against).
     [0x1014c99c] (the local player's) is never held back.
   - Tanks as infantry (round 33, ported, the world loader Sim_100dcc12): in a network game a GPS gear whose type name
     holds "tank" (any case) is loaded as "d01infnt" / "mmb00std" / "Infantry" / "GREL", its words +8 / +0xa zeroed.
+
+- **The DLL's C runtime is 1.0's** (round 33; Diego, 2026-11-01: "We will replace them all at the end."): 1.2's
+  copies (about 90 routines, from a newer compiler) are not ported. After: every C-runtime call replaced by the
+  standard library (or our own where the game's results depend on the exact digits), each replacement checked
+  against 1.2's C-runtime results (1.2's game ran on 1.2's copies).
 
 ## Checker
 
@@ -100,6 +122,15 @@ start (the checker needs the DLL to compare against).
 - **1.2 force feedback** (controls round): 1.2's request Sim_100382fb and its table (kept at 1.0's 0x1013af00, size
   set by the hook layer) go to 1.2's FFORCE.DLL, a DirectInput I-Force library; does nothing without a
   force-feedback stick. After: drop the library and map the requests to SDL3 haptics / gamepad rumble, or drop them.
+- **1.2 sound** (sound round): `SNDSDL_RELEASE_ALL` (sdl_sound.c) keeps 1.2's "Release until the count is 0" loop
+  shape around a single `Audio_VoiceDestroy`, and the `SND_MUTATE12*` / `W5C_MUTATE12` switches exist for the
+  checker's negative checks. After: one destroy call, the switches dropped. The music close sits in Sim_1003a052
+  only under `HG_MUSIC_FILES` (the checker builds keep 1.0's CD code); after: unconditional.
+- **3D sound** (sound round; Diego, 2026-11-01: "will add support for modern alternatives onces the dlls are gone"):
+  the shell's 3D sound choice (Off / Headphones / Mono / Quad / Stereo / Surround = HGSND.CFG +0x40) is ignored; every
+  choice plays as Off. After: give it a modern 3D path, e.g. miniaudio (one C file, mixes into SDL3) or OpenAL Soft
+  (HRTF and real surround). The game logic for it is kept: 0x100397e7 / 0x10039931 fill the listener / voice blocks
+  0x109e36e0 / 0x109e3720, but only run with the 3D flag (block +0x10) on, which the sound start never sets now.
 
 ## Data files
 

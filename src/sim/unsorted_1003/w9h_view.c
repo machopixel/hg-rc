@@ -1,4 +1,5 @@
 #include "w9h.h"
+#include "../render/w31.h"
 #include "../render/w2n.h"
 #include "../util/access.h"
 #include "../util/util.h"
@@ -218,6 +219,7 @@ uint32_t __cdecl Sim_10032a10(uint8_t *obj, uint32_t b, uint32_t colour, uint32_
 }
 
 // FUNCTION: HGSIM 0x100352d5
+// FUNCTION: HGSIM12 0x1002a195
 void __cdecl Sim_100352d5(void)
 {
     uint8_t quad[4 * 0x24];
@@ -261,6 +263,12 @@ void __cdecl Sim_100352d5(void)
     } else if (G32(0x1014cb04) != 0 || G32(0x1014cb08) != 0) {
         SIM_FN(W9hCameraFn, 0x100a0def)(BYTES(G32(0x1014cae0)));
     }
+    /* 1.2 (0x1002a195): render state 0xc (1.0's 0xd: the depth buffer cleared) after the background and sky, before
+       the world, unless the display kind [0x1014cb1c] is 1 - the sky stays behind the scene on a Voodoo */
+#ifndef W9HD_MUTATE /* the checker's negative check only: 1.0, no clear */
+    if (W31_TexMode() && G32(0x1014cb1c) != 1)
+        ((int(__cdecl *)(uint32_t, uint32_t))(uintptr_t)G32(0x109e3d40))(0xd, 1);
+#endif
     Sim_100a4c45();
     Sim_100071f6();
     Sim_100d32e5(0);

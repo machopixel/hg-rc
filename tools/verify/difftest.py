@@ -383,7 +383,8 @@ def run_spec(m, spec, seed=1):
             both_fault += 1
             if os.environ.get('DT_DEBUG') and both_fault == 1: print('  fault:', vo, vc)
             continue
-        ok = ro == rc and (ro != 'ok' or (vo[0] == vc[0] if not spec.get('void') else True)
+        rm = spec.get('retmask', 0xffffffff)     # a function returning a word in ax: only ax compared
+        ok = ro == rc and (ro != 'ok' or ((vo[0] & rm) == (vc[0] & rm) if not spec.get('void') else True)
                            and vo[1:4] == vc[1:4] and vo[4] == vc[4])
         why = None
         if ok and log_o != log_c and not (spec.get('fp') and fp_log_equal(log_o, log_c, spec.get('tol', 4e-7))):

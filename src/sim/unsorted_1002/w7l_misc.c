@@ -24,12 +24,18 @@
 #include "../util/access.h"
 
 // FUNCTION: HGSIM 0x100200d1
+// FUNCTION: HGSIM12 0x100173e1
 void __cdecl Sim_100200d1(int a, int b)
 {
     uint32_t first = 0, second = 0;
     int32_t n;
 
+#ifdef W7LB_MUTATE /* the checker's negative check only: 1.0's banks 0..2 and 4 */
     if (a <= -1 || (a >= 3 && a != 4) || b < 0 || b >= 0xa)
+#else
+    /* 1.2 (0x100173e1): banks 0..4 (bank 3's sound index [0x10133710] is never set, -1, in 1.0 and 1.2 alike) */
+    if (a <= -1 || a > 4 || b < 0 || b >= 0xa)
+#endif
         return;
     if (a == 0) {
         n = GS32(0x10133700);

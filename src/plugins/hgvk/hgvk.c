@@ -228,14 +228,11 @@ EXPORT unsigned GetSocketCaps(void)
 #define HGVK_STATE_PAINTER 0x48470001u   /* "HG" 1; the sim's W32_STATE_PAINTER */
 static int g_painter;
 /*
- * The cloud layer as a backdrop (round 33, Voodoo mode). State 0xd (1.2's 0xc; 3dfxgear: a depth-only buffer clear)
- * is sent once a frame, by the sky routine just before its cloud layer (1.2 0x1008dff3 -> 0x1008da61; w22_poly.c).
- * That layer is a textured card with rhw = scale / z, nearer than the ground it hangs over; drawn opaque in mode 2
- * (Voodoo mode) it wrote depth and hid the hills drawn after it. Before Voodoo mode it went as mode 6, blended, which
- * writes no depth, so the world covered it. The one Render after state 0xd is drawn in painter's order (no depth
- * test or write): the sky behind the scene.
+ * State 0xd (1.2's 0xc) clears the depth buffer at that point of the frame, as 3dfxgear's SetState 12 does (a
+ * depth-only grBufferClear). 1.2 sends it before its cloud layer (the sky routine 0x1008dff3) and again after the sky
+ * and background, before the world (0x1002a195 = Sim_100352d5): the cloud card, nearer than the hills it hangs over,
+ * so lands behind the scene (round 33; this replaced a stopgap that drew the call after the first clear without depth).
  */
-static int g_skyNext;
 
 EXPORT int SetState(unsigned code, unsigned value)
 {
@@ -258,8 +255,10 @@ EXPORT int SetState(unsigned code, unsigned value)
        draw them in painter's order, as 1.2's renderer drew everything */
     if (code == HGVK_STATE_PAINTER)
         g_painter = value != 0;
-    if (code == 0xd && value != 0)
-        g_skyNext = 1;
+    if (code == 0xd && value != 0) {
+        Vk_ClearDepth();
+        g_lastIz = -1.0f;       /* as at the frame's start */
+    }
     return 0;
 }
 
@@ -463,10 +462,9 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
     const ModeInfo *m;
     const uint8_t *src = (const uint8_t *)verts;
     HgvkTexture *texture = NULL;
-    int out = 0, i, needed, vblend, sky = g_skyNext;
+    int out = 0, i, needed, vblend;
 
     (void)surf;
-    g_skyNext = 0;          /* only the very next Render, drawn or not */
     g_renders++;
     if (g_verbose >= 2)
         HgvkLog("Render(mode=%d, n=%d)", mode, count);
@@ -591,9 +589,9 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
         for (i = 0; i < out; i++)
             if (g_scratch[i].iz > nearest)
                 nearest = g_scratch[i].iz;
-        if (nearest > 0.0f && !sky)         /* the cloud card's depth is not the world's */
+        if (nearest > 0.0f)
             g_lastIz = nearest;
-        else if (nearest <= 0.0f)
+        else
             nearest = g_lastIz;
         for (i = 0; i < out; i++)
             if (g_scratch[i].iz <= 0.0f)
@@ -602,7 +600,7 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
 
     /* a texture with alpha (1.2's .TEX) is not colour-keyed: it blends in the modes with blending, else is opaque */
     Vk_AddDraw(m->topology, m->blend, (m->clamp ? 1 : 0) | (g_linear ? 2 : 0),
-               Vk_TextureHasAlpha(texture) ? 0 : m->keyed, g_painter || sky, texture, g_scratch, out);
+               Vk_TextureHasAlpha(texture) ? 0 : m->keyed, g_painter, texture, g_scratch, out);
     return 0;
 }
 

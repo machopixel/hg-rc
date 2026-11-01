@@ -1,10 +1,16 @@
 #include "w2j.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x100405e6
 void __cdecl Sim_100405e6(const void *obj)
 {
     uint32_t entry;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x1003406a): ignored once the game is over */
+        return;
+#endif
 
     if (G32(0x1017b8c8) == U8(obj, 4))
         return;

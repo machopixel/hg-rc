@@ -10,6 +10,7 @@
 #include "../unsorted_1000/w5a.h"
 #include "../unsorted_100a/w7o.h"
 #include "../util/w3o.h"
+#include "w3p.h"
 
 #define W8U_CAM() BYTES(G32(0x1014cae0))
 #define W8U_TICKS() ((double)GS32(0x1015dc80))
@@ -20,6 +21,11 @@ void __cdecl Sim_1004170e(const uint8_t *pkt, int index)
     uint8_t *unit;
     double len;
     float vol;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x100354eb): ignored once the game is over */
+        return;
+#endif
 
     if (GS32(0x1017b8c8) == index)
         return;

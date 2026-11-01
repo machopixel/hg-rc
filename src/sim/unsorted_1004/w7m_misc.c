@@ -5,6 +5,7 @@
 #include "../unsorted_1007/w3p.h"
 #include "../unsorted_100a/w6g.h"
 #include "../unsorted_100f/w2e.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x1004ee50
 uint32_t __cdecl Sim_1004ee50(uint32_t *obj)
@@ -152,6 +153,11 @@ void __cdecl Sim_100410ff(const uint8_t *packet)
     uint32_t high = p & 0xffff0000u;
     uint32_t obj;
 
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034d99): ignored once the game is over */
+        return;
+#endif
+
     if (S16(packet, 3) != 0x4200) {
         obj = PTRTAB(U8(packet, 3));
         if (obj == 0 || U32(obj, 0x14) != 3)
@@ -175,12 +181,17 @@ void __cdecl Sim_100410ff(const uint8_t *packet)
 }
 
 // FUNCTION: HGSIM 0x10040191
+// FUNCTION: HGSIM12 0x10033a8a
 void __cdecl Sim_10040191(const uint8_t *packet)
 {
     uint32_t who = U8(packet, 2);
     uint32_t obj, state, entry;
     int32_t i;
 
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10033a8a): ignored once the game is over */
+        return;
+#endif
     if (PTRTAB(who) == 0)
         return;
     if (G32(0x1017b8c8) == who)
@@ -198,13 +209,30 @@ void __cdecl Sim_10040191(const uint8_t *packet)
         float qf;
 
         entry = U32(state, 0x88) + (uint32_t)i * 0x3c;
+#ifdef NETDM_MUTATE /* the checker's negative check only: 1.0 sets the part's values from the level */
         q = (double)(int32_t)(0xf - level) * (double)S32(entry, 0x38) / (double)W7M_GF(0x10111530);
         qf = (float)q;
         W7M_F(entry, 0) = (float)(q * (double)W7M_GF(0x1011150c));
         W7M_F(entry, 8) = (float)((double)qf * (double)W7M_GF(0x1011150c));
-        *SIM_PTR(uint8_t, 0x1015da45 + U32(obj, 4) * 0x16 + (uint32_t)i) = U8(packet, 5 + i);
+#else
+        /* 1.2 (0x10033a8a) still works out (15 - level) * the part's +0x38 / 3 into a local, and stores it nowhere:
+           a remote unit's part values no longer follow this message; only a part reported destroyed is zeroed */
+        (void)q;
+        (void)qf;
+#endif
+        g_net10Row[U32(obj, 4)][5 + i] = U8(packet, 5 + i);
         Sim_100aae7b(BYTES(U32(U32(state, 0), 0x48)), (int)level, (uint32_t)i + 1);
-        if ((U8(packet, 5 + i) & 0x10) != 0 && (S16(entry, 0x36) & 0x2000) == 0)
+        if ((U8(packet, 5 + i) & 0x10) != 0 && (S16(entry, 0x36) & 0x2000) == 0) {
+#ifndef NETDM_MUTATE
+            W7M_F(entry, 8) = 0.0f;         /* 1.2: the destroyed part's value */
+#endif
             W7M_CALL_1006abf6((int16_t)U32(obj, 0x150), state, i + 1);
+#ifndef NETDM_MUTATE
+            if (i == 1) {                   /* 1.2: the second part gone marks the unit */
+                g_net10Mark[U32(obj, 4)] = 1;
+                W7M_F(entry, 8) = 0.0f;
+            }
+#endif
+        }
     }
 }

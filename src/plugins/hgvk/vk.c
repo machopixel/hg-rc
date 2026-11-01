@@ -48,7 +48,7 @@
     X(vkAllocateCommandBuffers) X(vkBeginCommandBuffer) X(vkEndCommandBuffer) \
     X(vkResetCommandBuffer) X(vkCmdBeginRenderPass) X(vkCmdEndRenderPass) \
     X(vkCmdBindPipeline) X(vkCmdBindVertexBuffers) X(vkCmdBindDescriptorSets) \
-    X(vkCmdPushConstants) X(vkCmdDraw) X(vkCmdSetViewport) X(vkCmdSetScissor) \
+    X(vkCmdPushConstants) X(vkCmdDraw) X(vkCmdSetViewport) X(vkCmdSetScissor) X(vkCmdClearAttachments) \
     X(vkCmdPipelineBarrier) X(vkCmdCopyBufferToImage) X(vkQueueSubmit) X(vkQueueWaitIdle) \
     X(vkDeviceWaitIdle) X(vkCreateSemaphore) X(vkDestroySemaphore) X(vkCreateFence) \
     X(vkDestroyFence) X(vkWaitForFences) X(vkResetFences) \
@@ -73,6 +73,7 @@ struct HgvkTexture {
 typedef struct Draw {
     uint32_t first, count;
     uint8_t topology, blend, sampler, keyed, painter;
+    uint8_t clearDepth; /* not a draw: the depth buffer cleared at this point of the frame (Vk_ClearDepth) */
     HgvkTexture *tex;
 } Draw;
 
@@ -1275,7 +1276,7 @@ void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, Hg
     memcpy(g.verts + g.vertCount, verts, (size_t)count * sizeof(HgvkVertex));
 
     last = g.drawCount ? &g.draws[g.drawCount - 1] : NULL;
-    if (last != NULL && last->topology == topology && last->blend == blend &&
+    if (last != NULL && !last->clearDepth && last->topology == topology && last->blend == blend &&
         last->sampler == sampler && last->keyed == keyed && last->painter == painter && last->tex == tex) {
         last->count += (uint32_t)count;
     } else {
@@ -1298,9 +1299,31 @@ void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, Hg
         d->sampler = (uint8_t)sampler;
         d->keyed = (uint8_t)keyed;
         d->painter = (uint8_t)(painter != 0);
+        d->clearDepth = 0;
         d->tex = tex;
     }
     g.vertCount += (uint32_t)count;
+}
+
+void Vk_ClearDepth(void)
+{
+    Draw *d;
+
+    if (!g.ready || !g.depthOn)
+        return;
+    if (g.drawCount == g.drawCap) {
+        uint32_t cap = g.drawCap ? g.drawCap * 2 : 4096;
+        Draw *grown = (Draw *)realloc(g.draws, (size_t)cap * sizeof(Draw));
+
+        if (grown == NULL)
+            return;
+        g.draws = grown;
+        g.drawCap = cap;
+    }
+    d = &g.draws[g.drawCount++];
+    memset(d, 0, sizeof(*d));
+    d->first = g.vertCount;
+    d->clearDepth = 1;
 }
 
 static void ResetBatch(void)
@@ -1558,8 +1581,24 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
 
     for (i = 0; i < g.drawCount; i++) {
         const Draw *d = &g.draws[i];
-        VkPipeline pipe = d->painter ? g.painterPipelines[d->topology][d->blend] : g.pipelines[d->topology][d->blend];
-        HgvkTexture *tex = d->tex != NULL ? d->tex : &g.white;
+        VkPipeline pipe;
+        HgvkTexture *tex;
+
+        if (d->clearDepth) {
+            VkClearAttachment ca;
+            VkClearRect cr;
+
+            memset(&ca, 0, sizeof(ca));
+            ca.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            ca.clearValue.depthStencil.depth = 0.0f; /* farthest, as at the frame's start */
+            memset(&cr, 0, sizeof(cr));
+            cr.rect.extent = g.extent;
+            cr.layerCount = 1;
+            vk.vkCmdClearAttachments(f->cmd, 1, &ca, 1, &cr);
+            continue;
+        }
+        pipe = d->painter ? g.painterPipelines[d->topology][d->blend] : g.pipelines[d->topology][d->blend];
+        tex = d->tex != NULL ? d->tex : &g.white;
 
         if (pipe != bound) {
             vk.vkCmdBindPipeline(f->cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, pipe);

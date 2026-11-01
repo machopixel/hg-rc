@@ -204,6 +204,7 @@ int __cdecl Sim_100b979f(char *type)
 // FUNCTION: HGSIM 0x100b9b3f
 uint32_t __cdecl Sim_100b9b3f(uint32_t data, const uint32_t *key, const char *type, uint32_t size)
 {
+    /* 1.2 (0x100a1f1f): the same code; only its out-of-memory asserts give source lines 2 higher */
     uint32_t t, e, head;
     uint64_t stamp;
     int32_t slot;
@@ -213,7 +214,7 @@ uint32_t __cdecl Sim_100b9b3f(uint32_t data, const uint32_t *key, const char *ty
         Sim_100d9fc0();
         t = (uint32_t)(uintptr_t)Heap_Malloc(0x24);
         if (t == 0)
-            ASSERT_AT(0x10150dc0, 0x10150d9c, 0x2f1);
+            ASSERT_AT(0x10150dc0, 0x10150d9c, 0x2f3);
         Str_CopyN((char *)(uintptr_t)(t + 0x18), type, 8);
         U32(t, 0x20) = 0;
         U32(t, 0) = 0x400;
@@ -222,14 +223,14 @@ uint32_t __cdecl Sim_100b9b3f(uint32_t data, const uint32_t *key, const char *ty
         U32(t, 0xc) = 0;
         U32(t, 0x10) = (uint32_t)(uintptr_t)Heap_Malloc(U32(t, 0) << 2);
         if (U32(t, 0x10) == 0)
-            ASSERT_AT(0x10150dec, 0x10150dc8, 0x2fb);
+            ASSERT_AT(0x10150dec, 0x10150dc8, 0x2fd);
         Mem_Fill((void *)(uintptr_t)U32(t, 0x10), 0, U32(t, 0) << 2);
         U32(t, 0x14) = (uint32_t)(uintptr_t)PtrArray_Create();
         if (U32(t, 0x14) == 0)
-            ASSERT_AT(0x10150e1c, 0x10150df8, 0x2ff);
+            ASSERT_AT(0x10150e1c, 0x10150df8, 0x301);
         if (Sim_100bdc5d((SortedList100b *)(uintptr_t)G32(0x1017d604), (int32_t)t,
                          SIM_FN(int(__cdecl *)(int32_t, int32_t), 0x100b9db0)) == 0)
-            ASSERT_AT(0x10150e50, 0x10150e2c, 0x303);
+            ASSERT_AT(0x10150e50, 0x10150e2c, 0x305);
     }
     if (size + U32(t, 0xc) >= U32(t, 4))
         W8Y_CALL_100b9203(0, (const char *)(uintptr_t)(t + 0x18));
@@ -238,7 +239,7 @@ uint32_t __cdecl Sim_100b9b3f(uint32_t data, const uint32_t *key, const char *ty
     slot = (int32_t)(key[0] ^ key[1]) % S32(t, 0);
     e = (uint32_t)(uintptr_t)Heap_Malloc(0x24);
     if (e == 0)
-        ASSERT_AT(0x10150e7c, 0x10150e58, 0x31d);
+        ASSERT_AT(0x10150e7c, 0x10150e58, 0x31f);
     head = U32(U32(t, 0x10), (uint32_t)slot * 4);
     U32(e, 8) = 1;
     U32(e, 0x20) = 0;
@@ -332,14 +333,16 @@ void __cdecl Sim_100b9fa5(void)
 // FUNCTION: HGSIM 0x100ba304
 void __cdecl Sim_100ba304(const char *name)
 {
+    /* 1.2 (0x100a26e4): a guard for a line with hash size 0 (fixed, below); the asserts give 1.2's source lines */
     char line[0x100];
     void *f;
     char *tok;
-    uint32_t t;
+    uint32_t t, old;
+    int fresh;
 
     G32(0x1017d604) = (uint32_t)(uintptr_t)PtrArray_CreateSized(0x20);
     if (G32(0x1017d604) == 0)
-        ASSERT_AT(0x10150fd0, 0x10150fac, 0x365);
+        ASSERT_AT(0x10150fd0, 0x10150fac, 0x367);
     f = Sim_100fd850(name, SIM_PTR(const char, 0x10150fdc));
     if (f == 0)
         return;
@@ -349,10 +352,11 @@ void __cdecl Sim_100ba304(const char *name)
         tok = Str_NextToken_100fd560(line, SIM_PTR(const char, 0x10150fe0));
         W8Y_CALL_100ba21c(tok);
         t = Sim_100bda9f((void *)(uintptr_t)G32(0x1017d604), (uint32_t)(uintptr_t)tok, CMP_FN(0x100b971d));
+        fresh = t == 0;
         if (t == 0) {
             t = (uint32_t)(uintptr_t)Heap_Malloc(0x24);
             if (t == 0)
-                ASSERT_AT(0x10151008, 0x10150fe4, 0x37a);
+                ASSERT_AT(0x10151008, 0x10150fe4, 0x37c);
             U32(t, 0x20) = 0;
             Str_CopyN((char *)(uintptr_t)(t + 0x18), Crt_StrUpper(tok), 8);
         }
@@ -362,9 +366,21 @@ void __cdecl Sim_100ba304(const char *name)
                 Heap_FreeBlock(t);
             continue;
         }
+        old = fresh ? 0 : U32(t, 0);
         U32(t, 0) = (uint32_t)Crt_AToI(tok);
         if (S32(t, 0) == -1)
             U32(t, 0) = 0x400;
+        if (U32(t, 0) == 0) {
+            /* Fix (DECISIONS.md, "Cache size 0"): 1.2 keeps the type with no slot table (+0x10 = 0), but filing or
+             * finding a file of it divides by the size 0 (1.0's own CACHE.INI has "tex 0 0"). The line is left out
+             * instead: the type is made with the defaults when its first file is filed (Sim_100b9b3f), as for a
+             * type the file does not list */
+            if (fresh)
+                Heap_FreeBlock(t);
+            else
+                U32(t, 0) = old;
+            continue;
+        }
         tok = Str_NextToken_100fd560(0, SIM_PTR(const char, 0x10151014));
         if (tok == 0) {
             if (t != 0)
@@ -376,16 +392,20 @@ void __cdecl Sim_100ba304(const char *name)
             U32(t, 4) = 0x100000;
         U32(t, 0x10) = (uint32_t)(uintptr_t)Heap_Malloc(U32(t, 0) << 2);
         if (U32(t, 0x10) == 0)
-            ASSERT_AT(0x1015103c, 0x10151018, 0x396);
+            ASSERT_AT(0x1015103c, 0x10151018, 0x39a);
         Mem_Fill((void *)(uintptr_t)U32(t, 0x10), 0, U32(t, 0) << 2);
         U32(t, 0x14) = (uint32_t)(uintptr_t)PtrArray_Create();
         if (U32(t, 0x14) == 0)
+#ifdef W8Y_MUTATE12 /* the checker's negative check only */
             ASSERT_AT(0x1015106c, 0x10151048, 0x39a);
+#else
+            ASSERT_AT(0x1015106c, 0x10151048, 0x3a3);
+#endif
         U32(t, 8) = 0;
         U32(t, 0xc) = 0;
         if (PtrArray_Insert((void *)(uintptr_t)G32(0x1017d604), t, SIM_FN(int(__cdecl *)(uint32_t, uint32_t), 0x100b9db0))
             == 0)
-            ASSERT_AT(0x101510a0, 0x1015107c, 0x3a1);
+            ASSERT_AT(0x101510a0, 0x1015107c, 0x3aa);
     }
     W8Y_CALL_100fd760(f);
 }

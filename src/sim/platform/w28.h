@@ -66,11 +66,14 @@ void __cdecl Sim_10086b99(void);
  *        refresh (driver [0x1015e68c] +0x18) and Plat_WindowPainted; 0. Otherwise the OS default.
  *   0x02 destroyed: Plat_RequestQuit; 0.
  *   0x1c activated / deactivated (wParam 1 / 0), unless the quit flag [0x1017b8b8] is set (then the OS default):
- *        [0x1017b928] = [0x1017b920] = wParam. Activated: the key state is cleared (Sim_10057f53); for a mode
+ *        [0x1017b928] = [0x1017b920] = wParam. Activated: after a pause of its own (g_w28FocusPaused) the game
+ *        resumes (Sim_1008b900), then the key state is cleared (Sim_10057f53); for a mode
  *        that fits 640x480 ([0x1015e9c4] <= 640, [0x1015e9c8] <= 480) without [0x1017b940]: after a minimise by
  *        the game ([0x1015e9c0] 1) the screen mode is set again (0x10037f71, flag cleared) and the window
  *        restored, else restored, or shown without activating for an exclusive display driver ([[0x1015e688]] 1);
- *        bigger modes restored. Then the sound resumes ([0x109e3d5c], with [0x1017b934]). Deactivated: the sound
+ *        bigger modes restored. Then the sound resumes ([0x109e3d5c], with [0x1017b934]). Deactivated: unless the
+ *        clock is already held (timer flag 0x200: the HUD menu, Sim_1002a983) or in a network game ([0x1015ecd0]),
+ *        the game pauses (Sim_1008b8de: clock and music) and g_w28FocusPaused is set; then the sound
  *        pauses ([0x109e3d60]); for a fitting mode the window is minimised (hidden for an exclusive driver),
  *        except for a windowed driver ([[0x1015e688]] 0) not minimised before: minimised, flag set, mode set
  *        (0x10037f71); bigger modes minimised. Both: the palette is set again (driver [0x1015e688] +0x14 with
@@ -148,6 +151,8 @@ void __cdecl Sim_1003650d(const char *path);
 void __cdecl Sim_1003695b(const char *kind, const char *name, uint32_t index);
 extern void(__cdecl *g_w28Trace)(const char *format, ...);
 
+/* 1.2 change with a fix (DECISIONS.md, "Focus pause"): set while the game is paused by a focus loss. */
+extern int g_w28FocusPaused;
 int32_t __stdcall Sim_100867a2(uint32_t window, uint32_t message, uint32_t wParam, uint32_t lParam);
 
 #endif

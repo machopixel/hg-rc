@@ -55,6 +55,9 @@ void Vk_RequestDropAllTextures(void);
 
 /* sampler: bit 0 clamp, bit 1 linear filter. */
 /* painter != 0: drawn without depth test or write, in submission order (1.2's particles, round 32) */
+/* Clears the depth buffer at this point of the frame's draws (1.2's render state 0xc, our 0xd; 3dfxgear: a
+   depth-only grBufferClear). */
+void Vk_ClearDepth(void);
 void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, HgvkTexture *tex,
                 const HgvkVertex *verts, int count);
 

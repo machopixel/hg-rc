@@ -5,6 +5,7 @@
 #include "../unsorted_1002/w2i.h"
 #include "../unsorted_1007/w2e.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x10040a37
 void __cdecl Sim_10040a37(const uint8_t *p)
@@ -12,6 +13,11 @@ void __cdecl Sim_10040a37(const uint8_t *p)
     int16_t kind = S16(p, 3);
     uint32_t byteValue = U8(p, 2);
     uint16_t word = U16(p, 5);
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034682): ignored once the game is over */
+        return;
+#endif
 
     if (kind != 0) {
         if (kind == 7)

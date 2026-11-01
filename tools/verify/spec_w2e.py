@@ -17,6 +17,13 @@ SOURCES = [
     'sim/core/timer.c', 'sim/core/w2a_timers.c', 'sim/unsorted_1003/slots.c',
     'sim/util/lookup.c', 'sim/unsorted_100d/state.c',
 ]
+# The list above predates round 33 (the kill table g_w34Kills): what the files need to link now is added by
+# w10_common's closure(), run in its own namespace so that nothing else of w10_common changes this spec.
+_w10 = {}
+exec(open('tools/verify/w10_common.py').read(), _w10)
+SOURCES = _w10['closure'](SOURCES)
+# some of the added files have frames over 4 KB: no probe call (rt.c has no __chkstk_ms), as in the other specs
+CFLAGS = ['-mno-stack-arg-probe']
 
 ALPHA = b'abAB01 _.-'
 

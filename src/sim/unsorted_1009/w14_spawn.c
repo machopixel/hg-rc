@@ -24,6 +24,7 @@
 #include "../unsorted_1004/fns.h"
 #include "../unsorted_1005/w3s.h"
 #include "../unsorted_1007/w2e.h"
+#include "../unsorted_1004/w3p.h"
 
 #define W14S_UNIT(rec) BYTES(U32(rec, 0))
 #define W14S_NODE(rec) ((void *)(uintptr_t)U32(W14S_UNIT(rec), 0x48))
@@ -184,7 +185,7 @@ int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_
         Sim_10016632(S32(W14S_UNIT(rec), 8));
     }
     GS32(0x1014c99c) = -1;
-    *GBYTES(0x1015d1b0 + U32(W14S_UNIT(rec), 4)) = 0;
+    g_net10Mark[U32(W14S_UNIT(rec), 4)] = 0;    /* 1.2 0x107cb4d0 */
     /* 1.2: a computer gear (+0x14 0 or 1) whose group leader is a remote player's gear (state 3) is handed to that
        leader's group, with a message when it is the local player's */
     if (S32(entry, 0x14) == 0 || S32(entry, 0x14) == 1) {

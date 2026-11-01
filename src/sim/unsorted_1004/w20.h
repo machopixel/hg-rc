@@ -25,7 +25,8 @@
  *
  * Deviation (DECISIONS.md, round 20): in the two own-unit branches the original clears +0x164 of its gear pointer
  * [ebp-4] before ever setting it (a stale stack value left by the network dispatch); the C stores nothing there.
+ * Network round: 1.2's rewritten version (0x1003474e) is the build's; the text above is 1.0's (NETRG_MUTATE).
  */
-void __cdecl Sim_10040af8(uint8_t *msg);
+void __cdecl Sim_10040af8(uint8_t *msg, int who);     /* 1.2: the sender too */
 
 #endif

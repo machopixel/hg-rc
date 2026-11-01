@@ -12,6 +12,7 @@
 #include "../unsorted_100a/w5y.h"
 #include "../view/w3r.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 typedef uint32_t(__cdecl *W6eCall3Fn)(uint32_t, uint32_t, uint32_t);
 typedef uint32_t(__cdecl *W6eCall1Fn)(uint32_t);
@@ -20,6 +21,11 @@ typedef uint32_t(__cdecl *W6eCall1Fn)(uint32_t);
 void __cdecl Sim_1004131b(const uint8_t *msg)
 {
     uint32_t entry;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034fce): ignored once the game is over */
+        return;
+#endif
 
     if (PTRTAB(msg[2]) == 0)
         return;
@@ -45,10 +51,15 @@ void __cdecl Sim_10041b2d(const uint8_t *msg, int slot)
     uint8_t bits;
     int i;
 
-    p += 4;
-    if (stamp <= SIM_PTR(s32a, 0x1015db80)[slot])
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10035923): ignored once the game is over */
         return;
-    SIM_PTR(s32a, 0x1015db80)[slot] = stamp;
+#endif
+
+    p += 4;
+    if (stamp <= g_net10SnStamp[slot])
+        return;
+    g_net10SnStamp[slot] = stamp;
     bits = *p;
     for (i = 0; i < 0xfe; i++) {
         if ((bits & 0x80) != 0 && (S16(GBYTES(0x109e9ba0), i * 0x50) & 4) == 0)

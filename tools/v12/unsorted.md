@@ -43,7 +43,16 @@ Read-only analysis. Input: the survey's "Unclassified" rows (69 changed, 102 new
 ## Tiny sweep: also to do
 
 - Fix the three 1.0 checker files that no longer link (their source lists predate rounds 32 / 33): spec_w2e.py,
-  spec_w6h.py, spec_w8z.py (Diego, 2026-11-01: option a).
+  spec_w6h.py, spec_w8z.py (Diego, 2026-11-01: option a). Done 2026-11-01: their lists now go through w10_common's
+  closure(); all pass (66 / 29 / 36 functions, 0 failed).
+- Not ported: 1.2's WAV player (wavmap.ini, mmio reading, DirectSound streaming; the "sound" new-feature rows): the
+  MUSIC folder's Ogg player does its jobs (Diego, 2026-11-01: option a).
+- Not ported: 1.2's C-runtime copies (the "C runtime" rows; 1.2 was built with a newer Microsoft compiler): all
+  replaced by the standard library when HGSIM.DLL goes (Diego, 2026-11-01: "We will replace them all at the end.").
+- No PowerVR support (Diego, 2026-11-01): nothing to leave out - 1.2 has no PowerVR-only code (DECISIONS.md).
+- zlib: settled 2026-11-01, dead code in 1.2's HGSIM (tools/v12/remaining.md, D): nothing to port.
+- Go given (2026-11-01) for controls and AI first; graphics, sound, mission / platform and the test files followed
+  the same day (DECISIONS.md "Tiny sweep, mission / platform and test files").
 
 ## Rows
 

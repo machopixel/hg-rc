@@ -2014,6 +2014,11 @@ Round 33, lighting (Diego: "I want to match 1.2 sky lighting"; Voodoo 2's look i
     before Voodoo mode. No sim change; no spec affected.
     Diego's choice (2026-11-01, option a): keep the cloud layer behind the hills, as built (not the arithmetic of a
     real Voodoo, which would put it in front of far hills).
+    **Correction (2026-11-01, sweep):** the premise was wrong. 1.2's frame step (0x1002a195 = Sim_100352d5) sends
+    state 0xc (our 0xd, depth clear) again after the background and sky, before the world - so on a Voodoo the sky
+    is behind the scene. Ported (sweep, graphics); HGVK now clears its depth buffer on state 0xd (Vk_ClearDepth, a
+    queued vkCmdClearAttachments), as 3dfxgear does, replacing the stopgap above (the Render after state 0xd drawn
+    without depth). Same picture, now 1.2's own way; Diego told.
 
 ## Round 33, round 4: weapons, damage, HUD, animation (Diego, 2026-11-01: "go go go")
 
@@ -2028,10 +2033,11 @@ the C's); each has a negative check (a planted 1.0 behaviour) that the spec catc
   direction (Sim_100cbc6b) and sends the fixed angle 90; ours sends the computed direction (W10E_FIX_DIR, default 1).
   spec_w10_blast_v12.py (built with W10E_FIX_DIR=0): 6000 trials, 0 mismatches; distances around 2000 / 3000 included;
   W10E_NEG12=1 (1.0's 3000): 50, =d (the fix on): 108 (every request sent). Only felt with a force-feedback stick.
-- **Selected weapon slot** (1.2's gear field +0x5fb): the gear set-up Sim_1005bb7a (1.2 0x1004e6a0) starts it at -1
+- **Weapon mount slot** (1.2's gear field +0x5fb; correction 2026-11-01: not the selected weapon, which is +0x4fc -
+  +0x5fb is the mount index of the gear's kind-10 part, the node the weapons hang on, +0x498 + 4 * index): the gear set-up Sim_1005bb7a (1.2 0x1004e6a0) starts it at -1
   right after +0xc15 = 0 (the kind-10 part still sets its mount number later, as in 1.0); the weapon mount
-  Sim_10038ad5 (1.2 0x1002cdc5; the survey's "new" function is its 1.2 version) makes the slot it fills the selected
-  one when +0x5fb is -1 (the record's +0x128 and +0x5fb), else copies +0x5fb as 1.0. spec_w2e_mount_v12.py 3000 / 0
+  Sim_10038ad5 (1.2 0x1002cdc5; the survey's "new" function is its 1.2 version) makes the slot it fills that mount
+  index when +0x5fb is -1 (a gear without a kind-10 part) (the record's +0x128 and +0x5fb), else copies +0x5fb as 1.0. spec_w2e_mount_v12.py 3000 / 0
   (W2EW_NEG12: 1419); spec_w14_pof_slot_v12.py: the set-up with the store left out still matches 1.0 exactly (10000 /
   0: nothing else in it changed; 1.2's other differences there are re-packed tables of the same values and a debug
   print through its empty log function), with it in only +0x5fb differs (7426 of 10000).
@@ -2059,3 +2065,390 @@ the C's); each has a negative check (a planted 1.0 behaviour) that the spec catc
 - **Checker housekeeping:** spec_w2e.py, spec_w6h.py and spec_w8z.py no longer link (their fixed source lists predate
   rounds 32 / 33: W31_TexMode, the railgun / accelerator systems, g_w34Kills); the new v12 specs build their own
   closures. Diego's choice (2026-11-01, option a): fixed in the tiny sweep (listed in tools/v12/unsorted.md).
+
+## Round 33, music from the MUSIC folder (music thread; recorded 2026-11-01)
+
+- **Music as 1.2's WAV music, with Ogg files** (Diego, 2026-10-31: "The music cd will instead be played from the
+  music folder ... Ignore the cd"): CD track N plays MUSIC\TrackNN.ogg (src/platform/music.c, stb_vorbis, an SDL3
+  stream voice). The game side is 1.2's WAV-map code ported line by line (start 0x10015e83, restart of a finished
+  track 0x10015fbd, pause 0x10015f1b, resume 0x10015f59, stop 0x10015f97, volume 0x1001603f, option read / set
+  0x10015450 / 0x1001550d), checked by tools/verify/spec_music_v12.py; notes in tools/v12/sound.md. 1.2's WAV player
+  itself (wavmap.ini, .wav reading through mmio, the DirectSound buffer and its winmm refill timer, about 34
+  functions) is not ported: the Ogg player does its jobs (Diego, 2026-11-01: option a, "keep the OGG music").
+- **Deviation (1.2 bug not kept):** 1.2's music-option setter sets the music volume only while the CD is open, so
+  with WAV music the volume option never changed the music's volume. Ours follows the option for the files too, as
+  1.2's CD path does (the spec compares the option setter with 1.2's CD flag set).
+
+## Round 33, tiny-sweep choices (Diego, 2026-11-01)
+
+- **1.2's C-runtime copies not ported** (option a, "We will replace them all at the end."): about 90 routines of the
+  Microsoft C library compiled into 1.2's HGSIM (a newer compiler; no game change). The converted code keeps using
+  1.0's copies or the standard library (exactness rules above) until HGSIM.DLL goes; then every C-runtime call is
+  replaced, each replacement checked against 1.2's C-runtime results (AFTER_DLL.md).
+- **1.2's WAV player not ported** (option a): see the music section.
+- **No PowerVR support** (Diego, 2026-11-01: "I don't want powervr support", option a). Checked in 1.2's HGSIM: the
+  string "POWERVR" (0x1011e0c8) has one use, sim main 0x1006ffd2, setting the shared 3DFX / PowerVR mode flag
+  [0x1014b954] (our g_w33Voodoo); there is no separate PowerVR-only flag or branch (the "PowerVR state toggles" of the
+  survey are that shared mode's state 0xe, already ported with Sim_1004954e), and 1.2 ships no PowerVR renderer
+  (its plugins: 3dfxgear, dx5draw, i76draw, renddraw). The POWERVR name test in our sim main stays (1.2's line).
+
+## Tiny sweep, controls (Diego, 2026-11-01: "do controls and ai"; AI moved to its own thread)
+
+Each function of the survey's input / controls rows was diffed against 1.2 (tools/v12/fdiff.py) and read:
+- **Order-target helper** (Sim_10015018 = 1.2 0x1000e1a8, w7l_misc.c), the "next unit" selector 0x4200: 1.0 also took
+  a unit whose state (Sim_10052be7) is 0 when [0x1015d110] is set - nothing ever writes it (one read in the DLL,
+  initial 0). 1.2 tests its network flag (1.0 [0x1015ec58]) or its [0x1012d4e8] (likewise never written, initial 0).
+  Ported: in a network game that unit is taken too. spec_w7l_order_v12.py 4000 / 0 (only ax compared, a new difftest
+  option `retmask`; 0x1015d110 left out of the copied globals, the listing pairs it with 1.2's network flag);
+  W7LO_NEG12 (1.0's flag): mismatches.
+- **Cache entry** (Sim_100b9b3f = 1.2 0x100a1f1f, w8y_cache.c): the same code; its five out-of-memory asserts give
+  source lines 2 higher (0x2f1 -> 0x2f3, ...). Ported (constants only; the assert fires only when an allocation fails).
+- **Layout only, nothing to port** (the 4-byte record shift written as arithmetic, fdiff's only difference): steering
+  0x100139ff (1.2 0x1000cb8f, +0x228 -> +0x224), the key test 0x10048c84 (0x1003aaf4, +0x124 -> +0x120), the two
+  control states 0x100c145b / 0x100c1609 (0x100a8c28 / 0x100a8dd6, +0x224 -> +0x220).
+- **Already in 1.2's form:** the textured submit 0x100d1e10 (1.2 0x100b7ff0: its mode 8 is our 1.0 mode 6, its 7-dword
+  description: round 31).
+- **Left for the network round:** the player-id lookup 0x1003db56 (1.2 0x100312c6) looks at 10 ids instead of 8 (part
+  of 1.2's 10-player protocol).
+
+## Tiny sweep, AI (Diego, 2026-11-01: "do controls and ai", "start the ai in a separate thread")
+
+The four AI-side functions of the sweep, each diffed against 1.2 and run against 1.2's code in the checker:
+- **Group orders** (Sim_10017263 = 1.2 0x10010412, w9h_group.c): layout only, every difference is the unit record's
+  4-byte shift (+0x28 -> +0x24, +0x1a0 -> +0x19c, +0x1a6 -> +0x1a2, +0x1aa -> +0x1a6, +0x1ae -> +0x1aa). Nothing to
+  port. spec_w9h_group_v12.py (unit records shifted for 1.2's run, the selected star's entries copied to 1.2's table,
+  Sim_10016d83's word-list pointer logged by its contents): 5000 trials, 0 mismatches; W9HG_NEG (kind 4 taken as 5):
+  90 mismatches.
+- **Range test** (Sim_10066907 = 1.2 0x100571d7, w16_range.c): layout only (+0x1c -> +0x18, +0x28 -> +0x24, +0x58 ->
+  +0x54, +0x84 -> +0x80, +0x29c -> +0x298). Nothing to port. spec_w16_range_v12.py: 12000 trials, 0 mismatches;
+  W16R_NEG12 (box flag 2 taken as 1): 603 mismatches.
+- **Maths helper** (1.0 0x101039a0 Math_FrExp = 1.2 0x100e1cf0, w7r_math.c): the C runtime's frexp. 1.2's copy only
+  reorders instructions and adds a `movsx esi, si` after `and esi, 0x7ff`, which cannot change the value: same
+  results. Not ported (Diego's rule for the C runtime: replaced at the end).
+- **Sparks** (Sim_1009fada = 1.2 0x1008c922, w22_poly.c): the only difference is the render mode, 1.2's 0x12 for our
+  0x10 (1.2's renumbering, round 33 "Render modes renumbered in 1.2"). Nothing to port. spec_w22_sparks_v12.py (bit 1
+  of the mode and the state block's address masked in the log): 4000 trials, 0 mismatches; W22_NEG: 154 of 300.
+
+## Weapon selection after a burst (Diego, 2026-11-01: option b, "keep my new selection")
+
+- **Bug fix of a 1.2 / 1.0 behaviour:** the per-frame weapon handling (Sim_100d4590 = 1.2 0x100ba550, w10_weapons.c)
+  makes every slot that fires a burst shot the current weapon (+0x4fc). A player who switched weapons while the old
+  weapon's burst was still running was switched straight back; and since a finished burst refires by itself when its
+  slot is the current one (state 3 -> 2), the old weapon kept firing. Now (W10F_KEEP_SEL, default 1) the local
+  player's gear keeps its selection: the running burst finishes, the old weapon then stops unless the trigger is held.
+  Computer gears keep 1.2's behaviour (their weapon choice and aim lead read +0x4fc).
+- **Checked:** spec_w10_fireloop_v12.py against 1.2: with W10F_KEEP_SEL=0, 15000 / 0; with the fix (W10F_NEG12=fix,
+  1.2's result given back the player's old +0x4fc), 14 of 15000 differ, all in that refire decision of a slot that is
+  no longer current (expected); the fix applied to every gear (W10F_NEG12=1): 1534. The 1.0 spec with
+  W10F_KEEP_SEL=0: 15000 / 0. Found while checking: a current slot without a weapon reads "kind -1", the 0xd6 bytes
+  before the kind table, in both versions (the spec copies them too). Nothing else reads +0x4fc in the shot path
+  (the fire functions get the slot and weapon record), and no network message carries it.
+
+## Tiny sweep, graphics and sound (Diego, 2026-11-01: "do the graphics and sound next")
+
+Every candidate was diffed against 1.2 (tools/v12/fdiff.py) and read in 1.2's code:
+- **Depth clear before the world** (Sim_100352d5 = 1.2 0x1002a195, w9h_view.c): after the background quad or sky,
+  render state 0xc (our 0xd) unless [0x1014cb1c] is 1. Ported (W31_TexMode). HGVK: state 0xd now clears the depth
+  buffer at that point of the frame (Vk_ClearDepth: a queued vkCmdClearAttachments; the last-depth fallback reset), as
+  3dfxgear's SetState 12 does; the round-33 stopgap (the Render after state 0xd drawn without depth) is gone.
+  spec_w9h_view_clear_v12.py 3000 / 0 (1.2's state codes mapped +1); W9HD_NEG12 (no clear): 1669.
+- **Backdrop shapes at the far end** (0x100a291d / 0x100a29da, w3q_driver.c = 1.2 0x1008fc0f / 0x1008fce8;
+  0x100a2823, w6g_misc.c = 1.2 0x1008faed): each vertex's z is 3.4e38 (0x7f7fc99e) in 1.2's mode, as the sky band.
+  spec_w3q_far_v12.py: 1500 / 0 each (the fields 1.2 writes compared); W3QZ_NEG12: all mismatch. HGVK treats both
+  z values as a backdrop, so no visible change there; 1.2's Direct3D gets the far depth.
+- **Sound banks** (0x1002009d stop = 1.2 0x100173ad, w5x_calls.c; 0x100200d1 queue = 1.2 0x100173e1, w7l_misc.c):
+  1.2 accepts bank 3. Inert in 1.2 itself: bank 3's sound index (1.0 0x10133710, 1.2 0x1010a188) is never written in
+  either DLL (-1: nothing queued), and nothing calls the stop routine; 1.2 also inserted an all-zero record 3 into
+  its bank table (1.0's record 3 is 1.2's 4). Bounds ported. spec_w7l_bank_v12.py 3000 / 0; W7LB_NEG12: 512.
+- **Already in 1.2's form:** the animated-texture table and its users (0x10006a2f, 0x1000716a, 0x100072ff,
+  0x100da14c: round T's 0x380 / 0x1c layout), the lighting field split (Sim_10032a10, lighting round), the sparks'
+  extra argument (Sim_1006c161, round 32), the textured submit (round 31).
+- **Nothing to port:** the WTB model reader (1.2 0x100c5e73 is identical; the survey's "polygon flag bit" came from a
+  misaligned decode).
+- **Dead in both versions, not ported:** the 1.0 effect spawners 0x10095616 / 0x10096541 and the pool user
+  0x10091597 (their jump stubs are referenced nowhere), with their callbacks (e.g. 0x1009524d = 1.2 0x10080d38, part
+  of 1.2's family 0x1008139b, which 1.2 never spawns either). So no further 1.0-layout writes into 1.2's pool.
+- **Moved to the network round:** 0x1004170e (1.2 0x100354eb: a network collision packet, 1.2's "game ending" check)
+  and 0x1005b98c (1.2 0x1004e4cc: armour scaling by difficulty; in a network game 1.2 doubles every gear's armour,
+  1.0 quadrupled only the player's own and kind-1 gears) - both network-only.
+
+## Tiny sweep, mission / platform and test files (Diego, 2026-11-01: go for the rest of the sweep)
+
+- **The survey's mission / platform rows:** the window procedure (focus pause, ported: "Focus pause and cache size
+  0"); Cd_Open 0x1009e1ef (1.2 0x1008b36f: its volume call goes through 1.2's music table, which ours already does
+  through Win_AuxSetVolume with HG_MUSIC_FILES; nothing to port); the CD drive search 0x10099510 (below).
+- **CD drive search** (1.2 0x10087460): the GameRip 1.0 HGSIM is a patched copy (two jumps NOPed, FindClose called
+  in place of FindFirstFileA), which is why 1.0 always answered "found". 1.2 really looks for a CD-ROM drive holding
+  \video\B51MOVIE.AVI. In our build nothing changes either way: SimMain skips it (1.2's own "no CD" flag, round 33),
+  the movie folder search gets no files from it in 1.2 either (1.2 answers 1, not a drive letter), and the CD audio
+  start is hooked off. Kept as ours (option A), under Diego's standing rule "NO CD EVER" (project memory; hooks_cd.c
+  fakes the drive): 1.2's search is not ported. Diego can still ask for 1.2's search.
+- **Rows re-read against 1.2:** zlib is dead code in 1.2's HGSIM (no caller of uncompress 0x100b7c40 or of the
+  "ZLIB" reader 0x10026f40), so no data file needs it; the full-screen toggle is not new (1.2 0x1002c5a1 = 1.0
+  0x10037f71, identical, already converted); the missile release 0x10024548 only gains a dead store in 1.2; the
+  target readout 0x100c7120 is layout only. Nothing to port; tools/v12/remaining.md corrected.
+- **The three 1.0 checker files** (round 33's housekeeping, option a): spec_w2e.py, spec_w6h.py and spec_w8z.py run
+  their hand-written source lists through w10_common's closure() (in its own namespace, so their CFLAGS and helpers
+  stay theirs); spec_w2e.py also gets -mno-stack-arg-probe for the added files' large frames. All pass against 1.0:
+  spec_w2e 66 functions, spec_w6h 29, spec_w8z 36, 0 failed.
+- **1.2's duels: no HGSIM change.** 1.2 adds no duel missions: the duel files (M51DUEN1/2, M51DUES1/2) and the
+  shell's "Duel" / "Duelist" texts are all in 1.0. 1.2's patch folder changes one byte in M51DUES1.BWD and
+  M51DUES2.BWD: the gear file GQGMAMBA (which does not exist) becomes GPGMAMBA (in HEAVYG.PRJ). That matches the
+  readme's "Fixed Error 55 in Duel missions" and is data only; neither sim has a duel-specific text or branch.
+  Project already has 1.2's two files (byte for byte) and runs 1.2's HGSHELL.
+
+## Sound round (Diego, 2026-11-01: "do the 4 sound functions")
+
+The four HGSIM sound functions 1.2 changed (tools/v12/remaining.md, Sound), read in 1.2's code and ported line by
+line onto the SDL3 sound (src/sim/sound/sdl_sound.c):
+- **Sound load** (SndSdl_1000e0d9 = 1.2 0x10007bf9): when the new voice cannot be made, the Lock, the copy and the
+  Unlock are skipped (1.2 0x10007f0e); 1.0 went on with a null voice. spec_snd_1000e0d9_v12.py 3000 / 0 (a quarter
+  of the trials fail the voice); SND_NEG12 (1.0's code): 139.
+- **Voice update** (SndSdl_10039c00 = 1.2 0x1002dc30): a finished or stopped voice is released until its reference
+  count is 0 (1.2 0x1002dec9 / 0x1002e021, for duplicated DirectSound buffers). An audio.h voice has one owner, so
+  the loop ends after one Audio_VoiceDestroy. spec_snd_10039c00_v12.py 3000 / 0 (3D flag off: 1.2's 3D functions
+  differ by the unit layout only); SND_NEG12 (two destroys): 522.
+- **Shutdown** (Sim_1003a052 = 1.2 0x1002e0a6, unsorted_1003/w5c_calls.c): 1.2 frees its music stream before the
+  device shutdown; ours closes the MUSIC-folder player there (Music_Close moved out of SndSdl_1003a548, which 1.2's
+  0x1002e655 matches again). spec_w5c_3a052_v12.py 2000 / 0 (built with HG_MUSIC_FILES); W5C_NEG12 (no close): 2000.
+- **Sound start** (SndSdl_1003a0e4 = 1.2 0x1002e159): 1.2 now always makes the primary buffer, creates its music
+  stream and sets the primary format to 22050 Hz 16-bit stereo for the music. None of this has an SDL3 counterpart:
+  our mix is 48000 Hz float stereo and the Ogg player needs nothing made at start. No logic change; the comments say
+  what 1.2 does. spec_snd_1003a0e4_v12.py 1000 / 0 (1.2's primary buffer, SetFormat and stream answered silently);
+  SND_NEG12 (block +0 not set): 755.
+- **3D sound: not new in 1.2.** The listener / 3D-buffer code (1.0 0x100397e7 / 0x10039931, the 3D primary buffer
+  in the start) is the same in both versions and runs only when HGSND.CFG's word +0x40 is set, which is 0 in every
+  copy (1.0, 1.2, Project). The word is the shell's 3D sound menu choice: its list (HGSHELL 1.0 0x10161d86) is Off,
+  Headphones, Mono, Quad, Stereo, Surround Speakers, the order of DirectSound's speaker codes 0..5, and the start
+  hands the word to SetSpeakerConfig (the shell's write of +0x40 itself not traced). So any choice but Off turns
+  the original's 3D sound on; ours ignores it. With it off, the game sets each sound's volume from its distance and its pan from its
+  direction (Sim_1000eb12, Sim_1000e737), which is what plays today. Our 3D stays off (see "What is not exact" under
+  the SDL3 sound mapping). Diego was given the choice on 2026-11-01: (A) keep it, recommended; (B) an own small
+  spatializer for the 3D word; (C) a library such as miniaudio. **Diego (2026-11-01): A**, "keep it as it is for
+  now, will add support for modern alternatives onces the dlls are gone" (AFTER_DLL.md, 1.2 sound).
+- The 1.0 specs of the changed functions still pass (spec_snd_1000e0d9 3000 / 0, spec_snd_10039c00 3000 / 0,
+  spec_snd_1003a548 500 / 0).
+
+## Network round (Diego, 2026-11-01: "Start the network round")
+
+- **Transport (Diego, 2026-11-01): "we want to make the multiplatform, can't use directplay".** The transport becomes
+  our own (no DirectPlay / ANET2.DLL; no play against the original 1.2 game). The sim side keeps 1.2's message format
+  byte for byte, so this round does not depend on the transport: the handlers build and parse message bytes and send
+  them through Net_DpSend_1007e950 / Net_DpSend_1007e920, which call DirectPlay through function pointers today.
+  Project already runs 1.2's HGSHELL.DLL and ANET2.DLL (the same files as the 1.2 rip), so the shell hands the sim
+  1.2's 10-player game record.
+- **Player lookup by network key** (Sim_1003db56 = 1.2 0x100312c6): 10 keys (1.0: 8). spec_net_lookup_v12.py 3000 / 0
+  (planted bug NETL_MUTATE, 8 keys: 246).
+- **Armour in a network game** (Sim_1005b98c = 1.2 0x1004e4cc): every gear's 17 part records x2 (1.0: x4 for the own
+  gear and the kind-1 gears, others untouched); single player unchanged. spec_net_armour_v12.py 3000 / 0 (planted bug
+  NETA_MUTATE, 1.0's rule: 1986).
+- **Game-over guard in twelve message handlers** (1.2's receive guard 0x101314c0 = g_w34NetOver, set by the message
+  loop from the game-over flag before each message; tested first, message ignored while set): "CH" Sim_1003ff72,
+  "WE" Sim_1004044c, "CA" Sim_100405e6, "AI" Sim_1004094e, "DS" Sim_10040a37, "NR" Sim_10040f2d, "OR" Sim_100410ff,
+  "DR" Sim_1004131b, "CO" Sim_1004170e, "EG" Sim_10041a16, "SN" Sim_10041b2d, "PU" Sim_10041247. g_w34NetOver moved
+  to its own file (src/sim/unsorted_1004/w34_netover.c; tools/verify/rt.c defines it for the checker builds with
+  hand-written source lists). spec_net_guard_v12.py (NETG_PART per handler) 1500 / 0 each; planted bug NETG_MUTATE (no
+  guard) caught in every one (21..495). The "TC" receive Sim_1004084a and the "DM" damage message Sim_10040191 have the
+  guard too and more 1.2 changes: below.
+- Checker notes: 1.2's unit records lack our dword +0x18; "CA" (and 1.0's "TC" / reset) clear it in ours, so the
+  spec keeps it 0. The "DS" helper's second argument is compared as a word (both leave the register's upper half).
+- **Open choices sent to Diego (2026-11-01):**
+  - **"TC" / "DI" damage handover, a 1.2 bug in three places:**
+    - 0x10033c90 writes the "DI" tag into buffer [0x10131500] but sends buffer [0x10131504], so the message goes out
+      with an empty tag and every receiver drops it.
+    - The "DI" receive 0x10033d7b tests `(unit+0x14 == 0) == 3`, which is never true.
+    - The "TC" receive 0x10034468 unpacks the 17 part records (+0, +4, +8 each, via 0x10034342) from msg+0x23,
+      past the end of the 0x21-byte "TC" message, so it reads stale receive-buffer bytes. Handed-over gears get
+      garbage armour values.
+    - Options:
+      - A: exactly as 1.2.
+      - B: 1.2's intent, fixed (recommended).
+      - C: no damage handover.
+  - **Scope:** the survey missed most of 1.2's network module: about 60 functions, with the loop's timed part
+    rewritten into about 15 functions the survey did not see. The 10-player change also needs 7 per-player tables
+    moved to 10-entry C tables. The 1.0 tables: 0x1015db00 / db20 / db40 / db80 (dwords), d1b0 / d090 (bytes),
+    da40 (0x16-byte rows, cleared 0x11 bytes from +5; 1.2 clears 0x16). The 1.2 tables: 0x107cab60 / caba0 / cb440 /
+    cb4a0, cb4d0 / cb430, caa80. Two of their users are still original code: "DA" 0x1003f3f8 = 1.2 0x10032cbe and
+    the player-list callback 0x10042125 = 0x10035f3e. Options: A, port the whole 1.2 network module now
+    (recommended); B, leave the rest for the transport rewrite.
+  - **Transport (read-only analysis):**
+    - The "dp" functions are ANET2.DLL's own API (Activision's library, transports in the anet folder), not
+      Microsoft DirectPlay.
+    - HGSIM loads 55 and calls 8, all from our C: send, receive, enum players, number of players, report score,
+      connection callback, enum servers, debug print.
+    - HGSHELL makes 61 calls into 29 ANET2 functions, plus 14 WSOCK32 calls in two places.
+    - Options: (1) our own ANET2 stand-in on OS sockets behind the platform layer, with the shell's imports patched
+      as for DirectDraw (recommended); (2) the same on SDL3_net (a download); (3) convert the shell's lobby first.
+- **Until scope option A:** the 10-key lookup (above) lets players 9 and 10 get indices whose per-player entries
+  overflow 1.0's 8-entry tables. It lands safely only together with the 10-entry tables. Not a concern before
+  network play exists on our transport, but the tables must move before any 9- or 10-player game.
+
+## Focus pause and cache size 0 (Diego, 2026-11-01: "port both but add fixes to bugs")
+
+- **Focus pause** (Sim_100867a2 = 1.2 0x10071397, src/sim/platform/w28_window.c, message 0x1c): as in 1.2, losing
+  the window's focus pauses the game (Sim_1008b8de: the clock's flag 0x80 and the sound pause Sim_1001f4ba, which
+  pauses the music), and getting it back resumes it (Sim_1008b900) before the key state is cleared. Before, the
+  mission clock and the music ran on while the game was in the background (frames were already skipped).
+  - **Bug fix of 1.2:** the pause shares the clock flag with the HUD menu (Sim_1008b78f) and the clock's own hold
+    (Sim_1002a983). In 1.2, switching away and back while the menu was open started the clock and music again
+    behind the menu. Now the focus code pauses only when the clock is not already held (timer flag 0x200 of
+    [0x1015317c]) and not in a network game, remembers it (g_w28FocusPaused, cleared at each sim load by
+    W28_InputReset), and resumes only its own pause.
+  - **Checked:** spec_w28_window_v12.py against 1.2, 20000 / 0, 1.2's pause / resume calls brought to the fix's
+    form by the spec from the trial's state, and the flag the C leaves checked by the spec; negative check
+    (resume without the flag test) caught, 557 / 20000.
+- **Cache size 0** (Sim_100ba304 = 1.2 0x100a26e4, w8y_cache.c, the CACHE.INI reader): 1.2's asserts give its own
+  source lines (0x367, 0x37c, 0x39a, 0x3a3, 0x3aa).
+  - **Bug fix of 1.2:** 1.2 keeps a type whose hash size is 0 with no slot table (+0x10 = 0), but filing or finding
+    a file of it still divides by the size (Sim_100b9b3f, Sim_100baf3f and the other lookups, unchanged in 1.2),
+    so 1.0's own CACHE.INI ("tex 0 0") would still crash at the first .TEX. Now a size-0 line is left out: the type
+    is made with the defaults (0x400 slots, 0x100000 bytes) when its first file is filed, as for a type the file
+    does not list. An earlier line of the same name keeps its record unchanged. We still ship 1.2's CACHE.INI
+    (round 31), so this only matters for an edited or old file.
+  - **Checked:** spec_w8y_reader_v12.py against 1.2: files without size-0 lines 4000 / 0 (644 both-fault: an
+    allocation failure before a null write, as in spec_w8y.py); size-0 lines, with 1.2 given each such line
+    rewritten to what the fix makes of it, 3000 / 0; negative check (1.0's assert line) caught, 105 / 4000.
+    spec_w8y.py's 1.0 check of Sim_100ba304 no longer applies (1.2's lines, the fix).
+- **Diego's choices (2026-11-01):**
+  - **Damage handover: B**, "Fix it the way 1.2 meant". The fixes are behind a switch, NETDI_FIX (default on). With
+    the switch off the code is 1.2 exactly; with it on, only the intended differences.
+  - **Scope: A**, "Port it all now". All of 1.2's network module, function by function, each checked against 1.2
+    with a planted bug.
+  - **Transport: option 1.** Our own ANET2 stand-in on plain OS sockets (UDP) behind the platform layer; HG.EXE swaps
+    the shell's ANET2 imports as it does for DirectDraw; 1.2's message format is kept. It comes after the 1.2 port,
+    and its plan goes to Diego first.
+- **The 10-player tables** (src/sim/unsorted_1004/w34_netover.c, declared in w3p.h; tools/verify/rt.c has copies for
+  the checker builds): g_net10Heard / Db20 / Left / SnStamp / Mark / Ready / Row, plus g_net10DiSent and
+  g_net10DiBuf for "DI". Every C user was moved to them.
+  - **The network game start** (Sim_1003dc19 = 1.2 0x10031389): 10 players; clears the whole 0x16-byte row; clears
+    the "DI" cache; allocates the "DI" buffer after the third block. 1.2's "AK" block stays our static g_w34AkBuf
+    (round 33). spec_net_start_v12.py 3000 / 0; planted bug NET10_MUTATE (1.0's 0x11 bytes per row) caught 653.
+- **"DA", a remote unit's state** (1.0 0x1003f3f8, original code until now; converted from 1.2 0x10032cbe as
+  Sim_1003f3f8 in src/sim/unsorted_1003/w36_net.c). 1.2's changes:
+  - The game-over guard.
+  - No skip for a state-3 unit run by the local player.
+  - A unit whose second part is under 1e-7 is marked.
+  - Killers 0..9.
+  - The 10-player tables.
+  Its texts go into a 0x100-byte buffer instead of 1.2's 80 bytes. Two 44-byte names plus a text can exceed 80
+  (DECISIONS round 13); the text shown is the same. spec_net_da_v12.py 3000 / 0; planted bugs caught: NETDA_MUTATE
+  (no guard) 626, NETDA_MUTATE8 (1.0's killer range) 17.
+- **"DI", the damage of computer gears run from another machine (Diego's option B)**, in
+  src/sim/unsorted_1004/w3p_net.c.
+  - **Correction (2026-11-01):** I first reported three 1.2 slips. The third was wrong. 1.2's "TC" (the handover,
+    0xef bytes, sent by 0x100343b5) carries the 17 part records at +0x23, and its receive unpacks them there,
+    inside the message. The 0x21-byte message is "AI" (Sim_100408bd = 0x100344ef), not "TC". So 1.2's handover
+    does carry the damage.
+  - 1.2's new "DI" (0xd1 bytes, sent with each "AI" update) keeps the parts in step afterwards. It has the two
+    real slips:
+    - the tag is written into the "DM" message buffer [0x1015ecb0] (1.2 [0x10131500]), so "DI" goes out
+      untagged and is dropped;
+    - the receive tests (state == 0) == 3, never true.
+  - NETDI_FIX (default 1) fixes those two. NETDI_FIX 0 is 1.2 exactly.
+  - Functions: "DI" send Sim12_10033c90, pack Sim12_100342cf, unpack Sim12_10034342 (used by "TC" too),
+    receive Sim12_10033d7b. The "AI" send Sim_100408bd sends "DI" first. The "TC" receive Sim_1004084a gets
+    the game-over guard and 1.2's unpack from +0x23.
+  - Checked by spec_net_handover_v12.py (TCR / TCS / DIR):
+    - Fix off against 1.2: 3000 / 0 each.
+    - Fix on against 1.2 with exactly the two fixes patched into its code: 3000 / 0 each.
+    - Planted bugs (no guard, no "DI"): caught in each.
+  - The message loop dispatches "DI" (size 0xd1).
+- **"Player left" notice (Diego, 2026-11-01: option B, fix it).**
+  - 1.2's loop takes the library's notice as "d2" / "d6" (1.0: "eD"). It then reads the player's key from the
+    notice's first word, which is the tag itself, so it never finds the player.
+  - NETLEFT_FIX (w9b_net.c, default 1) reads the key after the tag, as 1.0 did. NETLEFT_FIX 0 is 1.2 exactly.
+  - 1.2 also skips a player already gone (+0x160 set; 1.2's +0x15c).
+  - Our ANET2 stand-in must send the notice as "d2" + the player's key word (AFTER_DLL.md).
+- **The loop's time-out:** a silent player's state-3 computer gear is handed on by the host (Sim_10040564; 1.0
+  cleared its controller). 1.2's debug print there ("NextExternalCtrl...", 0x1006e4b5) is an empty function. The
+  time-out loop covers 10 players. The loop also dispatches 1.2's "DI" (size 0xd1).
+- **"RG", regeneration / revival** (Sim_10040af8, w20_net.c), in 1.2's rewritten form (0x1003474e); 1.0's version
+  stays behind NETRG_MUTATE.
+  - The game-over guard; it now takes the sender.
+  - The host answers the sender (1.0: the unit's player), adding 10 (1.0: 8) when lives are left. It no longer
+    handles a state-3 unit's controller.
+  - The asker checks the unit and its owner. It clears the right unit's +0x164 (1.0 used a never-set pointer:
+    round 20) and calls Sim12_10089c60 before its own respawn. "Out of regenerations" no longer clears config
+    byte +8, and it clears the lives unconditionally.
+  - A revived state-3 unit no longer gets Sim_10011093.
+  - spec_net_rg_v12.py 3000 / 0. The 97 both-faults are a missing unit on the host's path, unchecked in both. The
+    unit table is filled past the players so a revival's unit + 10 resolves. Planted bugs: NETRG_MUTATE (1.0's
+    "RG") 2365; NETG_MUTATE 651.
+- **The player update** (Net_UpdatePlayers = 1.2's rewritten 0x100360c4, w9b_net.c; 1.0's behind NETUP_MUTATE).
+  1.2 split it into three new functions:
+  - Sim12_100343b5: "TC", 0xef bytes, with the 17 parts at +0x23 (1.0 sent 0x23 bytes).
+  - Sim12_10036590: the host's round-robin handover of a computer gear whose controller is gone.
+  - Sim12_100362d2: a destroyed computer gear of the local player. Kill text with killers 0..9, then a revival:
+    asked of the host, or done on the host with "'%s' resurrected.". 1.2 drops 1.0's Sim_10011093 and +0x164 on the
+    host's revival.
+  Also changed:
+  - 1.0's clearing of +0x164 for an intact gear is gone.
+  - So is its "+0x18" busy flag (1.2's record has none).
+  - Only state-3 gears are looked at.
+  spec_net_update_v12.py (UP / RR / DD / TC) 3000 / 0 each. UP's 20 both-faults are a random chase target beyond
+  the unit table, read in both. The generator always leaves one free player in the list, since the round robin
+  loops for ever otherwise, in both. Planted bug NETUP_MUTATE (1.0's update) caught 2411.
+
+## Command line (Diego, 2026-11-01: "We want only 16 bit, no need for switch")
+
+- **1.2's "/16bit" and "/8bit" not ported.** 1.2's reader (0x100201d0 = our CmdLine_Parse 0x1002ad50,
+  w9d_cmdline.c) adds the two words after "nogrid"; both set 0x1014a5e0 (never read in 1.2) and "16bit" / "8bit"
+  set the .TEX flag 0x10105048 to 1 / 0. 1.2's sim main sets 0x10105048 again from the 3D mode (0x10070a3d) before
+  anything reads it (checked by walking every direct call between the reader's call 0x1006fe81 and that store: no
+  read), so in 1.2 the switches change nothing. Neither 1.2's shell nor any data file passes them. Our .TEX mode
+  stays `W31_TexMode()` (Vulkan with the 3D mode or Voodoo look), i.e. 16-bit only. The rest of the reader is the
+  same as 1.0's apart from addresses and registers, so CmdLine_Parse is unchanged; the words, if typed, get 1.0's
+  unknown-switch report (error 10).
+- **"DM", a remote unit's part damage levels** (Sim_10040191, w7m_misc.c = 1.2 0x10033a8a):
+  - 1.2 adds the game-over guard.
+  - 1.2 no longer sets the parts' values (+0, +8) from the levels. It works the value out into a local and stores
+    it nowhere.
+  - A part reported destroyed gets +8 = 0, and the second part marks the unit (g_net10Mark).
+  - 1.0's update stays behind NETDM_MUTATE.
+  - spec_net_dm_v12.py 3000 / 0; planted bugs NETDM_MUTATE 331, NETG_MUTATE 118.
+  - 1.2 behaviour kept: it is deterministic and looks deliberate (coordinator, 2026-11-01: not a choice, the whole
+    game is 1.2). NETDM_MUTATE is only the checker's negative check.
+- **The state sender** Net_SendStateMessage (1.0 0x1003eebc = 1.2 0x10032782): only the record shift. The "AI"
+  payload Sim_10040721 (= 0x100341a6) and Sim_10040645 (= 0x100340ca) are also unchanged apart from layout.
+- **"NR", the game settings** (Sim_10040eb3 = 1.2 0x10034b31):
+  - The own state is sent first.
+  - The two values sent are kept where the message loop compares them: [0x1013aca0] the +0x137 byte,
+    [0x1013aca4] the +0x138 byte. 1.0 kept them crossed, so with the two bytes different the loop re-sent "NR"
+    every frame.
+  - spec_net_nr_v12.py 1000 / 0; planted bug NETNR_MUTATE (1.0's) 1000.
+- **The host change** (Sim_100421b0 = 0x10035fe7) and its player-list callback:
+  - The callback (0x10042125) was original code; it is now C, Sim_10042125, __stdcall, from 1.2's 0x10035f3e.
+  - 1.2 keeps the host before the change (g_net10OldHost = 1.2 0x10110144).
+  - When the new host differs, the callback cancels a pending request ([0x1015f200]).
+  - spec_net_host_v12.py CB 3000 / 0, HC 3000 / 0; planted bug NETHOST_MUTATE CB 1259, HC 2831.
+  - The callback is handed to the session's dpEnumPlayers (ANET2): its signature must stay as ANET2 calls it until
+    our transport replaces that.
+- **The message loop** (Net_ProcessMessages = 1.2 0x10031a86): 1.2's "player left" notice (with NETLEFT_FIX), a
+  player already gone skipped, the "DI" dispatch, the host handing a silent player's computer gear on, 10 players.
+  spec_net_loop_v12.py, on spec_w9b.py's stubs with each also hooked at its 1.2 twin:
+  - NETLEFT_FIX 0 against 1.2: 3000 / 0.
+  - NETLEFT_FIX 1 against 1.2 with the key read after the tag (a hook in its code): 3000 / 0.
+  - Planted bug NETLOOP_MUTATE (1.0's notice and time-out) caught 111.
+- **The rest of 1.2's network module** is 1.2's code already, or unchanged apart from the record shift:
+  - GO 0x100356ce, SU 0x10035a50, the reset 0x10035c65 (three empty debug prints).
+  - The helpers 0x10035eb9 / 35646 / 35673 / 35782 / 357d4 / 3583d / 366ce / 33dec / 33fe8 / 3470e.
+  - The receive / send wrappers.
+  - The "DM" send 0x100338e2 (now on g_net10Row).
+- **Not part of this round (transport):** 1.2's extra ANET2 loader (0x1002fd99 / 0x1002fdf4: dpDestroyGroup ..
+  dpReadyToFreeze). It goes with the ANET2 stand-in.
+- **The old 1.0 network specs** (spec_w9b.py's Net_ProcessMessages / Net_UpdatePlayers / Score_RecordKill parts,
+  spec_w3p.py's handlers, spec_w10_1003dc19.py) still describe 1.0's tables and logic. They are superseded by the
+  spec_net_*_v12.py specs; no fix is planned for them.
+- **Transport deferred (Diego, 2026-11-01): "only do the changes for hgsim, I don't want to rewrite the network
+  library yet".** No ANET2 stand-in is written. The original ANET2.DLL stays, under the menus and the sim.
+  tools/v12/anet2_shell.md stays as notes for later.
+  The sim-side 1.2 code runs on the original ANET2:
+  - **"Player left" fix B:** reads the key after the "d2" tag. 1.2's own menus read ANET2's "d2" notice the same
+    way (id at +2, name at +0x10; hgshell 0x1002abfb and 0x1011f0bf), so the fix matches the real ANET2.
+  - **"DI" fix B:** only the message's own bytes and receive test; nothing transport-specific.
+  - **The host-change callback** (Sim_10042125): __stdcall with 4 arguments, as 1.0's 0x10042125 and 1.2's
+    0x10035f3e (both `ret 0x10`), the way ANET2's dpEnumPlayers calls it.
+  - No other network change assumes a new transport.
+- **1.2's ANET2 name list** (its loader, the twin of Sim_1003be30; the survey's 0x1002fd99 / 0x1002fdf4 are points
+  inside it): 54 names instead of 55, in another order. It has dpSetGameServerEx for dpSetGameServer and no
+  dpEnumTransports. The sim never calls those, and our C uses its own slot table consistently, so nothing to port.

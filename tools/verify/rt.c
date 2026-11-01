@@ -2,6 +2,14 @@
 #include <stddef.h>
 
 unsigned char *g_simBase;
+/* 1.2's network receive guard and 10-player tables (the game's own definitions are in
+   src/sim/unsorted_1004/w34_netover.c): here so every checker build of a network function links them, whatever its
+   source list (closure() then never pulls w34_netover.c in) */
+unsigned int g_w34NetOver;
+unsigned int g_net10Heard[10], g_net10Db20[10], g_net10Left[10];
+int g_net10SnStamp[10];
+unsigned char g_net10Mark[10], g_net10Ready[10], g_net10Row[10][0x16], g_net10DiSent[10][0xd1];
+unsigned char *g_net10DiBuf;
 
 void *memset(void *d, int c, size_t n)
 {

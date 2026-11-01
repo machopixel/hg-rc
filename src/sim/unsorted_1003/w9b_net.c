@@ -1,4 +1,6 @@
 #include "w9b.h"
+#include "w36.h"
+#include "../unsorted_1004/w20.h"
 #include "fns.h"
 #include "w3p.h"
 #include "w5a.h"
@@ -34,7 +36,11 @@
 #define ROOT G32(0x1015d004)
 #define SELF G32(0x1017b8c8)
 #define RECV BYTES(G32(0x1015d008))
-#define LAST_SEEN(i) (SIM_PTR(u32a, 0x1015db00)[(i)])
+#ifndef NETLEFT_FIX
+#define NETLEFT_FIX 1
+#endif
+static const char kNetDi[4] = "DI";
+#define LAST_SEEN(i) (g_net10Heard[(i)])     /* 1.2: 10 players (1.0 0x1015db00) */
 #define TEXT(addr) SIM_PTR(const char, addr)
 #define TEXT_AT(addr) ((const char *)(uintptr_t)G32(addr))
 
@@ -74,9 +80,16 @@ int __cdecl Net_ProcessMessages(void)
         tag[0] = (char)RECV[0];
         tag[1] = (char)RECV[1];
         tag[2] = 0;
+#ifdef NETLOOP_MUTATE /* the checker's negative check only: 1.0's "eD" notice */
         if (type == 0 && W9b_Tag(tag, 0x1013acb4)) {
-            /* "eD": a player has left */
             type = *(u16a *)(RECV + 2);
+#else
+        /* 1.2 (0x10031a86): the library's "player left" notice is "d2" or "d6" (1.0: "eD"); 1.2 then reads the
+           player's key from the notice's first word, the tag itself, so it never finds the player: NETLEFT_FIX 0
+           (1.2 exactly). NETLEFT_FIX 1 (default; Diego, 2026-11-01: option B) reads it after the tag, as 1.0 did. */
+        if (type == 0 && (U16(RECV, 0) == 0x3264 || U16(RECV, 0) == 0x3664)) {
+            type = *(u16a *)(RECV + (NETLEFT_FIX ? 2 : 0));
+#endif
             who = (int)Sim_1003db56((int16_t)type);
             if (who < 0)
                 continue;
@@ -84,6 +97,10 @@ int __cdecl Net_ProcessMessages(void)
             entry = BYTES(PTRTAB(who));
             if (entry == 0)
                 continue;
+#ifndef NETLOOP_MUTATE
+            if (U32(entry, 0x160) != 0)         /* 1.2: already gone */
+                continue;
+#endif
             if (G32(0x1015f1fc) == 0) {
                 /* (the original tests ([0x1017b94c] | 0x80000000) != 0 here, which always holds) */
                 Sim_1006abf6(0xffffffffu, BYTES(U32(entry, 0x28)), 2);
@@ -103,7 +120,7 @@ int __cdecl Net_ProcessMessages(void)
             continue;
         LAST_SEEN(who) = G32(0x1015dc7c);
         if (W9b_Tag(tag, 0x1013acc0)) {                             /* "DA" */
-            W9B3_CALL_1003f3f8(RECV, who, extra);
+            Sim_1003f3f8(RECV, who, (int)extra);
             if (S16(entry, 0x1c) & 0x4000) {
                 Sim_100aa39f(BYTES(U32(entry, 0x48)));
                 Sim_100aa454(BYTES(U32(entry, 0x48)));
@@ -120,6 +137,9 @@ int __cdecl Net_ProcessMessages(void)
         } else if (W9b_Tag(tag, 0x1013acc8)) {                      /* "DM" */
             if (extra == 0x16)
                 Sim_10040191(RECV);
+        } else if (Str_CompareNoCase(tag, kNetDi) == 0) {          /* 1.2's new "DI" */
+            if (extra == 0xd1)
+                Sim12_10033d7b(RECV);
         } else if (W9b_Tag(tag, 0x1013accc)) {                      /* "KI" */
             if (extra == 0xc)                       /* 1.2: 10 players */
                 Sim_1004158c(RECV, who);
@@ -150,7 +170,7 @@ int __cdecl Net_ProcessMessages(void)
                     Sim_1006abf6(0xfffffffeu, BYTES(U32(entry, 0x28)), 2);
                     Score_RecordKill(-2, BYTES(U32(entry, 0x28)));
                 }
-                SIM_PTR(u32a, 0x1015db40)[who] = 1;
+                g_net10Left[who] = 1;
                 Sim_100421b0(*word);
                 Crt_SPrintf(text, TEXT(0x1013ace8), (const char *)entry + 0x124, TEXT_AT(0x101c4a00));
                 Sim_1007df6c(text, TEXT_AT(0x109b98c0), 0x712, 0x50);
@@ -168,7 +188,7 @@ int __cdecl Net_ProcessMessages(void)
         } else if (W9b_Tag(tag, 0x1013ad04)) {                      /* "DS" */
             Sim_10040a37(RECV);
         } else if (W9b_Tag(tag, 0x1013ad08)) {                      /* "RG" */
-            W9B3_CALL_10040af8(RECV);
+            Sim_10040af8(RECV, who);
         } else if (W9b_Tag(tag, 0x1013ad0c)) {                      /* "NR" */
             Sim_10040f2d(RECV);
         } else if (W9b_Tag(tag, 0x1013ad10)) {                      /* "OR" */
@@ -187,7 +207,7 @@ int __cdecl Net_ProcessMessages(void)
             G32(0x1017b94c) |= 1;
         } else {
             if ((int32_t)(G32(0x1015dc7c) - G32(0x1015ece0)) >= 0) {
-                for (i = 0; i < 8; i++) {
+                for (i = 0; i < NET10_PLAYERS; i++) {   /* 1.2: 10 players */
                     uint8_t *e;
 
                     if ((uint32_t)i == SELF || PTRTAB(i) == 0)
@@ -204,8 +224,15 @@ int __cdecl Net_ProcessMessages(void)
                     if ((int32_t)(G32(0x1015dc7c) - LAST_SEEN(i)) <= 0x38e)
                         continue;
                     if (U32(e, 0x14) == 3) {
+#ifdef NETLOOP_MUTATE
                         U32(e, 0xc) = 0xffffffffu;
                         U32(e, 0x18) = 0;
+#else
+                        /* 1.2: the host hands the silent player's computer gear on (Sim_10040564; 1.0 cleared its
+                           controller); 1.2's debug print "NextExternalCtrl: ..." here is an empty function */
+                        if (G32(0x1015ecd0) == 1)
+                            Sim_10040564(i);
+#endif
                         continue;
                     }
                     if (U32(e, 0x48) != 0) {
@@ -260,7 +287,7 @@ int __cdecl Net_ProcessMessages(void)
         }
         if (G32(0x1015ec54) != 0) {
             if (G32(0x1015ecd0) == 1) {
-                GBYTES(0x1015d090)[SELF] = 1;
+                g_net10Ready[SELF] = 1;
                 Sim_1004185b();
             } else {
                 Sim_10041888();

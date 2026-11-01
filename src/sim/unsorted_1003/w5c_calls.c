@@ -2,6 +2,10 @@
 #include "w3r.h"
 #include "../unsorted_100a/w4u.h"
 #include "../util/access.h"
+#include "../unsorted_1004/w3p.h"
+#ifdef HG_MUSIC_FILES
+#include "../../platform/music.h"
+#endif
 
 typedef int(__stdcall *W5cHeapFreeFn)(void *heap, uint32_t flags, void *block);
 
@@ -10,6 +14,9 @@ int __cdecl Sim_1003a052(void)
 {
     uint32_t i;
 
+#if defined(HG_MUSIC_FILES) && !defined(W5C_MUTATE12) /* W5C_MUTATE12: the checker's negative check only */
+    Music_Close();      /* 1.2 0x1002e0aa: frees its music stream [0x10131310] first (Music_Close: none open is fine) */
+#endif
     if (G32(0x109e369c) != 0)
         SIM_CALL_1003a548(SIM_PTR(char, 0x109e369c));
     if (G32(0x1015d0a4) == 0)
@@ -27,6 +34,11 @@ int __cdecl Sim_1003a052(void)
 void __cdecl Sim_10041247(const uint8_t *msg)
 {
     uint32_t rec = PTRTAB(msg[2]);
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034eef): ignored once the game is over */
+        return;
+#endif
 
     if (rec == 0)
         return;

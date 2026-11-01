@@ -108,7 +108,12 @@ void __cdecl Sim_1005b98c(int index)
         }
         ScaleRecords(gear, factor);
     } else if (G32(0x1015ec58) != 0) {
+#ifdef NETA_MUTATE /* the checker's negative check only: 1.0's x4 for the own gear and the kind-1 gears */
         if (index == GS32(0x1017b8c8) || S32(U32(gear, 0), 0x14) == 1)
             ScaleRecords(gear, 4);
+#else
+        /* 1.2 (0x1004e4cc): in a network game every gear's parts get x2 */
+        ScaleRecords(gear, 2);
+#endif
     }
 }

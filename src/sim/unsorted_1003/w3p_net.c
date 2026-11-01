@@ -6,6 +6,7 @@
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
 #include "../util/w3p.h"
+#include "../unsorted_1004/w3p.h"
 
 #define ROOT G32(0x1015d004)
 #define SELF G32(0x1017b8c8)
@@ -89,9 +90,9 @@ void __cdecl Sim_1003ffe9(int index)
             msg[5 + i] = (uint8_t)(level | 0x10);
         else
             msg[5 + i] = (uint8_t)level;
-        if (msg[5 + i] != GBYTES(0x1015da45)[U32(entry, 4) * 0x16u + (uint32_t)i]) {
+        if (msg[5 + i] != g_net10Row[U32(entry, 4)][5 + i]) {
             changed = 1;
-            GBYTES(0x1015da45)[U32(entry, 4) * 0x16u + (uint32_t)i] = msg[5 + i];
+            g_net10Row[U32(entry, 4)][5 + i] = msg[5 + i];
         }
     }
     if (changed != 0)

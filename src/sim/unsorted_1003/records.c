@@ -5,14 +5,20 @@
 #define ROOT (*SIM_PTR(unsigned char *, 0x1015D004))
 #define PTR_AT(base, off) (*(unsigned char **)((base) + (off)))
 
-/* ROOT+0x16 points at 8 words of keys; ROOT+0x126 at records of 0x1e bytes with a word id at +0x1a. */
+/* ROOT+0x16 points at the players' key words; ROOT+0x126 at records of 0x1e bytes with a word id at +0x1a.
+ * 1.2 (0x100312c6) looks at 10 keys (its shell's 10-player game); NETL_MUTATE (checker negative only) at 1.0's 8. */
+#ifdef NETL_MUTATE
+#define NETL_KEYS 8
+#else
+#define NETL_KEYS 10
+#endif
 // FUNCTION: HGSIM 0x1003db56
 uint32_t __cdecl Sim_1003db56(int16_t key)
 {
     if (*ENABLED != 0) {
         uint32_t i;
 
-        for (i = 0; i < 8; i++) {
+        for (i = 0; i < NETL_KEYS; i++) {
             if (((uint16_t *)PTR_AT(ROOT, 0x16))[i] == (uint16_t)key)
                 return *(uint16_t *)(PTR_AT(ROOT, 0x126) + i * 0x1e + 0x1a);
         }

@@ -1,6 +1,7 @@
 #include "w2h.h"
 #include "../unsorted_1001/w2h.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x10040721
 void __cdecl Sim_10040721(void *obj, const void *src)
@@ -30,6 +31,11 @@ void __cdecl Sim_10040721(void *obj, const void *src)
 void __cdecl Sim_1004094e(const void *record, int32_t index)
 {
     uint32_t rec;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x1003458e): ignored once the game is over */
+        return;
+#endif
 
     if (index < 0 || index >= GS32(0x1015dc64))
         return;

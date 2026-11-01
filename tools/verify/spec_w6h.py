@@ -31,6 +31,11 @@ SOURCES = [
     'sim/unsorted_100d/w2g_misc.c', 'sim/unsorted_1002/w2j_nodes.c', 'sim/unsorted_1008/w3s_grid.c',
     'sim/view/matrix.c', 'sim/unsorted_100d/w2j_nodes.c', 'sim/view/objlist.c', 'sim/view/viewrect.c',
 ]
+# The list above predates rounds 32 / 33 (W31_TexMode, the particle systems): what the files need to link now is
+# added by w10_common's closure(), run in its own namespace so that nothing else of w10_common changes this spec.
+_w10 = {}
+exec(open('tools/verify/w10_common.py').read(), _w10)
+SOURCES = _w10['closure'](SOURCES)
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 
 STACK_LO, STACK_HI = 0x00700000, 0x00800000

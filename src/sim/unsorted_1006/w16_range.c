@@ -133,7 +133,11 @@ int __cdecl Sim_10066907(uint8_t *self, float *x, float *y, float *z, uint32_t *
         if (gear == 0 || U32(gear, 4) == selfId)
             continue;
         other = BYTES(U32(gear, 0x28));
+#ifdef W16R_MUTATE /* the checker's negative check only: box flag 2 taken as 1 */
+        otherBox = U32(gear, 0x29c) == 1 || U32(gear, 0x29c) == 2;
+#else
         otherBox = U32(gear, 0x29c) == 1;
+#endif
         counted = Sim_10079feb((int32_t)U32(gear, 0));
         if (other == 0 || (counted != 0 && U32(other, 0x58c) != 2) || (U16(other, 0x560) & 0x100) != 0 ||
             (S16(U32(other, 0), 0x1c) & 0x4000) != 0)

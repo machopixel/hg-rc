@@ -1,9 +1,14 @@
 #include "w5y.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x10041a16
 void __cdecl Sim_10041a16(void)
 {
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10035801): ignored once the game is over */
+        return;
+#endif
     SIM_FN(void(__cdecl *)(void), 0x1007c42f)();
     if (G32(0x1015f1fc) == 0) {
         G32(0x1015f1fc) = 1;

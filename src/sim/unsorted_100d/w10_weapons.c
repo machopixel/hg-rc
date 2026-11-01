@@ -38,7 +38,12 @@ static void W10d_Group(uint8_t *u, int group)
     }
 }
 
+#ifndef W10F_KEEP_SEL
+#define W10F_KEEP_SEL 1
+#endif
+
 // FUNCTION: HGSIM 0x100d4590
+// FUNCTION: HGSIM12 0x100ba550
 void __cdecl Sim_100d4590(uint8_t *u)
 {
     uint32_t tbl = U32(W10D_OBJ(u), 0x48);
@@ -165,7 +170,18 @@ void __cdecl Sim_100d4590(uint8_t *u)
                     U32(slot, 0x2c) = 0;
                     continue;
                 }
-                U32(u, 0x4fc) = (uint32_t)i;
+                /* 1.2 (0x100ba550) makes the slot that fires the current weapon, so the rest of a burst switches a
+                   player who has just changed weapons back to the old one. Bug fix (Diego, 2026-11-01: "keep my new
+                   selection"): not for the local player's gear; computer gears keep 1.2's behaviour. W10F_KEEP_SEL 0
+                   builds 1.2's line (the checker's comparison). */
+#if W10F_KEEP_SEL
+#ifdef W10F_MUTATE /* the checker's negative check only: the fix for every gear */
+                if (0)
+#else
+                if (U32(W10D_OBJ(u), 4) != G32(0x1017b8c8))
+#endif
+#endif
+                    U32(u, 0x4fc) = (uint32_t)i;
                 if (U32(W10D_OBJ(u), 0) == 9)
                     Sim_10024684(0x1e, U32(u, 0));
                 else if (U8(BYTES(U32(tbl, 0x90)), 0) == 0x53 && U32(weapon, 0x18) != 0x1a)

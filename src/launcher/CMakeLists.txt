@@ -287,6 +287,8 @@ add_executable(HG WIN32
     ../sim/unsorted_1003/w3p_net.c
     ../sim/unsorted_1004/w3p_calc.c
     ../sim/unsorted_1004/w3p_net.c
+    ../sim/unsorted_1004/w34_netover.c
+    ../sim/unsorted_1003/w36_net.c
     ../sim/unsorted_1004/w35_menu.c
     ../sim/unsorted_1006/w3p_box.c
     ../sim/unsorted_1007/w3p_net.c

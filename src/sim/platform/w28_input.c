@@ -20,6 +20,7 @@ void W28_InputReset(void)
     g_open = 0;
     g_openFailed = 0;
     g_captured = 0;
+    g_w28FocusPaused = 0;
     Input_SetMessageRules(SIM_PTR(int, 0x1017b8b8), SIM_PTR(const int, 0x1017b93c));
 }
 

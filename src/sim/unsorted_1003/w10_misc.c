@@ -15,6 +15,7 @@
 #include "../unsorted_100f/w6h.h"
 #include "../unsorted_100f/w6i.h"
 #include "../unsorted_100f/w8z.h"
+#include "../unsorted_1004/w3p.h"
 
 typedef union {
     float f;
@@ -307,9 +308,11 @@ int __cdecl Sim_10030c87(const float *grid, uint8_t *points, void *seg)
 
 typedef void *(__stdcall *W10_3HeapAlloc2Fn)(void *heap, uint32_t flags, uint32_t bytes);
 
-/* the 17 cleared blocks of 0x100 bytes, in the original's order (the 14th clears 0x1015ecb8 again, not its own) */
-static const uint32_t W10_3BLOCKS[17][2] = {
-    {0x1015ec88, 0x1015ec88}, {0x1015ec90, 0x1015ec90}, {0x1015ecb0, 0x1015ecb0}, {0x1015ec98, 0x1015ec98},
+/* the 17 cleared blocks of 0x100 bytes, in the original's order (the 14th clears 0x1015ecb8 again, not its own);
+   1.2 (0x10031389) also allocates the "DI" message buffer (its [0x10131504], g_net10DiBuf) after the third, the {0, 0}
+   entry here, and its "AK" buffer after the fifth (ours is the static g_w34AkBuf, round 33) */
+static const uint32_t W10_3BLOCKS[18][2] = {
+    {0x1015ec88, 0x1015ec88}, {0x1015ec90, 0x1015ec90}, {0x1015ecb0, 0x1015ecb0}, {0, 0}, {0x1015ec98, 0x1015ec98},
     {0x1015d084, 0x1015d084}, {0x1015ec9c, 0x1015ec9c}, {0x1015eca0, 0x1015eca0}, {0x1015eca4, 0x1015eca4},
     {0x1015ecbc, 0x1015ecbc}, {0x1015eca8, 0x1015eca8}, {0x1015ecac, 0x1015ecac}, {0x1015ecb4, 0x1015ecb4},
     {0x1015ecb8, 0x1015ecb8}, {0x1015ecc0, 0x1015ecb8}, {0x1015ecc4, 0x1015ecc4}, {0x1015ecc8, 0x1015ecc8},
@@ -331,33 +334,48 @@ void __cdecl Sim_1003dc19(uint32_t game)
         G32(0x1017b94c) |= 1;
         return;
     }
-    for (i = 0; i < 8; i++) {
-        G32(0x1015db00 + 4 * i) = 0;
-        *GBYTES(0x1015d1b0 + i) = 0;
-        *GBYTES(0x1015d090 + i) = 0;
-        G32(0x1015db40 + 4 * i) = 0;
+    for (i = 0; i < NET10_PLAYERS; i++) {     /* 1.2: 10 players, its own tables (1.0: 8, 0x1015db00 ...) */
+        g_net10Heard[i] = 0;
+        g_net10Mark[i] = 0;
+        g_net10Ready[i] = 0;
+        g_net10Left[i] = 0;
     }
     *SIM_PTR(u16a, 0x1016552a) = *SIM_PTR(u16a, 0x1015dc64);
     G32(0x1015d088) = 0;
     G32(0x1015ec8c) = 0x42;
-    for (i = 0; i < 17; i++) {
-        G32(W10_3BLOCKS[i][0]) = (uint32_t)(uintptr_t)SIM_API(W10_3HeapAlloc2Fn, 0x10ac5658)(
-            (void *)(uintptr_t)G32(0x1017b8f8), 1, 0x100);
-        if (G32(W10_3BLOCKS[i][0]) == 0)
+    for (i = 0; i < 18; i++) {
+        void *block = SIM_API(W10_3HeapAlloc2Fn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, 0x100);
+
+        if (W10_3BLOCKS[i][0] == 0) {
+            g_net10DiBuf = (uint8_t *)block;
+            if (block == 0)
+                return;
+            Mem_Fill(block, 0, 0x100);
+            continue;
+        }
+        G32(W10_3BLOCKS[i][0]) = (uint32_t)(uintptr_t)block;
+        if (block == 0)
             return;
         Mem_Fill((void *)(uintptr_t)G32(W10_3BLOCKS[i][1]), 0, i == 0 ? G32(0x1015ec8c) : 0x100);
-        if (i == 13)
+        if (i == 14)
             G32(0x1015d08c) = 0x27;
     }
     G32(0x1015d008) = (uint32_t)(uintptr_t)SIM_API(W10_3HeapAlloc2Fn, 0x10ac5658)(
         (void *)(uintptr_t)G32(0x1017b8f8), 1, 0x100);
     if (G32(0x1015d008) == 0)
         return;
-    for (i = 0; i < 8; i++) {
-        G32(0x1015db20 + 4 * i) = 0;
-        G32(0x1015db80 + 4 * i) = 0;
+    for (i = 0; i < NET10_PLAYERS; i++) {
+        g_net10Db20[i] = 0;
+        g_net10SnStamp[i] = 0;
+#ifdef NET10_MUTATE /* the checker's negative check only: 1.0's 0x11 bytes from +5 */
         for (k = 0; k < 0x11; k++)
-            *GBYTES(0x1015da45 + i * 0x16 + k) = 0;
+            g_net10Row[i][5 + k] = 0;
+#else
+        for (k = 0; k < 0x16; k++)              /* 1.2: the whole row */
+            g_net10Row[i][k] = 0;
+#endif
+        for (k = 0; k < 0xd1; k++)              /* 1.2: the last "DI" message sent per player */
+            g_net10DiSent[i][k] = 0;
     }
     root = BYTES(G32(0x1015d004));
     G32(0x1017b8c8) = Sim_1003db56((int16_t)U16(root, 0x10));

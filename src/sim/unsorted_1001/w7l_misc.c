@@ -108,6 +108,7 @@ void __cdecl Sim_10012970(void)
 }
 
 // FUNCTION: HGSIM 0x10015018
+// FUNCTION: HGSIM12 0x1000e1a8
 int16_t __cdecl Sim_10015018(void *obj, int16_t sel, int16_t key)
 {
     int16_t result = -1;
@@ -141,7 +142,14 @@ int16_t __cdecl Sim_10015018(void *obj, int16_t sel, int16_t key)
                     if (key >= GS32(0x1015dc64))
                         break;
                     if ((uint32_t)Sim_10052aaf((int)U32(PTRTAB(key), 8)) == G32(0x1017b8c8)
+#ifdef W7LO_MUTATE /* the checker's negative check only: 1.0's flag [0x1015d110] (never set: always 0) */
                         || (G32(0x1015d110) != 0 && Sim_10052be7(key) == 0)) {
+#else
+                        /* 1.2 (0x1000e1a8): in a network game ([0x1015ec58]; 1.2 also tests its [0x1012d4e8], which
+                           nothing sets) a unit whose state Sim_10052be7 is 0 is taken too (1.0 tested [0x1015d110],
+                           which nothing sets) */
+                        || (G32(0x1015ec58) != 0 && Sim_10052be7(key) == 0)) {
+#endif
                         result = key;
                         break;
                     }

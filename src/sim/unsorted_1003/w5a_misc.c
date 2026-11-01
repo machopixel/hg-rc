@@ -6,6 +6,7 @@
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
 #include "../win/w4u_api.h"
+#include "../unsorted_1004/w3p.h"
 
 // FUNCTION: HGSIM 0x10031917
 void __cdecl Sim_10031917(void *p)
@@ -65,6 +66,11 @@ void __cdecl Sim_1003ce00(uint32_t a, uint32_t b, int c, uint32_t d, uint32_t e,
 void __cdecl Sim_1003ff72(void *obj, int idx)
 {
     char text[0x64];
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10033860): ignored once the game is over */
+        return;
+#endif
 
     if (PTRTAB(idx) == 0)
         return;

@@ -9,9 +9,6 @@
 #include "../unsorted_1000/w2k.h"
 #include "../unsorted_100b/w6g.h"
 #include "../unsorted_100d/w2j.h"
-#ifdef HG_MUSIC_FILES
-#include "../../platform/music.h"
-#endif
 
 #define SND() BYTES(G32(0x1015d0a4))
 #define SND_VOICE(i) ((AudioVoice *)(uintptr_t)U32(SND(), 0x94 + (uint32_t)(i) * 8))
@@ -103,6 +100,23 @@ void __cdecl SndSdl_100397e7(void)
     /* was the 3D listener's SetAllParameters(block 0x109e36e0) and CommitDeferredSettings: no SDL3 counterpart */
 }
 
+/* 1.2's release of a finished voice: Release until the reference count is 0 (DirectSound buffers made by
+ * DuplicateSoundBuffer share one). An audio.h voice has a single owner, so it is gone after one destroy.
+ * SND_MUTATE12_RELEASE (the checker's negative check only) frees it twice. */
+#ifdef SND_MUTATE12_RELEASE
+#define SNDSDL_RELEASE_REFS 2
+#else
+#define SNDSDL_RELEASE_REFS 1
+#endif
+#define SNDSDL_RELEASE_ALL(voice)                                                                                 \
+    do {                                                                                                          \
+        int32_t refs = SNDSDL_RELEASE_REFS;                                                                       \
+        while (refs > 0) {                                                                                        \
+            Audio_VoiceDestroy(voice);  /* was Release */                                                         \
+            refs--;                     /* the count Release returns: 0 after the one owner */                    \
+        }                                                                                                         \
+    } while (0)
+
 // FUNCTION: HGSIM 0x10039c00
 int __cdecl SndSdl_10039c00(void)
 {
@@ -152,7 +166,7 @@ int __cdecl SndSdl_10039c00(void)
             break;
         case 2:
             if ((Audio_VoiceGetStatus(voice) & AUDIO_STATUS_PLAYING) == 0) {      /* was GetStatus */
-                Audio_VoiceDestroy(voice);                                          /* was Release */
+                SNDSDL_RELEASE_ALL(voice);                                          /* 1.2 0x1002dec9 */
                 SND_STATE(i) = 0;
                 U32(SND(), 0x2d4 + i * 4) = 0;
                 U16(SND(), 0x314 + i * 2) = 0;
@@ -172,7 +186,7 @@ int __cdecl SndSdl_10039c00(void)
             break;
         case 3:
             Audio_VoiceStop(voice);                                                 /* was Stop */
-            Audio_VoiceDestroy(voice);                                              /* was Release */
+            SNDSDL_RELEASE_ALL(voice);                                              /* 1.2 0x1002e021 */
             SND_STATE(i) = 0;
             U32(SND(), 0x2d4 + i * 4) = 0;
             U16(SND(), 0x314 + i * 2) = 0;
@@ -269,15 +283,21 @@ int __cdecl SndSdl_1000e0d9(int id, uint32_t data, uint32_t flags, uint32_t a4, 
             return -6;
     }
     Sim_1000e060((const uint8_t **)(SND() + 0x154 + (uint32_t)slot * 4), &size);
+#ifdef SND_MUTATE12 /* the checker's negative check only: 1.0's code, no 1.2 guard */
     SndSdl_100399f4(G32(0x109e369c), &voice, &v3d, (uint32_t)size, kind);
-    /* was Lock; it always gives the clip memory of a voice just made (DECISIONS.md) */
-    r = Audio_VoiceLock(voice, 0, (uint32_t)size, &p1, &n1, &p2, &n2, 0);
-    if (r != 0)
-        Sound_ErrorName(r);
-    SIM_FN(SndSdlMemcpyFn, 0x100fcdc0)(p1, (const void *)(uintptr_t)U32(SND(), 0x154 + (uint32_t)slot * 4),
-                                        (uint32_t)size);
-    Audio_VoiceUnlock(voice, p1, n1, p2, n2);       /* was Unlock */
-    r = 0;
+    {
+#else
+    if (SndSdl_100399f4(G32(0x109e369c), &voice, &v3d, (uint32_t)size, kind) != 0) {   /* 1.2 0x10007f0e */
+#endif
+        /* was Lock; it always gives the clip memory of a voice just made (DECISIONS.md) */
+        r = Audio_VoiceLock(voice, 0, (uint32_t)size, &p1, &n1, &p2, &n2, 0);
+        if (r != 0)
+            Sound_ErrorName(r);
+        SIM_FN(SndSdlMemcpyFn, 0x100fcdc0)(p1, (const void *)(uintptr_t)U32(SND(), 0x154 + (uint32_t)slot * 4),
+                                            (uint32_t)size);
+        Audio_VoiceUnlock(voice, p1, n1, p2, n2);   /* was Unlock */
+        r = 0;
+    }
     Sim_100bb2b0((const uint32_t *)entry, (const char *)(uintptr_t)G32(0x1014ceb4));
     U32(SND(), 0x94 + (uint32_t)slot * 8) = (uint32_t)(uintptr_t)voice;
     U32(SND(), 0x114 + (uint32_t)slot * 4) = v3d;
@@ -305,11 +325,18 @@ int __cdecl SndSdl_1003a0e4(uint32_t *device, uint32_t window)
     *device = (uint32_t)(uintptr_t)SndSdl_Device;
     /* was SetCooperativeLevel(*device, window, 3) with Sound_ErrorName and the shutdown 0x1003a548 on failure:
      * SDL3 has no counterpart (and nothing that can fail there) */
-    /* was, with HGSND.CFG's 3D word ([[0x1015d1b8] + 0x40]), the primary buffer with 3D control, its listener
-     * (block +8 / +0xc), SetSpeakerConfig and Sim_10039725: SDL3 has no 3D, so the 3D flag stays off as when
-     * HGSND.CFG turns 3D off (the shipped config) */
+    /* 1.2 (0x1002e286) then always makes the primary buffer (with 3D control when HGSND.CFG's 3D word
+     * [[0x1015d1b8] + 0x40] is set; "return 1" with a message when that fails), creates its music stream
+     * ([0x10131310] = 0x1002e918(device)) and sets the primary format to 22050 Hz 16-bit stereo for the music
+     * (a message when that fails). SDL3 has no primary buffer: our mix format is fixed (48000 Hz float stereo,
+     * audio_sdl3.c) and the music player needs nothing made here (platform/music.h; Music_Close in Sim_1003a052). */
+    /* was, with the 3D word, the listener of that primary buffer (block +8 / +0xc), SetSpeakerConfig and
+     * Sim_10039725: SDL3 has no 3D, so the 3D flag stays off as when HGSND.CFG turns 3D off (every shipped
+     * config; kept so by Diego on 2026-11-01 until the DLLs are gone, DECISIONS.md "Sound round") */
     U32(SND(), 0x10) = 0;
+#ifndef SND_MUTATE12_START /* the checker's negative check only: the sound never counts as started */
     U32(SND(), 0) = 1;
+#endif
     return 1;
 }
 
@@ -318,10 +345,8 @@ int __cdecl SndSdl_1003a548(uint32_t *device)
 {
     if (*device == 0)
         return 1;
-#ifdef HG_MUSIC_FILES
-    Music_Close();          /* the music stream before its output (1.2 frees its music stream here too) */
-#endif
-    Audio_Close();          /* was the DirectSound object's Release */
+    /* the music stream is closed before this, in Sim_1003a052 (1.2 0x1002e0a6) */
+    Audio_Close();         /* was the DirectSound object's Release */
     *device = 0;
     /* CoUninitialize went with CoInitialize (sound start) */
     return 1;

@@ -47,4 +47,7 @@ void __cdecl Dib_InitHeader(uint32_t width, int height);
 /* In-place byte-wise transform of a buffer, keyed by a 32-bit seed. */
 void __cdecl Sim_1003c7b0(unsigned char *buf, int count, uint32_t seed);
 
+/* the network round's 1.2 conversions (for the hook table) */
+#include "w36.h"
+
 #endif

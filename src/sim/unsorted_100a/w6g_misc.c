@@ -1,4 +1,5 @@
 #include "w6g.h"
+#include "../render/w31.h"
 #include "w2e.h"
 #include "../util/w3o.h"
 #include "../unsorted_1002/w5b.h"
@@ -6,6 +7,7 @@
 #include "../unsorted_100f/w2e.h"
 
 // FUNCTION: HGSIM 0x100a2823
+// FUNCTION: HGSIM12 0x1008faed
 uint32_t __cdecl Sim_100a2823(int x0, int y0, int x1, int y1, int x2, int y2, int x3, int y3, int x4, int y4,
                               uint32_t colour)
 {
@@ -18,6 +20,10 @@ uint32_t __cdecl Sim_100a2823(int x0, int y0, int x1, int y1, int x2, int y2, in
     for (i = 0; i < 5; i++) {
         v[i * 9 + 0] = Bits_OfFloat((float)xy[2 * i]);
         v[i * 9 + 1] = Bits_OfFloat((float)xy[2 * i + 1]);
+#ifndef W3QZ_MUTATE /* the checker's negative check only: 1.0, z left as it was */
+        if (W31_TexMode())
+            v[i * 9 + 2] = 0x7f7fc99eu;     /* 1.2 (0x1008faed): z at the far end, 3.4e38 */
+#endif
         v[i * 9 + 4] = colour;
         v[i * 9 + 6] = 0xff000000u;
     }

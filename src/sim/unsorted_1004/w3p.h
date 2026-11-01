@@ -96,6 +96,27 @@ int __cdecl Sim_1004be11(int a, int b);
 extern uint8_t g_w34Kills[10 * 0x14];
 extern int16_t g_w34Rating[10];
 extern uint32_t g_w34NetOver;
+/* Network round, 1.2's 10-player tables (w34_netover.c), each indexed by player (unit +4 / the sender):
+   1.0's 8-entry tables at the right, 1.2's 10-entry ones in brackets */
+extern uint32_t g_net10Heard[10];       /* frame of the player's last message: 0x1015db00 (0x107cab60) */
+extern uint32_t g_net10Db20[10];        /* 0x1015db20 (0x107caba0) */
+extern uint32_t g_net10Left[10];        /* the player left ("SS"): 0x1015db40 (0x107cb440) */
+extern int32_t g_net10SnStamp[10];      /* the "SN" message's stamp: 0x1015db80 (0x107cb4a0) */
+extern uint8_t g_net10Mark[10];         /* 0x1015d1b0 (0x107cb4d0) */
+extern uint8_t g_net10Ready[10];        /* 0x1015d090 (0x107cb430) */
+extern uint8_t g_net10Row[10][0x16];    /* the last unit state received ("DA" / "DM"), from +5: 0x1015da40 (0x107caa80) */
+extern uint8_t g_net10DiSent[10][0xd1]; /* the last "DI" message sent per player (0x107cac00, new in 1.2) */
+extern uint8_t *g_net10DiBuf;           /* the "DI" message buffer (1.2 [0x10131504]) */
+#define NET10_PLAYERS 10
+/* the damage handover (w3p_net.c): 1.2's "DI" message, its part records packed and unpacked, its receive */
+void __cdecl Sim12_100342cf(uint8_t *buf, const uint8_t *unit);
+void __cdecl Sim12_10034342(uint8_t *unit, const uint8_t *buf);
+void __cdecl Sim12_10033c90(int index);
+void __cdecl Sim12_10033d7b(const uint8_t *msg);
+/* 1.2's player update helpers (w9b_net.c): "TC" with the parts, the host's round-robin handover, a destroyed gear */
+void __cdecl Sim12_100343b5(int index, uint8_t to);
+void __cdecl Sim12_10036590(int index);
+void __cdecl Sim12_100362d2(int index);
 extern uint8_t g_w34AkBuf[0x100];
 void __cdecl Sim12_100352b7(uint8_t killer, int unit);
 void __cdecl Sim12_10035348(const uint8_t *msg);

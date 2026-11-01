@@ -7,9 +7,11 @@ typedef int(__stdcall *HeapFreeFn)(void *heap, uint32_t flags, void *block);
 #define IAT_HEAPFREE 0x10ac5634u
 
 // FUNCTION: HGSIM 0x1002009d
+// FUNCTION: HGSIM12 0x100173ad
 void __cdecl Sim_1002009d(int index)
 {
-    if (index > -1 && index < 3)
+    /* 1.2 (0x100173ad): banks 0..3 (1.2 has a 4th record, all zero; nothing calls this in 1.2) */
+    if (index > -1 && index < 4)
         SIM_CALL_1001f790(GBYTES(0x10133728u + (uint32_t)index * 0x18u), 0, -1);
 }
 

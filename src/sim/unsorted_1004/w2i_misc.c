@@ -1,11 +1,17 @@
 #include "w2i.h"
 #include "../util/access.h"
+#include "w3p.h"
 
 // FUNCTION: HGSIM 0x1004044c
 void __cdecl Sim_1004044c(void *p)
 {
     uint32_t block;
     int i;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10033ec2): ignored once the game is over */
+        return;
+#endif
 
     if (PTRTAB(U8(p, 2)) == 0)
         return;
@@ -52,6 +58,10 @@ void __cdecl Sim_10040645(void *dst, void *src)
 // FUNCTION: HGSIM 0x10040f2d
 void __cdecl Sim_10040f2d(void *p)
 {
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034bbc): ignored once the game is over */
+        return;
+#endif
     U8(G32(0x1015D004), 0x138) = U8(p, 4);
     U8(G32(0x1015D004), 0x137) = U8(p, 2);
 }

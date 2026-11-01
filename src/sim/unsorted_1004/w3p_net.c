@@ -1,9 +1,11 @@
 #include "w3p.h"
+#include <string.h>
 #include "fns.h"
 #include "w2h.h"
 #include "w2i.h"
 #include "../render/w2n.h"
 #include "../unsorted_1003/fns.h"
+#include "../unsorted_1003/w9b.h"
 #include "../unsorted_1007/w2f.h"
 #include "../unsorted_1007/w3p.h"
 #include "../unsorted_100f/w2e.h"
@@ -23,11 +25,10 @@
 #define KILLS(row, col) (*(u16a *)(g_w34Kills + (uint32_t)(row) * 0x14u + (uint32_t)(col) * 2u))
 
 /* Round 33, 1.2's 10-player rating: the kill table (1.2 0x1028cc2c; 1.0's 8 x 8 at 0x1016552c, row 0x10), the
-   ratings (1.2 0x107caa60; 1.0's 8 at 0x1015d0f0), the receive guard (1.2 0x101314c0, set by the message loop from
-   the game-over flag) and the buffer of 1.2's new message "AK" (1.2's pointer 0x101314e8, one more 0x100 block) */
+   ratings (1.2 0x107caa60; 1.0's 8 at 0x1015d0f0; the receive guard g_w34NetOver is in w34_netover.c) and the
+   buffer of 1.2's new message "AK" (1.2's pointer 0x101314e8, one more 0x100 block) */
 uint8_t g_w34Kills[10 * 0x14];
 int16_t g_w34Rating[10];
-uint32_t g_w34NetOver;
 uint8_t g_w34AkBuf[0x100];
 static const char kW34Ak[4] = "AK";
 
@@ -82,22 +83,118 @@ void __cdecl Sim_10040564(int index)
     Net_DpSend_1007e920(buf, 5, 1);
 }
 
+/* Network round, the damage of computer gears run from another machine. 1.2's "TC" (the handover, 0xef bytes,
+   sent by Sim12_100343b5) carries the gear's 17 part records at +0x23, which its receive unpacks; 1.2's new "DI"
+   (0xd1 bytes) is meant to keep them in step afterwards, sent with each "AI" update. "DI" has two slips; Diego
+   (2026-11-01, option B): "fix it the way 1.2 meant". NETDI_FIX 1 (default): "DI" goes out with its tag and its
+   receive applies it to a gear run from another machine (state 3). NETDI_FIX 0 is 1.2 exactly: the tag lands in the
+   "DM" message buffer [0x1015ecb0] (1.2 [0x10131500]), so "DI" goes out untagged and is dropped, and the receive
+   tests (state == 0) == 3, never true. */
+#ifndef NETDI_FIX
+#define NETDI_FIX 1
+#endif
+static const char kNetDi[4] = "DI";
+
+/* the first three dwords of each of the gear's 17 part records, 0xc bytes each, into buf */
+// FUNCTION: HGSIM12 0x100342cf
+void __cdecl Sim12_100342cf(uint8_t *buf, const uint8_t *unit)
+{
+    uint32_t part = U32(U32(unit, 0x28), 0x88);
+    int i;
+
+    for (i = 0; i < 0x11; i++) {
+        U32(buf, (uint32_t)i * 0xc) = U32(part, 0);
+        U32(buf, (uint32_t)i * 0xc + 4) = U32(part, 4);
+        U32(buf, (uint32_t)i * 0xc + 8) = U32(part, 8);
+        part += 0x3c;
+    }
+}
+
+/* and back: buf's 17 records of 0xc bytes into the gear's part records */
+// FUNCTION: HGSIM12 0x10034342
+void __cdecl Sim12_10034342(uint8_t *unit, const uint8_t *buf)
+{
+    uint32_t part = U32(U32(unit, 0x28), 0x88);
+    int i;
+
+    for (i = 0; i < 0x11; i++) {
+        U32(part, 0) = U32(buf, (uint32_t)i * 0xc);
+        U32(part, 4) = U32(buf, (uint32_t)i * 0xc + 4);
+        U32(part, 8) = U32(buf, (uint32_t)i * 0xc + 8);
+        part += 0x3c;
+    }
+}
+
+/* "DI" (0xd1 bytes): unit, its +0x150 word and its 17 parts, sent to all when it differs from the last one sent
+   for that player */
+// FUNCTION: HGSIM12 0x10033c90
+void __cdecl Sim12_10033c90(int index)
+{
+    uint8_t *unit;
+    uint8_t *buf = g_net10DiBuf;
+
+#if NETDI_FIX
+    Mem_Move(buf, kNetDi, 2);
+#else
+    Mem_Move(BUF(0x1015ecb0), kNetDi, 2);
+#endif
+    unit = BYTES(PTRTAB(index));
+    if (unit == 0)
+        return;
+    buf[2] = (uint8_t)index;
+    U16(buf, 3) = (uint16_t)U32(unit, 0x150);
+    Sim12_100342cf(buf + 5, unit);
+    if (memcmp(g_net10DiSent[U32(unit, 4)], buf, 0xd1) != 0) {
+        Mem_Move(g_net10DiSent[U32(unit, 4)], buf, 0xd1);
+        Net_DpSend_1007e920(buf, 0xd1, 1);
+    }
+}
+
+/* its receive */
+// FUNCTION: HGSIM12 0x10033d7b
+void __cdecl Sim12_10033d7b(const uint8_t *msg)
+{
+    uint8_t *unit;
+
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)
+        return;
+#endif
+    if (PTRTAB(msg[2]) == 0)
+        return;
+#if NETDI_FIX
+    if (U32(PTRTAB(msg[2]), 0x14) != 3)
+#else
+    if ((U32(PTRTAB(msg[2]), 0x14) == 0) != 3)
+#endif
+        return;
+    unit = BYTES(PTRTAB(msg[2]));
+    Sim12_10034342(unit, msg + 5);
+}
+
 // FUNCTION: HGSIM 0x1004084a
+// FUNCTION: HGSIM12 0x10034468
 void __cdecl Sim_1004084a(const uint8_t *msg)
 {
     uint8_t *entry;
 
+#ifndef NETG_MUTATE /* the checker's negative check only: no guard */
+    if (g_w34NetOver != 0)          /* 1.2 (0x10034468): ignored once the game is over */
+        return;
+#endif
     if (SELF != msg[4])
         return;
     entry = BYTES(PTRTAB(msg[2]));
     if (entry == 0 || U32(entry, 0x14) != 3)
         return;
     Sim_10040721(entry, msg + 5);
+    Sim12_10034342(entry, msg + 0x23);      /* 1.2: the handed-over gear's parts, +0x23 of the 0xef-byte "TC" */
     Sim_10040564((int)U32(entry, 4));
-    U32(entry, 0x18) = 0;
+    U32(entry, 0x18) = 0;       /* (our dword +0x18; 1.2's record has none) */
 }
 
 // FUNCTION: HGSIM 0x100408bd
+// FUNCTION: HGSIM12 0x100344ef
 void __cdecl Sim_100408bd(int index)
 {
     uint8_t *entry;
@@ -112,6 +209,9 @@ void __cdecl Sim_100408bd(int index)
     Mem_Move(buf, GBYTES(0x1013ad70), 2);
     buf[2] = (uint8_t)index;
     Sim_10040645(buf + 3, entry);
+#ifndef NETH_MUTATE /* the checker's negative check only: no "DI" */
+    Sim12_10033c90(index);          /* 1.2 (0x100344ef): the unit's "DI" first */
+#endif
     Net_DpSend_1007e920(buf, 0x21, 0);
 }
 
@@ -140,14 +240,27 @@ int __cdecl Sim_10040ab8(int kind)
     return Net_DpSend_1007e950(WORD_ECD8, BUF(0x1015eca8), 3, 1);
 }
 
+/* 1.2 (0x10034b31): the own state first (Net_SendStateMessage), and the two values sent are kept where the message
+   loop compares them ([0x1013aca0] the +0x137 byte, [0x1013aca4] the +0x138 byte). 1.0 kept them crossed, so with
+   the two bytes different the loop sent "NR" again every frame; NETNR_MUTATE (checker negative only) is 1.0's. */
 // FUNCTION: HGSIM 0x10040eb3
+// FUNCTION: HGSIM12 0x10034b31
 int __cdecl Sim_10040eb3(void)
 {
+#ifdef NETNR_MUTATE
     Header(0x1015ecc0, 0x1013ade0);
     U16(BUF(0x1015ecc0), 4) = (uint16_t)BYTES(ROOT)[0x138];
     G32(0x1013aca0) = (uint32_t)(int32_t)(int16_t)U16(BUF(0x1015ecc0), 4);
     U16(BUF(0x1015ecc0), 2) = (uint16_t)BYTES(ROOT)[0x137];
     G32(0x1013aca4) = (uint32_t)(int32_t)(int16_t)U16(BUF(0x1015ecc0), 2);
+#else
+    Net_SendStateMessage((int)SELF, 1);
+    Header(0x1015ecc0, 0x1013ade0);
+    U16(BUF(0x1015ecc0), 4) = (uint16_t)BYTES(ROOT)[0x138];
+    G32(0x1013aca4) = (uint32_t)(int32_t)(int16_t)U16(BUF(0x1015ecc0), 4);
+    U16(BUF(0x1015ecc0), 2) = (uint16_t)BYTES(ROOT)[0x137];
+    G32(0x1013aca0) = (uint32_t)(int32_t)(int16_t)U16(BUF(0x1015ecc0), 2);
+#endif
     return Net_DpSend_1007e920(BUF(0x1015ecc0), 6, 1);
 }
 
@@ -321,9 +434,9 @@ void __cdecl Sim_100418e3(int unused, int who)
     if (G32(0x1015ecd0) == 1) {
         int n;
 
-        GBYTES(0x1015d090)[who] = 1;
+        g_net10Ready[who] = 1;
         n = (*SIM_PTR(CountFn, 0x1015ead8))(SESSION) - 1;
-        while (n >= 0 && (int8_t)GBYTES(0x1015d090)[LIST_ID(n)] == 1)
+        while (n >= 0 && (int8_t)g_net10Ready[LIST_ID(n)] == 1)
             n--;
         if (n == -1)
             Sim_10041888();
@@ -401,12 +514,46 @@ int __cdecl Sim_100420a0(void)
     return 1;
 }
 
+/* 1.2's host before the last host change (1.2 0x10110144); its player list callback compares the new host with it
+   (not static: the checker pairs it with 1.2's) */
+uint32_t g_net10OldHost;
+
+/* The player list callback of the host change (dpEnumPlayers, __stdcall: key, flag, two more): a listed player has
+   been heard now; the lowest key that is neither the player leaving ([0x1013acb0]) nor one that left becomes the
+   host ([0x1015ecd8]). 1.2 (0x10035f3e): when the host is not the one before the change, a pending request
+   ([0x1015f200]) is cancelled. Was original code (0x10042125). */
+// FUNCTION: HGSIM 0x10042125
+// FUNCTION: HGSIM12 0x10035f3e
+void __stdcall Sim_10042125(uint32_t key, uint32_t listed, uint32_t unused3, uint32_t unused4)
+{
+    int index;
+
+    (void)unused3;
+    (void)unused4;
+    if (listed == 0)
+        return;
+    index = (int)Sim_1003db56((int16_t)key);
+    if (index < 0)
+        return;
+    g_net10Heard[index] = G32(0x1015dc7c);
+    if ((uint16_t)key < WORD_ECD8 && (uint16_t)key != *SIM_PTR(u16a, 0x1013acb0) && g_net10Left[index] == 0)
+        WORD_ECD8 = (uint16_t)key;
+#ifndef NETHOST_MUTATE /* the checker's negative check only: 1.0 keeps the request */
+    if ((uint32_t)WORD_ECD8 != g_net10OldHost)
+        G32(0x1015f200) = 0;
+#endif
+}
+
 // FUNCTION: HGSIM 0x100421b0
+// FUNCTION: HGSIM12 0x10035fe7
 void __cdecl Sim_100421b0(int word)
 {
     *SIM_PTR(u16a, 0x1013acb0) = (uint16_t)word;
+#ifndef NETHOST_MUTATE
+    g_net10OldHost = WORD_ECD8;                 /* 1.2 */
+#endif
     WORD_ECD8 = WORD_ACAC;
-    (*SIM_PTR(Fn5, 0x1015eae0))(SESSION, 0, SIM_PTR(void, 0x10001654), 0, 0);
+    (*SIM_PTR(Fn5, 0x1015eae0))(SESSION, 0, (void *)Sim_10042125, 0, 0);
     if ((*SIM_PTR(CountFn, 0x1015ead8))(SESSION) == 1) {
         G32(0x1015eccc) = 2;
         G32(0x1015ecd0) = 0;

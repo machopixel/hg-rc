@@ -1,4 +1,4 @@
-round2: src/sim/unsorted_1007/w14_unit.c
+﻿round2: src/sim/unsorted_1007/w14_unit.c
 round2: src/sim/unsorted_1006/w16_move.c
 round2: src/sim/unsorted_100d/w15_world.c
 round2: src/sim/unsorted_1001/w9d_select.c
@@ -23,14 +23,14 @@ round3: src/hooks/conv_1004.inc
 round3: src/launcher/CMakeLists.txt (one line)
 round3: src/sim/unsorted_1009/w14_spawn.c
 round3: src/sim/unsorted_1004/fns.h (one include)
-music: src/platform/music.c (new), src/platform/music.h (new), third_party/stb/stb_vorbis.c (new)
-music: src/platform/audio_sdl3.c, src/platform/audio.h (stream voice)
-music: src/sim/unsorted_1001/w4u_cd.c, w4u.h, w5a_misc.c, w5a.h, w6d_calls.c, w6d.h, w7l_misc.c, w7l.h, w9d_misc.c, w9d.h
-music: src/sim/win/w4w_win.c, w4w.h, src/sim/sound/sdl_sound.c
-music: src/launcher/CMakeLists.txt (music.c + HG_MUSIC_FILES)
-music: tools/verify/spec_music_v12.py (new), tools/verify/music_stub.c (new), tools/v12/sound.md
 round3: src/sim/unsorted_1008/w21_simmain.c (Voodoo test)
 round3: src/plugins/hgvk/hgvk.c, vk.c, vk.h (Voodoo combine)
 round4: src/sim/unsorted_1002/w10_effects.c, src/sim/unsorted_1005/w14_pof.c, src/sim/unsorted_1003/w2e_misc.c, src/sim/unsorted_1002/w9a_text.c, src/sim/unsorted_100d/w10_misc.c (+ their .h, new spec files)
 round4: src/sim/render/w23_screens.c, src/sim/unsorted_100c/w9e_hud.c (HUD panels 13 / 15 / 16)
 round4: src/sim/fx/w32.h (record macros), src/sim/unsorted_100d/w6h_calls.c, src/sim/unsorted_100d/w8z_project.c (weather emitters in 1.2's pool layout)
+sweep-controls: src/sim/unsorted_1001/w13_steer.c, src/sim/unsorted_1001/w7l_misc.c, src/sim/unsorted_1003/records.c, src/sim/unsorted_1004/w8v_misc.c, src/sim/unsorted_100b/w8y_cache.c, src/sim/unsorted_100c/w7p_states.c, src/sim/render/w3r_draw.c, tools/verify/difftest.py (retmask option) (+ .h, new specs)
+fix-burst: src/sim/unsorted_100d/w10_weapons.c (+ spec)
+sweep-gfx-sound: src/sim/unsorted_1003/w9h_view.c, src/sim/unsorted_1005/w3r_misc.c, src/sim/unsorted_1006/w10_misc.c, src/sim/unsorted_100e/w12_wtb.c, src/sim/render/w2n_texture.c, src/sim/unsorted_1004/w8u_camera.c, src/sim/unsorted_1009/w7o_effects.c, src/sim/unsorted_100a/w6g_misc.c, src/sim/render/w3q_driver.c, src/sim/unsorted_100d/w7q_names.c, src/sim/unsorted_1002/w5x_calls.c, src/sim/unsorted_1002/w7l_misc.c, src/sim/unsorted_1000/w2j_anim.c (+ .h, new specs)
+network: tools/v12/anet2_shell.md (new), src/sim/unsorted_1003/fns.h (one include), src/sim/unsorted_1003/w36_net.c + w36.h (new), src/hooks/conv_1004.inc, src/launcher/CMakeLists.txt (one line), src/sim/unsorted_1004/w34_netover.c (new), src/sim/unsorted_1003/records.c, w10_misc.c, w9b_net.c, w5a_misc.c, src/sim/unsorted_1005/w3r_misc.c, src/sim/unsorted_1004/w2i_misc.c, w7m_misc.c, w8u_camera.c, w6e_misc.c, w5y_misc.c, w2j_misc.c, w3p_net.c, w2h_record.c, w5a_misc.c (+ .h, conv incs, new spec_net_*_v12.py), src/sim/unsorted_1003/w5c_calls.c (Sim_10041247 only)
+focus-cache: src/sim/platform/w28_window.c (+ w28.h, w28_input.c one line), src/sim/unsorted_100b/w8y_cache.c (Sim_100ba304 only; keeps sweep-controls' edits), new spec_w28_window_v12.py / spec_w8y_reader_v12.py, DECISIONS.md (two rows), tools/v12/remaining.md (two lines)
+tiny-sweep-end: tools/verify/spec_w2e.py, tools/verify/spec_w6h.py, tools/verify/spec_w8z.py (source lists only); notes in tools/v12/remaining.md / unsorted.md / DECISIONS.md (own sections)

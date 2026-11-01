@@ -89,6 +89,12 @@ SOURCES = [
     'sim/unsorted_1010/w2f_mantissa.c', 'sim/unsorted_1002/w2e_object.c', 'sim/unsorted_100d/w2i_select.c',
     'sim/unsorted_1010/w2f_ld12.c',
 ]
+# The list above predates rounds 32 / 33 (W31_TexMode, the particle systems, the network code): what the files need
+# to link now is added by w10_common's closure(), run in its own namespace so that nothing else of w10_common
+# changes this spec.
+_w10 = {}
+exec(open('tools/verify/w10_common.py').read(), _w10)
+SOURCES = _w10['closure'](SOURCES)
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 
 STACK_LO, STACK_HI = 0x00700000, 0x00800000

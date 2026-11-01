@@ -2,6 +2,8 @@
 #include "../../platform/plat.h"
 #include "../util/access.h"
 #include "../unsorted_1005/w2g.h"
+#include "../unsorted_1008/w4u.h"
+#include "../unsorted_1008/w5y.h"
 
 #define W28_WINDOW() ((void *)(uintptr_t)G32(0x1017b8f0))
 #define W28_DRIVER() G32(0x1015e688)        /* the display driver's table */
@@ -10,6 +12,8 @@
 typedef void(__cdecl *W28VoidFn)(void);
 typedef void(__cdecl *W28PaletteFn)(uint32_t first, uint32_t count, void *colours, uint32_t now);
 typedef int32_t(__cdecl *W28IntFn)(int32_t);
+
+int g_w28FocusPaused;
 
 static void W28_SetPalette(void)
 {
@@ -42,6 +46,15 @@ int32_t __stdcall Sim_100867a2(uint32_t window, uint32_t message, uint32_t wPara
         G32(0x1017b928) = wParam;
         G32(0x1017b920) = G32(0x1017b928);
         if (G32(0x1017b920) == 1) {
+            /* 1.2 (0x10071397): the game resumes (0x10075070 = Sim_1008b900). Fix: only after its own pause */
+#ifdef W28F_MUTATE /* the checker's negative check only */
+            if (1) {
+#else
+            if (g_w28FocusPaused) {
+#endif
+                g_w28FocusPaused = 0;
+                Sim_1008b900();
+            }
             Sim_10057f53();
             if (W28_FITS()) {
                 if (G32(0x1015e9c0) == 1) {
@@ -59,6 +72,12 @@ int32_t __stdcall Sim_100867a2(uint32_t window, uint32_t message, uint32_t wPara
             if (G32(0x1017b934) != 0)
                 ((W28VoidFn)(uintptr_t)G32(0x109e3d5c))();
         } else {
+            /* 1.2: the game pauses (0x1007504e = Sim_1008b8de). Fix: not while the clock is already held (timer
+             * flag 0x200: the HUD menu, the hold in Sim_1002a983), whose owner resumes it; never in a network game */
+            if ((G32(0x1015317c) & 0x200) == 0 && G32(0x1015ecd0) == 0) {
+                g_w28FocusPaused = 1;
+                Sim_1008b8de();
+            }
             if (G32(0x1017b934) != 0)
                 ((W28VoidFn)(uintptr_t)G32(0x109e3d60))();
             if (W28_FITS()) {
