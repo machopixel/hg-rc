@@ -20,7 +20,8 @@ static void DrawText(uint8_t mode, uint32_t surface, int32_t x, int32_t y, uint3
 // FUNCTION: HGSIM 0x100cd70f
 void __cdecl Sim_100cd70f(void *obj, int32_t *pos, uint32_t font)
 {
-    char buf[0x100];
+    char buf[0x100], full[0x100];
+    const char *space;
     uint8_t *base = GBYTES(0x10473800) + G32(0x1013bb40) * 0x4fc3au;
     int32_t height = W9GC_CALL_100ecce0(font);
     int single = 0;
@@ -28,10 +29,6 @@ void __cdecl Sim_100cd70f(void *obj, int32_t *pos, uint32_t font)
     uint8_t *e;
     const char *label;
     int wrapped;
-
-    /* Deviation (DECISIONS.md round 21): the last-space search of a long objective runs past its cut + 1 copied
-       bytes, into whatever the stack held before this call; the buffer starts zeroed instead. */
-    Mem_Fill(buf, 0, sizeof(buf));
 
     if (G32(0x1015ec58) != 0 && U8(G32(0x1017b8c4), 0xa) == 0) {
         int32_t active = 0;
@@ -72,23 +69,31 @@ void __cdecl Sim_100cd70f(void *obj, int32_t *pos, uint32_t font)
         pos[0] += Sim_100ccb0d(label, (void *)(uintptr_t)font);
         len = (int32_t)Str_Length((const char *)e + 0xad);
         e[0xad + len] = 0;
+        /* 1.2 (0x100b1c8f): the objective is copied whole into its own buffer first; it wraps only when longer
+           than the width (1.0: also when equal) and always breaks at the objective's last space (1.2 tests the
+           byte it has just zeroed, so the search always runs, over the whole copy) */
+        Str_Copy(full, (const char *)e + 0xad);
+#ifdef W9GW_MUTATE                      /* the checker's negative check only: 1.0's width test */
         if (len < GS32(0x10151d60 + G32(0x101c64f0) * 4u)) {
-            DrawText(0xc, U32(obj, 0xec), pos[0], pos[1], font, (const char *)e + 0xad);
+#else
+        if (len <= GS32(0x10151d60 + G32(0x101c64f0) * 4u)) {
+#endif
+            DrawText(0xc, U32(obj, 0xec), pos[0], pos[1], font, full);
         } else {
             x0 = pos[0];
             y0 = pos[1];
             cut = GS32(0x10151d60 + G32(0x101c64f0) * 4u);
-            Str_CopyN(buf, (const char *)e + 0xad, (uint32_t)cut + 1u);
-            if ((int8_t)e[0xae + cut] != ' ')
-                cut = (int32_t)(Str_FindLast(buf, ' ') - buf);
-            Str_CopyN(buf, (const char *)e + 0xad, (uint32_t)cut + 1u);
+            space = Str_FindLast(full, ' ');
+            if (space != 0)         /* deviation: 1.2 takes a cut from a NULL result (no space at all) */
+                cut = (int32_t)(space - full);
+            Str_CopyN(buf, full, (uint32_t)cut + 1u);
             buf[cut + 1] = 0;
             DrawText(0xc, U32(obj, 0xec), pos[0], pos[1], font, buf);
             pos[0] = x0;
             pos[1] += height;
-            rest = (int32_t)Str_Length((const char *)e + 0xad) - cut;
+            rest = (int32_t)Str_Length(full) - cut;
             if (rest > 0) {
-                Str_CopyN(buf, (const char *)e + 0xae + cut, (uint32_t)rest);
+                Str_CopyN(buf, full + cut + 1, (uint32_t)rest);
                 buf[rest] = 0;
                 DrawText(0xc, U32(obj, 0xec), pos[0], pos[1], font, buf);
             }

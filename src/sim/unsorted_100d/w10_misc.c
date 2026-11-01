@@ -8,6 +8,7 @@
 #include "../util/util.h"
 #include "../unsorted_1008/w3o.h"
 #include "../unsorted_1009/w2g.h"
+#include "../unsorted_1004/w2k.h"
 #include "../unsorted_100a/w5b.h"
 #include "../unsorted_100a/w5y.h"
 #include "../render/w2n.h"
@@ -205,8 +206,13 @@ int __cdecl Sim_100d4f71(uint8_t *obj, const uint8_t *weapon, uint8_t *slot)
     if (U32(rec, 0xc3d) != 0)
         return 0;
     mine = U32(U32(rec, 0), 4) == self;
-    if (mine)
+    if (mine) {
         *SIM_PTR(u16a, 0x101653f3) += 1;
+#ifndef W10F_MUTATE                     /* W10F_MUTATE: the checker's negative check only */
+        if (G32(0x1015ef3c) != 0)       /* 1.2 (0x100bafae): its force-feedback request for the own shot */
+            Sim_100382fb(U32(weapon, 0xd2), 0, 0, 0);
+#endif
+    }
     if (S32(slot, 0x20) != -1 && !(U8(G32(0x1017b8c4), 0) != 0 && U32(obj, 4) == self) &&
         (G32(0x1015ec58) == 0 || (U32(obj, 0x14) == 3 && U32(obj, 0xc) == self) || U32(obj, 4) == self)) {
         if (S32(slot, 0x20) == -2) {

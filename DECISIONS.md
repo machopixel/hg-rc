@@ -2452,3 +2452,21 @@ line onto the SDL3 sound (src/sim/sound/sdl_sound.c):
 - **1.2's ANET2 name list** (its loader, the twin of Sim_1003be30; the survey's 0x1002fd99 / 0x1002fdf4 are points
   inside it): 54 names instead of 55, in another order. It has dpSetGameServerEx for dpSetGameServer and no
   dpEnumTransports. The sim never calls those, and our C uses its own slot table consistently, so nothing to port.
+
+## 1.2 audit: the two missing changes (Diego, 2026-11-01: "apply both changes")
+
+An independent audit of all of 1.2's HGSIM (tools/v12/audit.md) found two 1.2 changes not yet in the C. Both ported:
+- **Force feedback when firing:** Sim_100d4f71 (1.2 0x100baf31), the fire routine the weapon tables point at (no
+  direct caller, so the round-33 survey had called 1.2's version dead). For the own unit's shot, after the shot
+  counter [0x101653f3], 1.2 sends the force-feedback request Sim_100382fb(weapon +0xd2, 0, 0, 0) while the library
+  flag [0x1015ef3c] (1.2 [0x10131718]) is set. tools/verify/spec_w10_100d4f71_v12.py 4000 / 0 against 1.2
+  (W10F_NEG12, no request: 1355); spec_w10_100d4f71.py (1.0) still passes 4000 / 0 (its flag stays clear).
+- **Current-objective line wrap:** Sim_100cd70f (1.2 0x100b1c8f). 1.2 copies the objective whole into its own
+  buffer, wraps only when it is longer than the width (1.0 also when equal) and always breaks at the objective's last
+  space (it tests the byte it has just zeroed, so the search always runs, over the whole copy): line 1 is all but the
+  last word and can be longer than the width. This replaces the round-21 deviation for this function (the zeroed
+  buffer is gone; the stack-leftover search no longer exists). Deviation: an objective longer than the width with no
+  space at all keeps the width as its cut (1.2 takes a cut from strrchr's NULL). tools/verify/spec_w9g_cd70f_v12.py
+  3000 / 0 against 1.2 (W9GW_NEG12, 1.0's `>=` test: 228). Superseded for this function: spec_w9g.py's Sim_100cd70f
+  entry and spec_w21_wrap_cd70f.py (both describe 1.0's wrap). The F12 list (Sim_100ccc60) keeps 1.0's wrap, as 1.2
+  does, with its round-21 deviation.
