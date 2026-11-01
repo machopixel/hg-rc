@@ -21,7 +21,7 @@ from unicorn import UC_HOOK_CODE
 from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EAX, UC_X86_REG_FPCW
 
 SOURCES = ['sim/render/w2m_texture.c', 'sim/render/w2n_texture.c', 'sim/render/w2n_project.c',
-           'sim/render/w2n_polygon.c', '../tools/verify/w2n_test.c']
+           'sim/render/w2n_polygon.c', '../tools/verify/w2n_test.c', 'sim/render/w33_dx12.c']
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 
 STUB = 0x00F00400
@@ -440,7 +440,7 @@ def g_ptrs(ctx):
     begin(ctx, keyops=(1, 2, 6))
     camera(ctx)
     w32(ctx, 0x1017b940, r.choice([1, 1, 1, 0, 5]))
-    w32(ctx, 0x1017d0ac, r.choice([0, 1, 9]))
+    w32(ctx, 0x1017d0ac, 0)       # round 33: the C tests 1.2's 3DFX flag (g_w33Voodoo, off) instead of 1.0's
     n = r.choice([0, 1, 2, 3, 3, 4, 5, 8, 30, 200, 255])
     verts = []
     for i in range(n):
@@ -518,8 +518,7 @@ SPECS = [
     dict(name='Render_SubmitVerts_10006744', orig=0x10006744, c='Render_SubmitVerts_10006744', gen=g_sub2, trials=1000),
     dict(name='Render_SubmitVerts_100068d9', orig=0x100068d9, c='Render_SubmitVerts_100068d9', gen=g_sub3, trials=1000),
     dict(name='Render_SubmitVertexPtrs_100a0339', orig=0x100a0339, c='Render_SubmitVertexPtrs_100a0339', gen=g_ptrs, trials=800),
-    dict(name='Render_SubmitClipped_100ac738', orig=0x100ac738, c='Render_SubmitClipped_100ac738', gen=g_clipped, trials=1000, void=True, fp=True),
-    dict(name='Sim_100ad1f3', orig=0x100ad1f3, c='Sim_100ad1f3', gen=g_model, trials=1000, void=True, fp=True),
+    # round 33: Render_SubmitClipped_100ac738 and Sim_100ad1f3 are 1.2's now (rhw 1 / z, ...): spec_w2n_shadow_v12.py
 ]
 
 # round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)

@@ -10,7 +10,9 @@ if os.environ.get('W28_NEG'):
     CFLAGS.append('-DW28P_MUTATE')
 
 PLAT_STUB = os.path.abspath(os.path.join('tools', 'verify', 'plat_stub.c'))
-SOURCES = closure(['sim/platform/w28_plugin.c']) + [PLAT_STUB]
+SOURCES = closure(['sim/platform/w28_plugin.c'])
+if not any(x.replace(os.sep, '/').endswith('verify/plat_stub.c') for x in SOURCES):
+    SOURCES = SOURCES + [PLAT_STUB]
 DESC, CHECK = 0x00F00E00, 0x00F00E10
 helper(DESC, None, 3)
 helper(CHECK, None, 1)

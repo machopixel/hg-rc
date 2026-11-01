@@ -27,5 +27,7 @@ typedef int(__cdecl *W7rMapStringFn)(uint32_t locale, uint32_t flags, const uint
  * The answer is c when the mapping gives 0 bytes, the first byte for 1, else first | second << 8.
  */
 int __cdecl Crt_ToLower(int c);
+/* 1.2 0x100ea880, _strlwr: A-Z to a-z in place (without a locale; with one through 0x101053c0). Returns s. */
+char *__cdecl Crt12_StrLwr(char *s);
 
 #endif

@@ -16,7 +16,25 @@ for _a, _c, _n in STUBS:
     helper(_a, _c, _n)
 MASK[(0x1000711c, 0)] = 0xffff
 MASK[(0x1000711c, 1)] = 0xffff
-ACTIVE = tuple(a for a, _, _ in STUBS)
+# Controls round: the C makes 1.2's force-feedback request Sim_100382fb(kind, 0, 0, 0), only while the library flag
+# [0x1015ef3c] is set, where 1.0 called Sim_10045f3b(kind, 0x2d, 0x32) always. FFC has no 1.0 address (the stub of
+# the C function only); lm_ff maps the original's call to that form. The flag is always set here; the v12 spec covers
+# it clear.
+FFC = 0x00F00F00
+helper(FFC, 'Sim_100382fb', 4)
+ACTIVE = tuple(a for a, _, _ in STUBS) + (FFC,)
+FF = {'flag': 0}
+
+
+def lm_ff(log_o, log_c):
+    out = []
+    for e in log_o:
+        if e[0] == 'stub_10045f3b' and len(e[1]) == 3:
+            if not FF['flag']:
+                continue
+            e = ('stub_%x' % FFC, (e[1][0], 0, 0, 0))
+        out.append(e)
+    return out, log_c
 
 
 def fb(v):
@@ -77,6 +95,8 @@ def fstubs(ctx):
 def g(ctx):
     r = begin(ctx, *ACTIVE)
     fstubs(ctx)
+    FF['flag'] = 1      # flag clear: 1.0 still calls, and the stubs' answers (picked by log position) would shift
+    w32(ctx, 0x1015ef3c, FF['flag'])
     ST['d'] = [fb(r.uniform(-2, 2)) for _ in range(7)]
     ST['fvals'] = {0x100c97c0: [fb(r.uniform(0, 3000))]}
     rets(0x100d5c9b, r.choice([0, 1]))
@@ -143,4 +163,4 @@ def g(ctx):
     return [obj, weapon, slot]
 
 
-SPECS = [dict(name='Sim_100d5446', orig=0x100d5446, c='Sim_100d5446', gen=g, trials=4000)]
+SPECS = [dict(name='Sim_100d5446', orig=0x100d5446, c='Sim_100d5446', gen=g, trials=4000, log_map=lm_ff)]

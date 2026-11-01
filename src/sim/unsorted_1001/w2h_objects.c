@@ -201,3 +201,59 @@ int __cdecl Sim_10017a05(const void *obj)
         U8(U32(obj, 0x54), 0x55) = 1;
     return 0;
 }
+
+/* 1.2's unit flag tests and the action gate that replaces Sim_10017a05 (1.2 0x10010bb4..0x10010cd2). 1.2 reads the
+   unit at +0x24 and the control block at +0x50: ours at +0x28 / +0x54. */
+// FUNCTION: HGSIM12 0x10010bb4
+int __cdecl Sim12_10010bb4(const void *obj)
+{
+    if (obj == 0)
+        return 0;
+    return (U16(U32(obj, 0x28), 0x562) & 0x60e) != 0 ? 1 : 0;
+}
+
+// FUNCTION: HGSIM12 0x10010bf4
+int __cdecl Sim12_10010bf4(const void *obj, int unused)
+{
+    (void)unused;
+    if (obj == 0)
+        return 0;
+    return (U16(U32(obj, 0x28), 0x560) & 0x20) != 0 ? 1 : 0;
+}
+
+// FUNCTION: HGSIM12 0x10010c72
+int __cdecl Sim12_10010c72(const void *obj)
+{
+    if (obj == 0)
+        return 0;
+    return (U16(U32(obj, 0x28), 0x562) & 8) != 0 ? 1 : 0;
+}
+
+// FUNCTION: HGSIM12 0x10010cb0
+void __cdecl Sim12_10010cb0(const void *obj)
+{
+    U8(U32(obj, 0x54), 0x55) = 1;
+}
+
+// FUNCTION: HGSIM12 0x10010cd2
+int __cdecl Sim12_10010cd2(const void *obj)
+{
+    int jets, busy;
+
+    if (obj == 0)
+        return 0;
+    if ((S32(obj, 0) == 1 || S32(obj, 0) == 9) &&
+        (S32(obj, 0x14) == 2 || (S32(obj, 0x14) == 3 && U32(obj, 0xc) == G32(0x1017b8c8)))) {
+        jets = Sim12_10010bf4(obj, 0);
+        busy = Sim12_10010bb4(obj);
+#ifdef W2HG_MUTATE /* the checker's negative check only: the jets ignored */
+        jets = 0;
+#endif
+        if (jets == 0 && busy == 0)
+            return 1;
+        if (Sim12_10010c72(obj) != 0 && jets == 0)
+            Sim12_10010cb0(obj);
+        return 0;
+    }
+    return 1;
+}

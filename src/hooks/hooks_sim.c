@@ -161,6 +161,8 @@ void Hooks_OnModuleLoaded(const char *moduleName, HMODULE module)
     DebugPrintf("%s: %d hook(s) installed\n", moduleName, count);
     if (_stricmp(moduleName, "HGSHELL.DLL") == 0)
         HooksDDraw_OnShellLoaded(module);
+    if (_stricmp(moduleName, "HGSHELL.DLL") == 0)
+        HooksCd_OnShellLoaded(module);
     if (_stricmp(moduleName, "HGSIM.DLL") == 0) {
         g_simBase = (unsigned char *)module;
         HooksView_OnSimLoaded(module);

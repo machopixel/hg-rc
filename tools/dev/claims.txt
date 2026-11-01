@@ -1,0 +1,36 @@
+round2: src/sim/unsorted_1007/w14_unit.c
+round2: src/sim/unsorted_1006/w16_move.c
+round2: src/sim/unsorted_100d/w15_world.c
+round2: src/sim/unsorted_1001/w9d_select.c
+round2: src/sim/unsorted_1001/w2h_objects.c
+round2: src/sim/unsorted_1001/w8t_actions.c
+round2: src/sim/unsorted_100f/w7r_ctype.c
+round2: tools/v12/unsorted.md
+controls: src/sim/unsorted_1004/w2k_flags.c
+controls: src/sim/unsorted_1004/w2k.h
+controls: src/sim/unsorted_1002/w29_shot.c
+controls: src/sim/unsorted_100d/w10_missile.c
+controls: src/hooks/hooks_conv.c
+round2: Project/MUSIC (11 OGG tracks copied from HeavyGearIso for the sort thread's music port)
+round3: src/sim/unsorted_1007/w9f_objectives.c
+round3: src/sim/unsorted_1002/w2e_tables.c
+round3: src/sim/unsorted_1004/w8u_files.c
+round3: src/sim/unsorted_1004/w3p_net.c (g_w34Kills only, read)
+round3: src/sim/unsorted_1002/w5y_misc.c
+round3: src/sim/unsorted_1004/w35_menu.c (new)
+round3: src/sim/unsorted_1004/w35.h (new)
+round3: src/hooks/conv_1004.inc
+round3: src/launcher/CMakeLists.txt (one line)
+round3: src/sim/unsorted_1009/w14_spawn.c
+round3: src/sim/unsorted_1004/fns.h (one include)
+music: src/platform/music.c (new), src/platform/music.h (new), third_party/stb/stb_vorbis.c (new)
+music: src/platform/audio_sdl3.c, src/platform/audio.h (stream voice)
+music: src/sim/unsorted_1001/w4u_cd.c, w4u.h, w5a_misc.c, w5a.h, w6d_calls.c, w6d.h, w7l_misc.c, w7l.h, w9d_misc.c, w9d.h
+music: src/sim/win/w4w_win.c, w4w.h, src/sim/sound/sdl_sound.c
+music: src/launcher/CMakeLists.txt (music.c + HG_MUSIC_FILES)
+music: tools/verify/spec_music_v12.py (new), tools/verify/music_stub.c (new), tools/v12/sound.md
+round3: src/sim/unsorted_1008/w21_simmain.c (Voodoo test)
+round3: src/plugins/hgvk/hgvk.c, vk.c, vk.h (Voodoo combine)
+round4: src/sim/unsorted_1002/w10_effects.c, src/sim/unsorted_1005/w14_pof.c, src/sim/unsorted_1003/w2e_misc.c, src/sim/unsorted_1002/w9a_text.c, src/sim/unsorted_100d/w10_misc.c (+ their .h, new spec files)
+round4: src/sim/render/w23_screens.c, src/sim/unsorted_100c/w9e_hud.c (HUD panels 13 / 15 / 16)
+round4: src/sim/fx/w32.h (record macros), src/sim/unsorted_100d/w6h_calls.c, src/sim/unsorted_100d/w8z_project.c (weather emitters in 1.2's pool layout)

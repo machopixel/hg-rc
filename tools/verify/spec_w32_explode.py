@@ -3,14 +3,14 @@
 # Stubbed on both sides (w32_common.py): the pool allocation (answers the generator's record), the engine node calls,
 # the projection (answers visible or not, writes nothing), the line of sight, the random ring (by call number), the
 # 2D pixel and the particle draw (logs the visible points only: the others are stack leftovers in both). The length
-# Sim_10084a94 runs for real (1.2's twin 0x1006f714 is the same code). The C is built with W32_LOOP32 (1.2's 0x20
-# frame marks; ours stop at 16, DECISIONS.md round 32).
+# Sim_10084a94 runs for real (1.2's twin 0x1006f714 is the same code). The C marks 0x20 particles as 1.2 does
+# (DECISIONS.md round 32).
 # Negative check: W32_NEG=1 builds the C with W32E_MUTATE (the particle one size step bigger).
 import os
 exec(open('tools/verify/w32_common.py').read())
 
 SOURCES = closure(['sim/fx/w32_explode.c', 'sim/fx/w32_family.c', 'sim/fx/w32_partspec.c', 'sim/fx/w32_draw.c'])
-CFLAGS = list(CFLAGS) + ['-DW32_LOOP32'] + (['-DW32C_MUTATE'] if os.environ.get('W32_NEG') == 'c' else ['-DW32E_MUTATE', '-DW32M_MUTATE', '-DW32X_MUTATE', '-DW32C_MUTATE', '-DW32K_MUTATE'] if os.environ.get('W32_NEG') else [])
+CFLAGS = list(CFLAGS) + (['-DW32C_MUTATE'] if os.environ.get('W32_NEG') == 'c' else ['-DW32E_MUTATE', '-DW32M_MUTATE', '-DW32X_MUTATE', '-DW32C_MUTATE', '-DW32K_MUTATE', '-DW32FS_MUTATE'] if os.environ.get('W32_NEG') else [])
 stub12(0x10090c7d, 'Sim_10090c7d', 4, 0x10079c54)
 stub12(0x100a9cfb, 'Sim_100a9cfb', 4, 0x1009518b)
 stub12(0x100d2669, 'Sim_100d2669', 3, 0x100b87f9)
@@ -226,6 +226,21 @@ def g_skate_draw(ctx):
 SPECS += [spec12('Sim12_1007e25c', 0x1007e25c, lambda c: g_spawn(c, 5), 3000, void=True),
           spec12('Sim12_1007dbe7', 0x1007dbe7, lambda c: g_update(c, 5), 1500),
           spec12('Sim12_1007dd89', 0x1007dd89, g_skate_draw, 3000)]
+
+# round 33: the footstep dust (type 0x15), 1.2's copy of the skate dust's spawn, update and draw
+FUNCS.update({0x10085992: 'Sim12_10085992', 0x10085b34: 'Sim12_10085b34'})
+
+
+def g_foot_draw(ctx):
+    args = g_draw(ctx, 0x15)
+    if args[0]:
+        w32(ctx, args[0] + 0x34a, ctx.rng.choice([0, 1, 4, 30, 255, ctx.rng.getrandbits(32)]))
+    return args
+
+
+SPECS += [spec12('Sim12_10086007', 0x10086007, lambda c: g_spawn(c, 0x15), 3000, void=True),
+          spec12('Sim12_10085992', 0x10085992, lambda c: g_update(c, 0x15), 1000),
+          spec12('Sim12_10085b34', 0x10085b34, g_foot_draw, 1000)]
 
 
 

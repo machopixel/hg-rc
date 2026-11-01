@@ -31,6 +31,7 @@
 #define W14P_COLUMN(i) GS32(0x10124eacu + (uint32_t)(i) * 0x98u)
 
 // FUNCTION: HGSIM 0x1005bb7a
+// FUNCTION: HGSIM12 0x1004e6a0
 int __cdecl Sim_1005bb7a(uint8_t *obj, uint8_t *design)
 {
     const uint8_t *base = design + 0x8c;
@@ -55,6 +56,9 @@ int __cdecl Sim_1005bb7a(uint8_t *obj, uint8_t *design)
     U32(obj, 0x60b) = 0xb5;
     U32(obj, 0x613) = U32(base, 0x2c);
     U32(obj, 0xc15) = 0;
+#ifndef W14PW_MUTATE /* the checker's negative check only: 1.0, the slot left as it was */
+    S32(obj, 0x5fb) = -1;       /* 1.2 (0x1004e6a0): no selected weapon slot yet (the mount 0x10038ad5 takes the first) */
+#endif
     for (i = 0; i < 0x28; i++)
         U8(obj, 0x498 + i) = 0;
     slot = BYTES(U32(obj, 0x84));

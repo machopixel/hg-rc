@@ -80,6 +80,17 @@ def _noflip(uc, k, raw, eax):       # the driver-less loop's last call: ends it 
 
 
 EFFECT[0x10086b99] = _frame
+
+
+def _plugin_name(uc, k, raw, eax):
+    """round 33: the plugin-name test that sets the 3DFX flag. 1.2 (and the C) run the 3D start-up block in that
+    mode even with 3D off, 1.0 does not: this 1.0 comparison answers "no match" when 3D is off"""
+    if raw[1] == 0x1014b210 and ur32(uc, 0x1017b940) == 0:
+        return 0
+    return None
+
+
+EFFECT[0x100fc970] = _plugin_name
 EFFECT[0x100d33ec] = _noflip
 
 
@@ -169,12 +180,38 @@ def g(ctx):
     base = frame(6)
     wb(ctx, base - 0x88, rb(ctx, 0x50) if NEG else bytes(0x50))
     net = r.choice([0, newbuf(ctx, 0x13c)])
-    return [r.getrandbits(32), r.getrandbits(32), ctx.buf(0x20, 'text'), net, r.getrandbits(32), r.getrandbits(32)]
+    # the 5th argument: 1.0 ignores it; from round 33 the C reads 1.2's "no CD" bit 2 there (DECISIONS.md), so the
+    # 1.0 comparison keeps to values without it (the CD needed, 1.0's path)
+    return [r.getrandbits(32), r.getrandbits(32), ctx.buf(0x20, 'text'), net,
+            r.choice([1, 0, r.getrandbits(32) & ~2]), r.getrandbits(32)]
 
 
-SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, trials=300 if NEG else 4000)]
+def post_c(m):
+    """round 33: 1.0's "3dfx" flag [0x1017d0ac] is the C's g_w33Voodoo (1.2's [0x1014b954]): put it where 1.0 has it"""
+    v = bytes(m.uc.mem_read(m.syms['g_w33Voodoo'], 4))
+    if v != bytes(4):
+        m.uc.mem_write(0x1017d0ac, v)
+        m.dirty.add(0x1017d0ac >> 12)                 # a host write after the run: mark its page for the comparison
+
+
+# round 33: 1.2 also sets the 3DFX flag for a "POWERVR" plugin path (a second name test, read from 1.2's SimMain);
+# this 1.0 comparison builds the C without it (W21V_MUTATE), so both make the same calls
+CFLAGS = list(CFLAGS) + ['-DW21V_MUTATE']
+SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, trials=300 if NEG else 4000,
+              post_c=post_c,
+              ignore_syms={'g_w33CdNeeded': 4,      # 1.2's CD flag (round 33), no 1.0 counterpart
+                           'g_w33Voodoo': 4})]      # compared at 1.0's [0x1017d0ac] (post_c)
 
 # round 31: the texture name table is ours now (w31_map.py: the mapping step around the C run)
 exec(open('tools/verify/w31_map.py').read())
 SOURCES = SOURCES + [x for x in W31_SOURCES + ['../tools/verify/plat_stub.c'] if x not in SOURCES]
 SPECS = w31_wrap(SPECS, None)
+_w31_post = SPECS[0]['post_c']
+
+
+def _post_both(m):
+    _w31_post(m)
+    post_c(m)
+
+
+SPECS[0]['post_c'] = _post_both

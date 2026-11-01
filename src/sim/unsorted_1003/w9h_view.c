@@ -167,7 +167,8 @@ uint32_t __cdecl Sim_10032a10(uint8_t *obj, uint32_t b, uint32_t colour, uint32_
         shade = 0xf;
     } else {
         SIM_FN(W9hShadeFn, 0x10058c5e)(obj, b, list, lo);
-        shade = Render_Ftol((double)S32(list[0], 0x3c) / 31.0 * 7.0 + 0.5);
+        /* 1.2 (0x10026610): the light is +0x3c's low byte, its other bytes the colour (round 33) */
+        shade = Render_Ftol((double)(S32(list[0], 0x3c) & 0xff) / 31.0 * 7.0 + 0.5);
     }
     if (G32(0x1014cb1c) != 3 && ((flags & 0x100) != 0 || (flags & 0xf0) == 0x50)) {
         level = W9H_LEVEL(obj);
@@ -177,7 +178,7 @@ uint32_t __cdecl Sim_10032a10(uint8_t *obj, uint32_t b, uint32_t colour, uint32_
                 for (i = 0; i < GS32(0x101c9ea8); i++) {
                     uint32_t v = list[i];
 
-                    S32(v, 0x3c) += Render_Ftol((double)level * ((double)(int32_t)(15u - U32(v, 0x3c)) / 15.0));
+                    S32(v, 0x3c) += Render_Ftol((double)level * ((double)(int32_t)(15u - (U32(v, 0x3c) & 0xff)) / 15.0));
                 }
             } else {
                 t = Render_Ftol((double)(16 - level) / 16.0);
@@ -185,7 +186,14 @@ uint32_t __cdecl Sim_10032a10(uint8_t *obj, uint32_t b, uint32_t colour, uint32_
                 for (i = 0; i < GS32(0x101c9ea8); i++) {
                     uint32_t v = list[i];
 
-                    S32(v, 0x3c) = Render_Ftol((double)t * (double)S32(v, 0x3c)) & 0xf;
+                    /* 1.2 keeps +0x3c & 0xffffff: the old light byte stays ORed in and the blue byte is lost */
+#ifdef W9HV_MUTATE /* the checker's negative check only: the colour bytes kept as 0xffffff00 */
+                    S32(v, 0x3c) = (Render_Ftol((double)t * (double)(S32(v, 0x3c) & 0xff)) & 0xf) |
+                                   (S32(v, 0x3c) & (int32_t)0xffffff00);
+#else
+                    S32(v, 0x3c) = (Render_Ftol((double)t * (double)(S32(v, 0x3c) & 0xff)) & 0xf) |
+                                   (S32(v, 0x3c) & 0xffffff);
+#endif
                 }
             }
         }

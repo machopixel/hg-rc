@@ -1,3 +1,4 @@
+#include "../unsorted_1004/w3p.h"
 #include "w23.h"
 #include "../util/access.h"
 #include "../unsorted_100c/w9g.h"
@@ -79,7 +80,7 @@ void __cdecl Sim_100ce586(void *panel)
     pos[1] = S32(panel, 0xb8);
     G32(0x10151d9c) = U32(panel, 0xd0) + G32(0x1017e5e4) + 0x42;
     G32(0x10151db4) = U32(panel, 0xd0) + G32(0x1017e5e4) + 0x42;
-    (void)*(volatile u32a *)(BYTES(PTRTAB(G32(0x1017b8c8))) + 0x28);   /* the player's gear block, read and unused */
+    /* 1.2 (0x100b26e6) no longer reads the player's gear block here (1.0 read it unused) */
     W23H_PIECE(0, G32(0x1017e5e4), G32(0x109e8494), (uint32_t)(uintptr_t)GBYTES(0x109e878c));
     if (G32(0x1017e5ec) != 0) {
         GS32(0x1017e5e4) += (int32_t)(G32(0x1017e5e8) * G32(0x1015dc80)) >> 16;     /* imul, sar */
@@ -106,7 +107,7 @@ void __cdecl Sim_100ce586(void *panel)
             if ((S16(unit, 0x1c) & 0x4800) != 0)
                 continue;
             W23H_SPRINTF(line, SIM_PTR(const char, 0x10151e20), unit + 0x124,
-                         (int)*SIM_PTR(int16_t, 0x1015d0f0 + (uint32_t)i * 2u));
+                         (int)g_w34Rating[i]);
             pos[1] += height;
             *GBYTES(0x109b992e) = 0xc;
             W23h_Text(U32(panel, 0xec), pos[0], pos[1], font, line);
@@ -188,7 +189,7 @@ void __cdecl Sim_100cde94(void *panel)
             if ((S16(unit, 0x1c) & 0x4800) != 0)
                 continue;
             W23H_SPRINTF(line, SIM_PTR(const char, 0x10151e18), unit + 0x124,
-                         (int)*SIM_PTR(int16_t, 0x1015d0f0 + (uint32_t)i * 2u));
+                         (int)g_w34Rating[i]);
             pos[1] += height;
             *GBYTES(0x109b992e) = 0xc;
             W23h_Text(U32(panel, 0xec), pos[0], pos[1], font, line);

@@ -12,10 +12,12 @@ from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EAX, UC_X86_REG_EIP
 
 SOURCES = ['sim/fx/w32_partspec.c', 'sim/render/w31_tex.c', '../tools/verify/plat_stub.c',
            'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2f_records.c', 'sim/unsorted_100f/w2e_string.c',
-           'sim/unsorted_1000/w2h_reset.c']
+           'sim/unsorted_1000/w2h_reset.c', 'sim/render/w33_dx12.c']     # (round 33: g_w33Voodoo)
 CFLAGS = []
 if os.environ.get('W32_NEG'):
     CFLAGS.append('-DW32C_MUTATE')
+if os.environ.get('W32PV_NEG'):            # round 33: the 3DFX mode not tested in the reset
+    CFLAGS.append('-DW32PV_MUTATE')
 
 BASE12 = 0x20000000
 
@@ -203,6 +205,7 @@ def g_init(ctx):
     r, uc, m = ctx.rng, ctx.m.uc, ctx.m
     w32(uc, m.syms['g_w31Tex'], 1)
     w32(uc, 0x1017b940, r.choice([0, 1, 1, 1]))
+    w32(uc, m.syms['g_w33Voodoo'], r.choice([0, 0, 1]))
     tab = bytearray(uc.mem_read(m.syms['g_w32_1011e700'], 22 * 0x1e))
     for i in range(22):
         o = i * 0x1e
@@ -235,7 +238,7 @@ def to12(m):
     uc.mem_write(TAB12, bytes(tab))
     uc.mem_write(REC12, bytes(uc.mem_read(REC10, 0x200 * 14)))
     w32(uc, A12(0x1014a5e8), r32(uc, 0x1017b940))
-    w32(uc, A12(0x1014b954), 0)
+    w32(uc, A12(0x1014b954), r32(uc, m.syms['g_w33Voodoo']))    # round 33: the C's 3DFX flag
 
 
 def from12(m):

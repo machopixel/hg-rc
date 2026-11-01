@@ -76,6 +76,7 @@ int Hooks_SdlPlatform(void);
 int Hooks_ConfigWord(const char *word);
 /* Whether the Vulkan renderer is in use: HG_RENDERER=hgvk, or (without HG_RENDERER) the first word of hgrc.cfg. */
 int Hooks_VulkanRenderer(void);
+int Hooks_Renderer12(void);
 void HooksAudio_OnSimLoaded(HMODULE sim);
 void HooksAudio_OnSimExit(void);
 
@@ -87,6 +88,9 @@ void HooksUninit_OnSimExit(void);
 void HooksDDraw_OnShellLoaded(HMODULE shell);
 int Hooks_DisplayWanted(void);
 void HooksDDraw_OnShellExit(void);
+
+/* The movies from the game folder's video\ when no disc holds them (hooks_cd.c). */
+void HooksCd_OnShellLoaded(HMODULE shell);
 LPARAM HooksDDraw_TranslateMouse(UINT msg, LPARAM lParam);
 
 /* Removed display drivers (hooks_dispprobe.c): the sim's DirectDraw / DISPDIB drivers answer "not available". */

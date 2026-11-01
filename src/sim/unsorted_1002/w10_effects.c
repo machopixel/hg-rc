@@ -40,17 +40,52 @@ static inline float W10_2E_Bits(uint32_t u)
     return v.f;
 }
 
+/*
+ * 1.2 (0x1001b3a1): the near-blast force feedback moved from before the switch into each blast kind's 0x400 branch:
+ * with the force-feedback library ([0x1015ef3c]) and the impact within 2000 of the own unit's object (x / y / z from
+ * its +0x58 / +0x5c / +0x60; 1.0 took all three from +0x58, under 3000), request kind 0xd. 1.2 computes the direction
+ * (Sim_100cbc6b) and then sends the fixed angle 90 (0x5a), strength 50. Bug fix (Diego, 2026-10-31: "Fix: send the
+ * real direction"): the computed direction is sent; W10E_FIX_DIR 0 builds 1.2's 90 (the checker's comparison).
+ */
+#ifndef W10E_FIX_DIR
+#define W10E_FIX_DIR 1
+#endif
+static void W10_2E_Near(float x, float y, float z)
+{
+    uint8_t *part;
+    float a, b, c, d;
+
+    if (G32(0x1015ef3c) == 0)
+        return;
+    part = BYTES(U32(BYTES(U32(PTRTAB(G32(0x1017b8c8)), 0x28)), 0));
+#ifdef W10E_MUTATE /* the checker's negative check only: 1.0's 3000 */
+    if (!(Sim_10084a94((float)((double)x - W10_2E_Bits(U32(part, 0x58))), (float)((double)y - W10_2E_Bits(U32(part, 0x5c))),
+                       (float)((double)z - W10_2E_Bits(U32(part, 0x60)))) > 3000.0))
+#else
+    if (!(Sim_10084a94((float)((double)x - W10_2E_Bits(U32(part, 0x58))), (float)((double)y - W10_2E_Bits(U32(part, 0x5c))),
+                       (float)((double)z - W10_2E_Bits(U32(part, 0x60)))) > 2000.0))
+#endif
+    {
+        Sim_100cbc6b((float)((double)x - W10_2E_Bits(U32(part, 0x58))), (float)((double)y - W10_2E_Bits(U32(part, 0x5c))),
+                     (float)((double)z - W10_2E_Bits(U32(part, 0x60))), &a, &b, &c, &d);
+#if W10E_FIX_DIR
+        Sim_100382fb(0xd, Render_Ftol((double)a), 0x32, 0);
+#else
+        Sim_100382fb(0xd, 0x5a, 0x32, 0);
+#endif
+    }
+}
+
 // FUNCTION: HGSIM 0x100246b3
 void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, float y, float z, uint32_t tx, uint32_t ty,
                           uint32_t tz, uint32_t ra, uint32_t rb, uint32_t rc)
 {
     uint32_t light[14];       /* the original's 0x38-byte light record at ebp-0xc4 (Sim_100585e1 reads +0..+0xc, +0x2c, +0x34) */
     uint32_t shade[5];        /* the original's 0x14-byte record at ebp-0x80 (Sim_100ac620 reads all of it) */
-    float a, b, c, d, dxc, dyc, dzc, d1, d2, cx, cz;
-    uint32_t hi, quiet = 0, fx, e = 0, cam, part;
+    float dxc, dyc, dzc, d1, d2, cx, cz;
+    uint32_t hi, quiet = 0, fx, e = 0, cam;
     int lit = 0, burst = 0, count, i, near, far;
     int32_t freeslot, burst_kind = -1, li, s, size;
-    uint8_t *me;
 
     if (code < 0)
         return;
@@ -60,17 +95,6 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
         return;
     if ((hi & 0x4000) != 0)
         quiet = 1;
-    if (G32(0x1015ef3c) != 0) {
-        /* the own unit feels a near blast (all three offsets from its +0x58, as the original) */
-        me = BYTES(U32(PTRTAB(G32(0x1017b8c8)), 0x28));
-        part = U32(me, 0);
-        if (!(Sim_10084a94((float)((double)x - W10_2E_Bits(U32(part, 0x58))), (float)((double)y - W10_2E_Bits(U32(part, 0x58))),
-                           (float)((double)z - W10_2E_Bits(U32(part, 0x58)))) >= (double)W10_2E_F(0x10111234))) {
-            Sim_100cbc6b((float)((double)x - W10_2E_Bits(U32(part, 0x58))), (float)((double)y - W10_2E_Bits(U32(part, 0x5c))),
-                         (float)((double)z - W10_2E_Bits(U32(part, 0x60))), &a, &b, &c, &d);
-            Sim_10045f3b(0, (uint32_t)Render_Ftol((double)a), 0x32);
-        }
-    }
     switch (code) {
     case 1:
     case 2:
@@ -90,6 +114,7 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
             y = (float)((double)y - W10_2E_F(0x10111260));
             code = 0x2f;
         } else if ((hi & 0x400) != 0) {
+            W10_2E_Near(x, y, z);
             code = 0x34;
             lit = 1;
         }
@@ -99,6 +124,7 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
             y = (float)((double)y - W10_2E_F(0x10111260));
             code = 0x2a;
         } else if ((hi & 0x400) != 0) {
+            W10_2E_Near(x, y, z);
             code = 0x2a;
         }
         lit = 1;
@@ -112,6 +138,7 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
             y = (float)((double)y - W10_2E_F(0x10111260));
             code = 0x2a;
         } else if ((hi & 0x400) != 0) {
+            W10_2E_Near(x, y, z);
             code = 0x2c;
         }
         lit = 1;
@@ -122,6 +149,7 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
             y = (float)((double)y - W10_2E_F(0x10111260));
             code = 0x32;
         } else if ((hi & 0x400) != 0) {
+            W10_2E_Near(x, y, z);
             code = 0x32;
             lit = 1;
         }
@@ -134,6 +162,7 @@ void __cdecl Sim_100246b3(uint32_t owner, uint8_t *node, int32_t code, float x, 
             y = (float)((double)y - W10_2E_F(0x10111260));
             code = 0x2a;
         } else if ((hi & 0x400) != 0) {
+            W10_2E_Near(x, y, z);
             code = 0x2a;
             lit = 1;
         }

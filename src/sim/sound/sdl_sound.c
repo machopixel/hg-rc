@@ -9,6 +9,9 @@
 #include "../unsorted_1000/w2k.h"
 #include "../unsorted_100b/w6g.h"
 #include "../unsorted_100d/w2j.h"
+#ifdef HG_MUSIC_FILES
+#include "../../platform/music.h"
+#endif
 
 #define SND() BYTES(G32(0x1015d0a4))
 #define SND_VOICE(i) ((AudioVoice *)(uintptr_t)U32(SND(), 0x94 + (uint32_t)(i) * 8))
@@ -315,6 +318,9 @@ int __cdecl SndSdl_1003a548(uint32_t *device)
 {
     if (*device == 0)
         return 1;
+#ifdef HG_MUSIC_FILES
+    Music_Close();          /* the music stream before its output (1.2 frees its music stream here too) */
+#endif
     Audio_Close();          /* was the DirectSound object's Release */
     *device = 0;
     /* CoUninitialize went with CoInitialize (sound start) */

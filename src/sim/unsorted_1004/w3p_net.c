@@ -19,7 +19,17 @@
 #define SESSION G32(0x1015ecd4)
 #define WORD_ACAC (*SIM_PTR(u16a, 0x1013acac))
 #define WORD_ECD8 (*SIM_PTR(u16a, 0x1015ecd8))
-#define RATING_ROW(i) ((uint32_t)(i) << 4)
+/* 1.2's kill table (0x1028cc2c): 10 x 10 words, a row of 0x14 per killer, a column per victim (round 33) */
+#define KILLS(row, col) (*(u16a *)(g_w34Kills + (uint32_t)(row) * 0x14u + (uint32_t)(col) * 2u))
+
+/* Round 33, 1.2's 10-player rating: the kill table (1.2 0x1028cc2c; 1.0's 8 x 8 at 0x1016552c, row 0x10), the
+   ratings (1.2 0x107caa60; 1.0's 8 at 0x1015d0f0), the receive guard (1.2 0x101314c0, set by the message loop from
+   the game-over flag) and the buffer of 1.2's new message "AK" (1.2's pointer 0x101314e8, one more 0x100 block) */
+uint8_t g_w34Kills[10 * 0x14];
+int16_t g_w34Rating[10];
+uint32_t g_w34NetOver;
+uint8_t g_w34AkBuf[0x100];
+static const char kW34Ak[4] = "AK";
 
 typedef int(__cdecl *CountFn)(uint32_t session);
 typedef int(__cdecl *Fn3)(uint32_t session, uint32_t from, int value);
@@ -186,60 +196,83 @@ int __cdecl Sim_100412cb(int kind, int sub, uint32_t value)
 }
 
 // FUNCTION: HGSIM 0x100413c7
+// FUNCTION: HGSIM12 0x10035088
 void __cdecl Sim_100413c7(void)
 {
     int i;
 
     Header(0x1015ec98, 0x1013adf0);
-    for (i = 0; i < 8; i++) {
-        if (PTRTAB(i) == 0)
-            break;
-        BUF(0x1015ec98)[2 + i] = GBYTES(0x1016552c)[RATING_ROW(i) + SELF * 2];
-    }
-    Net_DpSend_1007e920(BUF(0x1015ec98), 0xa, 1);
+    for (i = 0; i < 10 && PTRTAB(i) != 0; i++)
+        BUF(0x1015ec98)[2 + i] = (uint8_t)KILLS(i, SELF);
+    Net_DpSend_1007e920(BUF(0x1015ec98), 0xc, 1);
     Sim_10041444();
 }
 
 // FUNCTION: HGSIM 0x10041444
+// FUNCTION: HGSIM12 0x10035105
 void __cdecl Sim_10041444(void)
 {
-    int before = (int16_t)SIM_PTR(u16a, 0x1015d0f0)[SELF];
+    int16_t before = g_w34Rating[SELF];
     int i, j;
 
-    for (i = 0; i < 8; i++)
-        SIM_PTR(u16a, 0x1015d0f0)[i] = 0;
-    for (i = 0; i < 8; i++) {
-        if (PTRTAB(i) == 0)
-            break;
-        for (j = 0; j < 8; j++) {
-            uint16_t rating;
-
-            if (PTRTAB(j) == 0)
-                break;
-            rating = *(u16a *)(GBYTES(0x1016552c) + RATING_ROW(j) + (uint32_t)i * 2);
+    for (i = 0; i < 10; i++)
+        g_w34Rating[i] = 0;
+    for (i = 0; i < 10 && PTRTAB(i) != 0; i++) {
+        for (j = 0; j < 10 && PTRTAB(j) != 0; j++) {
             if (U32(PTRTAB(i), 8) == U32(PTRTAB(j), 8))
-                SIM_PTR(u16a, 0x1015d0f0)[j] = (uint16_t)(SIM_PTR(u16a, 0x1015d0f0)[j] - rating);
+                g_w34Rating[j] = (int16_t)(g_w34Rating[j] - (int16_t)KILLS(j, i));
             else
-                SIM_PTR(u16a, 0x1015d0f0)[j] = (uint16_t)(SIM_PTR(u16a, 0x1015d0f0)[j] + rating);
+                g_w34Rating[j] = (int16_t)(g_w34Rating[j] + (int16_t)KILLS(j, i));
         }
     }
-    if (before != (int16_t)SIM_PTR(u16a, 0x1015d0f0)[SELF]) {
-        int now = (int16_t)SIM_PTR(u16a, 0x1015d0f0)[SELF];
+    if (before != g_w34Rating[SELF]) {
+        int now = g_w34Rating[SELF];
 
         (*SIM_PTR(Fn3, 0x1015eb20))(SESSION, ((uint32_t)now & 0xffff0000u) | WORD_ACAC, now);
     }
 }
 
 // FUNCTION: HGSIM 0x1004158c
+// FUNCTION: HGSIM12 0x1003524d
 void __cdecl Sim_1004158c(const uint8_t *msg, int column)
 {
     int i;
 
-    for (i = 0; i < 8; i++) {
-        if (PTRTAB(i) == 0)
-            break;
-        *(u16a *)(GBYTES(0x1016552c) + RATING_ROW(i) + (uint32_t)column * 2) = msg[2 + i];
-    }
+    if (g_w34NetOver != 0)
+        return;
+    for (i = 0; i < 10 && PTRTAB(i) != 0; i++)
+        KILLS(i, column) = msg[2 + i];
+    Sim_10041444();
+    Sim_1007b02d();
+}
+
+/* 1.2's new message "AK": the kills of the unit `unit` (a kind-3 unit of the local player) by everyone */
+// FUNCTION: HGSIM12 0x100352b7
+void __cdecl Sim12_100352b7(uint8_t killer, int unit)
+{
+    int i;
+
+    Mem_Move(g_w34AkBuf, kW34Ak, 2);
+    g_w34AkBuf[2] = killer;
+    g_w34AkBuf[3] = (uint8_t)unit;
+    for (i = 0; i < 10 && PTRTAB(i) != 0; i++)
+        g_w34AkBuf[4 + i] = (uint8_t)KILLS(i, unit);
+    Net_DpSend_1007e920(g_w34AkBuf, 0xe, 1);
+    Sim_10041444();
+}
+
+/* its receive: the column of the unit named in the message */
+// FUNCTION: HGSIM12 0x10035348
+void __cdecl Sim12_10035348(const uint8_t *msg)
+{
+    uint8_t unit;
+    int i;
+
+    if (g_w34NetOver != 0)
+        return;
+    unit = msg[3];
+    for (i = 0; i < 10 && PTRTAB(i) != 0; i++)
+        KILLS(i, unit) = msg[4 + i];
     Sim_10041444();
     Sim_1007b02d();
 }

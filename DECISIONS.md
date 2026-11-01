@@ -1470,7 +1470,7 @@ Round E (explosions; in progress):
 - **Shared code** (src/sim/fx/w32_family.c): 1.2 repeats its spawn prologue, frame advance, particle size and corner
   template in every family; here each is one function (`W32_NewSystem`, `W32_ParticleFlags`, `W32_ParticleSize`,
   `W32_SetTemplate`).
-- **Bug fix (1.2), pending Diego's review:** every 1.2 spawn marks 0x20 particles' frames (dword +0x30 + j * 0x32 =
+- **Reproduced (1.2; was a bug fix until round 33, Diego: "do as 1.2 does"):** every 1.2 spawn marks 0x20 particles' frames (dword +0x30 + j * 0x32 =
   -1) in a record that holds 16 particles of 0x32 bytes (record 0x406 bytes). j = 16..19 land in the spawn's own
   record (+0x350, +0x382, +0x3b4, +0x3e6: the velocity, the corner template, two corner positions), which the spawn
   or the next draw rewrites. j = 20..31 land in the NEXT pool record at +0x12 + k * 0x32, k = 0..11: the x position
@@ -1581,3 +1581,481 @@ we will fix it from there if is not good enough"):
 - **Counters removed** after that run (w10_shot.c, w32_explode.c, w32_family.c, w32_draw.c, w32.h, hooks_conv.c, and
   spec_w32_draw's ignore); the code is back to what the checker passed. Rebuilt (option 4).
 
+Round 32, network part-destroyed branch (Diego: "do as 1.2 does, we can rework network later, but remember the
+change"):
+- **Ported (1.2 mode, `g_w31Tex`):** 1.2's part-destroyed function 0x1005ab68 differs from ours (Sim_1006ad98) only in
+  one branch at its top: a kind-4 unit, a network game ([0x1015ec58]), part 2 and the local player as the killer
+  ([0x1017b8c8]) give 6 shockwaves at node +0x4c0, 10 at node +0x4c4 and the kill tally, and the part is not marked.
+  It calls our tally (1.0's) until Diego decides on 1.2's tally (network only; recorded in AFTER_DLL.md, network).
+  1.0 mode is unchanged.
+- **Checked:** spec_w10_1006ad98_v12.py against 1.2's 0x1005ab68, 5000 trials exact (the unit's node pointer copied
+  from our +0x48 to 1.2's +0x44 for its run; the callees paired by hand, the aligner mispairs them); planted bug
+  W10N_MUTATE (one shockwave fewer) caught in 789 trials. The 1.0 spec still passes with the switch off (5000).
+
+Round 33 (Diego: "I want to migrate the whole game to 1.2 ... I WANT MY GAME TO BE LIKE 1.2"; from now on every 1.2
+change is the game's behaviour, for every renderer, with no 1.0 reference kept):
+- **The 0x20 particle marks, as 1.2 (round 32's fix undone):** W32_NewSystem marks 0x20 particles as every 1.2 spawn
+  does, so a new effect wipes the previous effect's particles out, as in 1.2. For the pool's last record (slot 999,
+  the first one handed out whenever the pool is empty) 1.2's marks run past its pool (1.2 0x10191060, 1000 x 0x406,
+  ending at 0x1028c7d0) into the data after it: 0xffffffff at 1.2 0x1028c7e2 + k * 0x32, k = 0..11. Our pool keeps
+  1.2's records in 1.0's larger buffer (0x10217c20), so a mark past its 1000th record is sent to our copy of the
+  data 1.2 has there (`W32_Mark`): the same variables follow the pool in both versions (our 1.0 pool also ends right
+  before them, at 0x1036f050), paired from the relocations of identical functions: 1.2 0x1028c7e0..0x1028c95f = ours
+  + 0xe2900, 1.2 0x1028c960..0x1028caab = ours + 0xe2940. What the twelve marks hit: k = 0..4 the saved camera
+  (0x1036f0e0, 0x38 dwords; Sim_1008fb20 saves it when a secondary view starts drawing, Sim_1008fd5a puts it back),
+  k = 5 a gap after 0x1036f1d8, k = 6..7 the saved 0x1014cae8 (0x1036f1e0, 0x1a dwords, same pair), k = 8 a gap no
+  1.2 code refers to, k = 9..11 dwords 17, 29/30 and 42 of the cell list 0x1036f2a0 (its readers stop at its 0 end,
+  dword 4 at the latest). The saved copies are written again at every view start, so a mark only shows if an effect
+  spawns while a secondary view draws (none found): exactly what 1.2 does in any case. The checker no longer builds
+  with W32_LOOP32 (the C now marks 0x20 itself); the spawn specs re-run (beam and explosion spawns, all exact).
+- **Option 3 runs 1.2 (Direct3D on 1.2's dx5draw.dll):** Project\plugin\DX5DRAW.DLL is now 1.2's (GameRip_12,
+  82432 bytes; same 16 exports, same plugin id 1 and /D3D contract as 1.0's). 1.2's game (Patch folder, .TEX
+  textures, particles and the other 1.2 ports, `g_w8yPatch` / `g_w31Tex`) is on with Vulkan and with Direct3D
+  (`Hooks_Renderer12`: hgrc.cfg / HG_RENDERER "hgvk" or "d3d"). 1.2's renderers number render modes and states as
+  1.2 does; our sim sends 1.0's numbering (which HGVK keeps), so the plugin load (Sim_1003650d) wraps the Direct3D
+  plugin's Render, RenderNoClip and SetState slots (src/sim/render/w33_dx12.c): modes 5..18 become 7..20, state
+  codes 1.0's minus 1, our painter state (round 32, Vulkan only) is dropped (1.2's dx5draw returns 1 and does nothing
+  for codes it does not know; it has no depth buffer and draws in the game's order anyway). The full-resolution HUD
+  stays with HGVK. Sim_1003650d's spec still passes (8000).
+- **Option H (noconv)** runs the untouched 1.0 DLL, now on 1.2's renderer: not a valid reference any more. The
+  reference becomes the untouched 1.2 game, run from its own copy (to be set up).
+- **1.2's 10-player kill table and rating (network only; single player is unchanged):** the kill tally
+  (Score_RecordKill = 1.2 0x10059e9d) is 1.2's: it no longer marks 0x1015d1b0[unit] in a network game, counts kills
+  by players 0..9 (1.0: 0..7) in 1.2's 10 x 10 table (rows of 0x14 per killer, a column per victim; new C array
+  g_w34Kills = 1.2 0x1028cc2c, 1.0's 8 x 8 0x1016552c is no longer used; 1.2 grew it in place and moved what
+  follows by 0x48, so it gets its own array here and the winner pick keeps 0x101655ac), and counts the kills of the
+  local player's kind-3 units, sent with 1.2's new message "AK" (Sim12_100352b7, 0xe bytes; receive
+  Sim12_10035348). The "KI" send (Sim_100413c7 = 1.2 0x10035088) sends 10 entries (0xc bytes), the rating sum
+  (Sim_10041444 = 0x10035105) covers 10 players into g_w34Rating (1.2 0x107caa60; 1.0's 8 at 0x1015d0f0, which the
+  two scoreboards Sim_100ce586 / Sim_100cde94 now read from g_w34Rating), the "KI" receive (Sim_1004158c =
+  0x1003524d) and the "AK" receive ignore messages once the game is over (1.2's guard 0x101314c0 = g_w34NetOver,
+  set by the message loop from the game-over flag 0x1015f1fc before each message, as 1.2's loop sets it), and the
+  winner pick (Sim_1007b02d = 0x10067f2d) reads the new table. The message loop (Net_ProcessMessages) takes "KI"
+  with 0xc bytes and the new "AK" with 0xe; the rest of 1.2's reworked loop (its other new messages, 10-player
+  loops) is for the network rewrite (AFTER_DLL.md, network).
+- **Checked:** spec_w34_rating.py against 1.2: the tally 3000 (planted bug W34_MUTATE, the kind-3 kill in the
+  wrong column, caught 174), the "KI" send / receive and "AK" send / receive 1500 each, the rating sum and the
+  winner pick 2000 each; all exact (1.2's player records lack our dword +0x18 and are turned into its layout for
+  its run). The scoreboards' 1.0 specs pass with the ratings in g_w34Rating (4000 each). The message loop's three
+  changed lines are not checked against 1.2 (its 1.2 version as a whole is not ported).
+
+Round 33, particles black with Vulkan (Diego: "the bullets and smoke in 1.2 are white in direct3d, in vulkan they
+are black"; 1.2's dx5draw is the reference):
+- **Cause:** the particle squares reuse their four corners (1.2's template, rec +0x36a), and 1.2's textured submitter
+  (0x100012c5 = our Render_SubmitVerts_10006744, identical) shifts each corner's light in place at every draw,
+  light = light << 3 | 7: 0xff, 0x7ff, ..., 0x7fffff, .., 0xffffffff after a few frames. 1.2's dx5draw (0x10004360)
+  builds the vertex colour as colour byte times light, unsigned and wrapping, >> 8, packed by shifts and ORs with no
+  clamp: these lights give white. HGVK multiplied as signed ints and clamped negatives to 0: black.
+- **Fix (HGVK, exactly dx5draw's arithmetic):** PackColour now computes the packed colour as dx5draw does (unsigned
+  wrap, overflow ORed into the next byte). Also from dx5draw: it never sets the texture blend, so D3D's default
+  MODULATE applies, where a texture with alpha replaces the vertex alpha: HGVK now ignores the vertex alpha for
+  textures with alpha (1.2's .TEX effect textures) and keeps it otherwise. The texture conversion (alpha 15 - top
+  nibble, RGB from the palette's xRGB) already matched (checked on FXSMOK04, FXBOOM00, FXDUST02); HGVK keeps 8-bit
+  colour where dx5draw had 4 bits.
+
+Round 33, the untouched 1.2 reference (dev.cmd option H, replacing the noconv 1.0 run):
+- **What it is:** C:\Coding\HeavyGear\Ref12, a copy of GameRip_12 (1.2's own HGSIM, HGSHELL, plugins and data; its
+  hg.exe kept as hg12-original.exe), started by our launcher (HG.EXE) with "d3d noconv" on 1.2's dx5draw.dll, mission
+  M01_SCN1 straight away. 1.2's own hg.exe asks for the Gameplay CD and there is no disc image.
+- **No CD, 1.2's own way:** 1.2's hg.exe passes (flags & 2) as the last argument but one of SimMain and ShellMain
+  (1.0 passed 1); flags is a build option stored in its hg.exe right after the bytes 34 12 98 40 f9 37 88 e9,
+  shipped as 0. Both 1.2 DLLs read bit 2 as "no CD": without it 1.2's sim keeps [0x1014a590] = 1 and runs its CD
+  search (1.2 0x10087460, which really looks for a CD-ROM drive holding \video\B51MOVIE.AVI; 1.0's was broken and
+  always answered "found") and stops with SYSERR_CDNOTFOUND, and 1.2's shell ([0x10259598]) searches the CD drives.
+  Our launcher now passes bit 2 (HG_LAUNCH_FLAGS, src/launcher/main.c), 1.2's own no-CD setting, to both, and our
+  SimMain reads the argument as 1.2's does (g_w33CdNeeded = 1.2 [0x1014a590]; 1 or no bit 2: the CD search, else
+  none). The reference runs untouched 1.2 code only (0 hooks with noconv). SimMain's 1.0 spec passes with that
+  argument kept to values without bit 2 (4000; the no-CD path is 1.2's six lines, not checked against 1.2 since 1.2's
+  SimMain as a whole is not ported). Not ported (Diego's choice, 2026-10-31): 1.2's crash handler around its WinMain,
+  which uploads crash reports to Activision's servers through ANET2's dpReportCrash; our local crash.log stays.
+- **Mission files:** a direct mission start needs the files the shell writes when it prepares a mission (USERSTAR.BWD,
+  USERGEAR.GDF, HGPRM.CFG, HGMSN.CFG, HGCAR.CFG, the random-mission BWD / BRF / RMG files, ...): copied from Project
+  (not CHARINFO.HG1 or CURRENT.CCT; Ref12 keeps 1.2's own). Checked: the untouched 1.2 game reaches mission 1
+  (screenshot, Direct3D 640x480).
+
+Round 33, 1.2's shell and DLLs in Project (whole game 1.2):
+- **Compatibility (read-only analysis):** 1.2's HGSHELL.DLL exports the same ShellMain / ShellWindowProc; its imports
+  differ only in three MSVCRT data symbols (same MSVCRT.DLL) and GetPrivateProfileStringA. Our shell hooks are all
+  import patches by name (the SDL3 DirectDraw stand-in: DirectDrawCreate, DirectDrawEnumerateA, ScreenToClient,
+  ClientToScreen, GetWindowRect), none by address. hgprm.cfg is read the same way by 1.2's hg.exe (0x344 bytes, the
+  sim command line at +0x240). The save CHARINFO.HG1 has the same format in both shells (header, zlib stream,
+  0x370-byte character records, the same field copies), so Diego's save is read as before. ShellMain's last argument
+  is 1.2's "no CD" switch (above); the launcher passes bit 2. 1.2's other changed DLLs keep every 1.0 export
+  (ANET2 adds many, KEYBOARD and FFORCE are unchanged in names, DKUPDDLL drops three nothing calls); 1.2's FFORCE
+  needs the new IFORCE2.DLL. No hook of ours targets any of them by address.
+- **Installed in Project** (1.0 files kept in Project\backup-1.0-20261031): HGSHELL.DLL, ANET2.DLL, anet\*.dll,
+  DKUPDDLL.DLL, FFORCE.DLL, KEYBOARD.DLL, the plugins 3dfxgear / i76draw / renddraw, ANET.INF, update.txt,
+  splash\SPLASH.EXE, and 1.2's new files IFORCE2.dll, HG.ifr, splash\SPLASH.DAT, M51DUES1.BWD, M51DUES2.BWD,
+  M99MSCN1.BWD. Not touched: CHARINFO.HG1, CURRENT.CCT, HGSND.CFG, DLLFILE.INI, HG.EXE (ours), HGSIM.DLL (1.0's,
+  which our converted code hooks).
+- **Launch check:** the menus start with 1.2's shell (log: the shell loads, 0 hooks, 5 DirectDraw imports replaced,
+  the intro screens in 16-bit then the 8-bit menu mode, same sequence as 1.0's shell). The menu picture itself was
+  not confirmed: the screen capture showed Diego's desktop, not the game window.
+
+Round 33, lighting (Diego: "I want to match 1.2 sky lighting"; Voodoo 2's look is the reference, his pick):
+- **SKYGND.PAR's coloured light, as 1.2:** the reader (Sim_100a0063 = 1.2 0x1008ceab) takes 1.2's line format with four
+  more keys: hambient (ambient colour), l1 and l2 (two lights: colour and direction) and gl (the global light's
+  colour); the directions are made unit vectors (left as they were below a length of 1e-7) and the colours clamped
+  to 0..255 (C globals g_w33*, 1.2 0x10138d20..0x10138d74). The view transform (Sim_1005874a = 1.2 0x1004b44a) turns
+  the two directions into the camera's frame (1.2 0x101181a4.. / 0x101181a8..). The vertex lighting
+  (Sim_10058c5e = 1.2 0x1004bad6) keeps 1.0's light (+0x3c, 0..0x1f) and adds a colour per point in +0x3c's upper
+  three bytes: the ambient, plus the global light's share times gl / 128, plus light 1's and light 2's shares (their
+  light times 255, the colour / 128), plus white for each point light reaching the point. The point lights (weapon
+  fire, contrails: the readme's "New lighting has been added for weapon firing and contrails") now also count in 3D
+  mode with fog on, except for the b000..e000 polygons; 1.0 skipped them whenever fog was on. The view function
+  (Sim_10032a10 = 1.2 0x10026610) reads only +0x3c's low byte as the light and, darkening, keeps +0x3c & 0xffffff as
+  1.2 does (the old light byte stays ORed in and the blue byte is lost: reproduced). 1.2's queued polygon (round 32)
+  already sends the light byte as the vertex light and the colour as the vertex specular colour. No other 1.2 code
+  masks +0x3c (byte scan of 1.2's code: these two functions only).
+- **Checked against 1.2:** spec_w12_sky_v12.py 4000 (planted W12S_MUTATE caught 478), spec_w3p_light_v12.py 3000
+  (W3PL_MUTATE 2552), spec_w10_10058c5e_v12.py 5000 (W10L_MUTATE 1483), spec_w9h_view_v12.py 3000 (W9HV_MUTATE 108);
+  all exact. (spec_w3p / spec_w9h's own source lists predate rounds 24..33: the v12 specs add round 31's files or
+  build the closure of their files.)
+- **Where the colour shows:** 1.2's dx5draw never turns on specular, so with Direct3D (options 3 / H) the colour is not
+  drawn. 1.2's 3dfxgear.dll never reads the specular bytes either; the colour reaches the screen because 1.2's sim, in
+  its 3DFX / PowerVR mode ([0x1014b954], set when the renderer's name contains "3DFX" or "POWERVR"), writes it into
+  the vertex colour (the textured submitters and 12 other functions test that mode). Diego wants Vulkan to show it
+  (Voodoo 2 look): next, that mode for HGVK. The HGVK side needs no shader for it (3dfxgear draws vertex colour times
+  texture); the per-mode colour combine of 3dfxgear (texture only in its keyed / blended modes) is held for Diego.
+- **Fog (CPU side, HGVK):** FirstDevice's fog switch and colour are kept (Vk_SetFog) and each vertex carries D3D's fog
+  factor (+0x1b / 255); nothing draws with them until the shaders change (a GLSL compiler is not installed yet).
+- **1.2's 3DFX / PowerVR vertex colour, the textured submitters (step 1 of that mode):** g_w33Voodoo (1.2
+  [0x1014b954]); with it the three textured submitters (0x10006609 / 0x10006744 / 0x100068d9 = 1.2 0x100010d9 /
+  0x100012c5 / 0x10001513) colour each vertex from its specular colour (the coloured light) times the channel factors
+  / 256, and the first two make it opaque, as 1.2 does. The flag is not yet switched on (how HGVK is recognised is
+  Diego's pick); its other 10 users follow. Checked: spec_w31_tex.py's three submitter specs against 1.2 with the mode
+  on in a third of the trials, 2000 each, exact (planted W2NV_MUTATE caught 97 / 108 / 97); spec_w2n.py's 1.0 specs of
+  the three still pass with it off.
+- **The shell's argument (Diego: option 1 showed only a blue screen with 1.2's shell):** 1.2's shell reads the same
+  argument differently from the sim: its flag [0x10259598] = (arg == 1 ? 0 : !(arg & 2)). Only the shipped 0 sets it
+  (its full setup: a list of 0x49 entries at 0x10139118, as 1.0's shell always has; 1 or 2 give 0x33 entries, a
+  reduced setup), and with it the shell searches the CD drives only for the DVD edition's movie path (wavmap.ini,
+  absent here). Our launcher passed 2 to both DLLs; the shell now gets the shipped 0 and the sim keeps 2 ("no CD").
+  The log of Diego's run: the shell started, showed an 8-bit screen, a 16-bit screen that 1.0's shell does not have
+  (2 pictures), then the 8-bit menu mode, and returned 255 (no fault, crash.log unchanged); his CHARINFO.HG1 was
+  rewritten by the shell with the same size and header. Whether the reduced setup is what left the screen blue is
+  not proven (no run of mine on his desktop); the shipped value is 1.2's own in any case.
+
+- **The blue screen, read from 1.2's shell (round 33):** both mode switches of the run come from 1.2 HGSHELL
+  0x1017b382 (DirectDraw init; 16 bits while [0x10247758] is set). [0x10247758] is the movie flag of 0x100319d5,
+  1.2's new movie player: it opens a full-screen popup of its own class (window procedure 0x1002f450, not
+  ShellWindowProc), plays the movie through DirectShow (CoInitialize, a filter graph), re-inits DirectDraw in 8 bits
+  and destroys the popup. The shell then draws (0x100318fa) and takes mouse / keys (ShellWindowProc) only while
+  its focus flag (object +0x1f8: WM_SETFOCUS 1, WM_KILLFOCUS 0) is set. In Diego's run the menu mode made 12 blits
+  while the mouse moved for minutes (1.0's menu: 17642), so the menu was never drawn: the focus flag left at 0 by
+  the popup is the leading suspect, not proven. The 255 is one of the shell's quit paths (WM_DESTROY of its window,
+  WM_QUIT, the quit menu choice, Ctrl+Q); no DirectDraw call of the stand-in was refused. HeavyGearIso (the full
+  1.1 + 1.2 install) has the same game files as Project, byte for byte: not the cause. Logging added (no change in
+  behaviour): the shell's CreateWindowExA / DestroyWindow (with the focus after) and WM_SETFOCUS / WM_KILLFOCUS /
+  WM_DESTROY on the shell route.
+- **The focus given back (round 33, coordinator's go):** HGSHELL's DestroyWindow import is replaced (outside
+  1.2's code, hooks_ddraw.c): after the shell destroys a window other than its game window, and the focus is not on
+  the game window, the game window is brought forward and given the focus (SetForegroundWindow + SetFocus), so the
+  shell gets the WM_SETFOCUS that sets its drawing flag, as on a 1998 desktop where the game window was next in
+  line. Logged ("focus given back"). Undo: drop the two calls. The movie itself: 1.2's player opens the movie's name
+  + ".AVI" through DirectShow; no .AVI file exists in Project or in HeavyGearIso (only smk\*.SMK), so the movie
+  most likely fails to open (the CD's files) and the popup (black background) closes at once: the 2 pictures of the
+  16-bit screen. Not a fault of ours; the next normal option 1 run shows both.
+- **1.2's intro movie (round 33):** the shell finds its movies by going through the drive letters, keeping only
+  CD-ROM drives (GetDriveType 5) and taking the first with a `video\` folder (0x1012b869; no volume label is read),
+  unless wavmap.ini's [WAVMap] DVDDrive / DVDMoviePath (DVD edition) gives the path. On Diego's PC: V: "Heavy Gear"
+  (disc 1, no video folder) and W: "HEAVYG" (disc 2, VIDEO\: 19 Indeo 5 AVIs, 186 MB; the intro is B51MOVIE.AVI);
+  the 32-bit Indeo 5.10 decoder and its DirectShow filter are installed on that PC. (1.2's sim CD check, 0x10087460,
+  looks only at the first CD-ROM drive for video\B51MOVIE.AVI: with V: first it fails; ours skips it.)
+  The movie is a DirectShow video window made a child of the game window (owner = the shell's window,
+  0x10022dce: WS_CHILD, 0,0 640x480, picture 2x the 320x240 source), above the shell's black full-screen popup.
+  With the SDL3 display the picture covered that child: Diego saw our empty 16-bit picture (blue) for the movie's
+  length. Fix (hooks_ddraw.c, outside 1.2's code): a 16-bit SetDisplayMode while the shell's popup exists opens
+  no picture and makes the game window the mode's size, centred, on top (as the 640x480 screen of 1998); the 8-bit
+  switch after the movie restores the full-screen window and picture. Undo: drop that branch. The focus hand-back
+  on the popup's DestroyWindow stays as a safety net (it did not fire in Diego's run: the focus was back already).
+- **Sim end and quit (round 33):** 1.2's SimMain returns 0xff only when [0x10131458] (ours 0x1015ebf8) is set, by
+  1.2 0x100308a8 = our Sim_1003ce98 (identical: a menu item confirmed by Enter or its number key); 1.2's HG.EXE
+  exits on a low byte 0xff as ours does. A destroyed gear does not set it. No difference.
+- **No CD for the movies (round 33, Diego's go):** the disc's 19 AVIs (VIDEO\, 186 MB, copied by Diego to
+  HeavyGearIso\VIDEO) are in Project\video and Ref12\video. 1.2's shell looks for them only on CD-ROM drives: its
+  start-up check action (0x100fc406) and its movie action (0x100fc782, which takes wavmap.ini's DVD path only with
+  its set-up flag 0, i.e. the reduced set-up; with ours it searches the drives too) and its set-up (0x1012b869).
+  So wavmap.ini is not used. src/hooks/hooks_cd.c (outside 1.2's code, HGSHELL's import table only): when no
+  CD-ROM drive holds X:\video\ and the game folder has video\, a free drive letter (from Z: down) is added to
+  GetLogicalDriveStringsA, reported by GetDriveTypeA as a CD-ROM, and its "X:\video..." paths are turned into the
+  game folder's video\ in _access and MultiByteToWideChar (the path DirectShow opens). A real disc with its video
+  folder still wins. Logged ("no-CD movies: ..."). The sim's B51MOVIE check stays skipped by 1.2's no-CD bit
+  (launch argument bit 2). Undo: drop the HooksCd_OnShellLoaded call.
+- **Checker:** spec_w8x_voodoo_v12.py: Sim_100a4c45 against 1.2 0x10091065 (2000 trials) and Sim_100a4d8e (with the
+  new Sim12_10090a85) against 1.2 0x100911ec (3000 trials), 0 mismatches; W8X_NEG=1 (W7OV_MUTATE, W8XV_MUTATE): 406
+  and 82 mismatches. Both-fault trials (205 / 112) not yet looked at.
+- **The movie's picture (round 33, Diego's run: sound, no picture, a 640x480 black box):** DirectShow builds the
+  full chain for B51MOVIE.AVI on this PC (checked with a 32-bit test that only builds the graph: AVI splitter,
+  Indeo 5.10 decoder, Video Renderer, DirectSound). The shell makes the video window a child of the game window,
+  which has carried SDL's Direct3D 11 picture; the leading suspect for the missing picture is that window (not
+  proven). Changed (outside 1.2's code): the shell's 16-bit movie switch now hides the game window and puts the
+  black full-screen popup on top (hooks_ddraw.c); hooks_cd.c keeps the shell's filter graph (its CoCreateInstance
+  import) and, at the movie loop's first wait (its MsgWaitForMultipleObjects import), gives the video window to
+  the popup through DirectShow (IVideoWindow put_Owner / SetWindowPosition, IBasicVideo SetDestinationPosition):
+  the largest 4:3 area of the screen, centred, the shell's own picture placement scaled to it (the 320x192 films
+  keep their bands). A migration presentation choice: 1.2 showed them on a 640x480 screen. Undo: drop the two
+  imports in HooksCd_OnShellLoaded and the hiding in DevSetDisplayMode.
+- **Movie picture parked (round 33, Diego: "I can recode them"):** the intro and cutscenes play with sound only
+  under our window layer; the original 1.2 install shows the picture on the same PC, so the cause is ours (not
+  pinned down: the SDL3 Direct3D picture on the owner window is the leading suspect). The two presentation tries
+  (game window 640x480 centred; then hidden, with DirectShow's window moved to the popup) are taken out again:
+  with the second the menu after the movie drew 12 frames before Diego closed it, while the plain path (the 16-bit
+  switch handled like any other) gave a working menu. To be solved in the video round by playing the movies
+  ourselves from re-encoded copies (format chosen then). Kept: the no-CD drive mapping (hooks_cd.c), the movie
+  popup tracking and the focus hand-back on its DestroyWindow (hooks_ddraw.c).
+- **Renderer state codes, fog (round 33):** 1.0's dx5draw SetState(code, value) knows codes 1..7; code 2 is fog
+  (value bit 0x200000 -> D3DRENDERSTATE_FOGENABLE). 1.0's sim called (0x200000, 1/0), a code its renderers reject
+  (fog never toggled by those calls); 1.2 calls (1, 0x200000) / (1, 0), its code 1 = 1.0's 2, so "1.2 code = 1.0
+  code - 1" holds and the ports' (2, 0) / (2, 0x200000) are right. Ported 1.2's two fixed call sites: the display-
+  kind command 0xc5 of Sim_1004954e (1.2 0x1003b3ba, also its 3DFX / PowerVR state 0xe = our 0xf on / off) and
+  Sim_1006b52f's case 0x1bee (1.2 0x1005b5c6). Checker: spec_w14_1004954e_v12.py (command 0xc5, 3000 trials, 0
+  mismatches; W14_NEG12: 594) and spec_w10_1006b52f_v12.py (6000, 0; W10F_NEG: 2). Data found on the way: 1.2's
+  player records hold their fields 4 bytes earlier (unit +0x24, flags +0x18) and its unit its control block at
+  +0x50 (1.0 +0x54); our sim keeps 1.0's layout (the specs map them).
+- **Voodoo port, deferred draw list (round 33):** Sim_100a4c45 (1.2 0x10091065: state 0xf off / on around the last
+  group) and Sim_100a4d8e (1.2 0x100911ec: Sim12_10090a85, 1.2's partition by object kind 0x8000 / 0x9000 before
+  the depth sort, when [0x1014cb1c] is 0; fog on -> state 2 = 0x200000), all under g_w33Voodoo (still 0).
+- **Blue box after the intro (round 33):** after the movie the shell redraws its screen and palette only on a
+  WM_SETFOCUS (ShellWindowProc 7: focus flag and redraw request +0x1dc). In 1998 its game window got one when the
+  movie popup closed; here the 16-bit / 8-bit mode switches (PlaceWindow) had already given the focus back, so none
+  came and the menu stayed blue (Diego's 17:34 run: 12 blits; his working 16:2x run had focus changes after the
+  movie, from his own clicks). hooks_ddraw.c's DestroyWindow import now sends the game window WM_SETFOCUS when the
+  shell's popup closes and the focus is already there. Correction (Diego: then black): sent from inside the
+  DestroyWindow it was handled while the shell's movie routine (0x100319d5) still ran, before it reloaded the menu
+  screen, so the one redraw came too early. Now posted: the shell's main loop dispatches it after the routine has
+  returned, as the focus change in his working run (from his own click) did.
+- **The 3DFX flag is 1.0's own (round 33):** 1.0's SimMain sets [0x1017d0ac] when the plugin path contains "3DFX";
+  1.2 sets [0x1014b954] for "3DFX" or "POWERVR" - the same flag. g_w33Voodoo now stands for it everywhere: SimMain
+  sets it (with 1.2's POWERVR test), the sky band tests it (1.0 [0x1017d0ac]; 1.2 0x1008f7f0 skips its band block in
+  that mode), and SimMain also takes 1.2's other two uses: the device flags' 0x80 replaced by the flag (with
+  g_w31Tex; HGVK reads only 0x200 and 2) and the 3D start-up block run also in that mode. With our plugin named
+  HGVK.DLL the flag stays 0 (Diego's choice of switch still open). Checker: spec_w21_simmain.py (1.0, 4000 trials,
+  0 mismatches; the C's flag compared at [0x1017d0ac] after the run - chained with w31_wrap's own post step, a host
+  write marked dirty; the name test answers "no" with 3D off; built without the POWERVR test, W21V_MUTATE) and
+  spec_w31_skyband.py (against 1.2, 6000, 0; the flag copied to 1.2's [0x1014b954]).
+- **Black menu after a mission (round 33, Diego):** the sim runs in a separate process (Vulkan / d3d); the
+  launcher hides the game window meanwhile and showed it again after, but the foreground stayed elsewhere (the
+  child had it; Windows' foreground lock), and the 1.2 shell reads its focus once at start (0x1002fb63: +0x1f8 =
+  GetFocus() == its window) and draws nothing without it (his run: 6 pictures, no focus message). In 1998 the sim
+  used the same window, which kept the focus. Now the child grants the foreground before it exits
+  (AllowSetForegroundWindow) and the parent brings the game window forward and gives it the focus before the shell
+  starts (SetForegroundWindow + SetFocus, logged "Sim process ended: ...").
+- **Particle setup in the 3DFX mode (round 33):** Sim12_100790be resets the particle types only without the 3D mode
+  and the 3DFX / PowerVR mode (1.2 0x100790be). spec_w32_partspec.py maps g_w33Voodoo to 1.2's [0x1014b954]
+  (generator 0 / 1) and builds w33_dx12.c: 1500 trials, 0 mismatches; W32PV_NEG (the 3DFX test left out): 120.
+- **Display mode 6's start (round 33):** 1.2 0x10071b9c is the start function of display mode 6 / device class 3
+  (the renderer plugin; mode records 1.0 0x1014b860, 1.2 0x1011e5e0). 1.0's (0x100877bc) returns 0; 1.2's first sets
+  the screen format record's colour masks to 5:6:5 in its 3DFX / PowerVR mode (1.2 0x1002bd5b = 1.0 Sim_1003772b,
+  record 1.2 0x107edf60 = 1.0 0x109e3880, found by 1.0's DirectDraw caller 0x100800ed). Ported in Sim_100877bc.
+  spec_w2k_mode6_v12.py: 300 trials, 0 mismatches; W2K_NEG: 197.
+- **Black menu after a mission, second look (round 33):** with the focus given back (his 18:34 run: focus and
+  foreground the game window at the shell's start) the restarted menu still drew 6 pictures: 1.2's shell asks for its
+  whole screen and palette only on WM_SETFOCUS (ShellWindowProc 7; FUN_100306c6, the only setter of +0x1dc, has no
+  other caller), and an already focused window gets none. In 1998 every exclusive mode switch activated the game
+  window. The DirectDraw stand-in's SetDisplayMode now posts WM_SETFOCUS when the window has the focus (else gives
+  it the focus, which sends one): the shell's loop handles it after its screen is set up, as in the intro fix.
+- **Black menu after a mission, third look (round 33):** the mode-switch post did not help (his 18:42 run): 1.2's
+  start routine (0x100301d7) sends 0x420 and 0x1c, then removes and drops 10 waiting messages (PeekMessage
+  PM_REMOVE), which ate the posted WM_SETFOCUS. Now (src/hooks/hooks_cd.c, imports of the shell): the first
+  PeekMessage after that flush posts WM_SETFOCUS when the game window has the focus (else foregrounds it and gives it
+  the focus, which sends one), so the shell's loop handles it; the constructor's one focus test (0x1002fb63, +0x1f8 =
+  GetFocus() == its window) is logged with its value ("shell start:" lines). The launcher also calls SetActiveWindow
+  on the game window after the isolated sim exits, before SetFocus, as Win98 activated it in the same thread.
+- **Round 1 of the gameplay port: footsteps and the gun (round 33, Diego's go).**
+  - Footsteps: 1.2's unit animation 0x1003fbb7 is our Sim_1004f257 (same constants and ladder) plus one addition:
+    when the step bit (+0x88 bit 8) is set and the unit is moving, dust at the lower foot (unit record node +0x4c4,
+    else +0x4c0) against the record's velocity +0x548, for every unit; the step sound stays the player's. Ported in
+    src/sim/unsorted_1004/w10_anim.c behind W32_PARTICLES(). 1.2's footstep family (spawn 0x10086007, update
+    0x10085992, draw 0x10085b34) is byte for byte the skate dust's with type 0x15: src/sim/fx/w32_explode.c shares
+    the spawn (W32e_Dust) and its update / draw call the skate's.
+  - Gun: 1.2's missile launch 0x100bb425 (our Sim_100d5446, src/sim/unsorted_100d/w10_missile.c) adds, after the
+    shot's sound slot, smoke at the weapon's mount node (unit record +0x498 + 4 * slot +0x11c) moving (0, 5, 0)
+    (0x1007f19f), behind W32_PARTICLES().
+  - Not ported (force-feedback round): in the same function 1.2 replaced the force-feedback request
+    Sim_10045f3b(kind, 0x2d, 0x32) with its reworked 0x100382fb(kind, 0, 0, 0), only while [0x10131718] is set; ours
+    keeps 1.0's until that round.
+  - Checker: spec_w10_1004f257_v12.py (6000) and spec_w10_100d5446_v12.py (4000) against 1.2, with the object, owner
+    and player records shifted 4 bytes for 1.2's run; spec_w32_footstep.py (the footstep spawn 3000, update and draw
+    1000 each, the skate spawn 3000): all exact, planted bugs caught (W10FS_MUTATE, W10G_MUTATE, W32FS_MUTATE). The
+    1.0 specs spec_w10_1004f257.py (15000) and spec_w10_100d5446.py (4000) still pass with the switch off.
+- **Controls round: 1.2's input changes and force feedback (2026-10-31, alongside round 2).**
+  - Survey check: 1.2 adds no controls. Its HGSIM has no new command names (torso_tilt and the rest are in 1.0's
+    HGSIM and HGSHELL); 1.2's INPUTW.MAP only rebinds existing commands (already in Project). Of the 29 "new input"
+    functions in tools/v12/survey.md, about 15 are 1.2's zlib inflate (strings "invalid distance code" ...), the rest
+    sound, the WTB reader, network, the dead Patch reader 0x100a3a92 and mid-function cuts. Of the 7 "changed" ones,
+    5 are layout only (the 4-byte record shift written as an immediate, add reg,0x228 -> 0x224) or assert line numbers;
+    0x10015018 (1.2 0x1000e1a8) adds an "or [0x1012d4e8] != 0" test that nothing in 1.2 ever sets (left out, no
+    behaviour); 0x1003db56 (1.2 0x100312c6) scans 10 network player keys instead of 8 (left for the network round).
+    The key handler's 1.2 changes (command 0xc5) were already ported in round 33.
+  - Force feedback: Project now has 1.2's FFORCE.DLL, whose TSFF_SIM_Effect takes 1.2's table (0xc0 bytes, 18
+    effect records with "changed" bits), not 1.0's (0xe0). The library is found, initialised, sent the table each
+    frame and closed by the same code in 1.0 and 1.2 (0x10045d70 / db9 / ec2 / e5d = 1.2 0x10038130 / 179 / 282 / 21d,
+    no logic difference), so only the table and its writers change. Ported: 1.2's request 0x100382fb as
+    Sim_100382fb (src/sim/unsorted_1004/w2k_flags.c), its table kept at 1.0's 0x1013af00 with 1.2's field offsets;
+    the size dword 0xc0 is set once by the hook layer at sim load (W2k_FfTable12, hooks_conv.c; 1.2's is static data).
+    Calls: the missile launch Sim_100d5446 now asks Sim_100382fb(kind, 0, 0, 0) only while the library flag
+    0x1015ef3c (1.2 0x10131718) is set (1.0: Sim_10045f3b(kind, 0x2d, 0x32) always); the shot Sim_100232d7 (1.2
+    0x10019f1d, its only logic change) sends a jolt Sim_100382fb(0xf, the fmod'ed heading, 0x32, 0) when the own unit
+    is hit and the flag is set; 1.2 also wraps a copy of the heading and never reads it (left out). Round 2 ports the
+    calls in gear movement and the unit update. Still 1.0's: the near-blast call in Sim_100246b3 (1.2 0x1001b3a1, 7
+    calls inside a larger rework, effects round); with a force-feedback stick its 1.0 record lands on 1.2's jolt
+    record (+0x48 flag, +0x4c angle, +0x50 strength). Without a force-feedback stick (Diego: no joystick support)
+    TSFF_InitSystem fails, the flag stays clear and none of this runs.
+  - Checker: spec_ff_100382fb.py (1.2's request, 4000 trials), spec_w10_100d5446_v12.py (4000, flag random) and
+    spec_w29_100232d7_v12.py (new, 6000; float stubs at their 1.2 twins, 1.2's never-written segment seeded at its
+    ebp-0xe0, the weapon table window 4 * 0xd6): all exact; planted bugs caught (FF_NEG / W2K_FF_MUTATE, the 1.2 flag
+    forced on for both call sites). The 1.0 specs spec_w10_100d5446.py (4000, flag set, 1.0's call mapped to the C's)
+    and spec_w29_100232d7.py (20000, flag clear) still pass.
+- **Round 2 of the gameplay port: gear movement and world AI (round 33, Diego's go).** Analysed with
+  tools/v12/fdiff.py (1.0 / 1.2 listings aligned with registers and addresses blanked, layout-only blocks hidden)
+  and the sort thread's tools/v12/unsorted.md; every 1.2 change of these functions ported line by line:
+  - Gear movement (Sim_1006e22c = 1.2 0x1005d75c, w16_move.c): the object's height is the body height +0x68 unless
+    [0x10179ce0] (1.0: +0x6c); the jump jets are also cut when unit +0x560 bit 0x20 is set; four force-feedback
+    requests (Sim_100382fb, the controls thread's port, only with [0x1015ef3c]): the contact bump kind 0xf after both
+    contact sounds and the lean kind 0x11 (0 or 0xb4) for the player.
+  - **Bug fix (Diego, 2026-10-31: "Fix it"):** 1.2's contact bump pushes its angle (0x1006f4ee, a double) without
+    converting it, so the request (kind 0xf: a = angle in degrees 0..0x167, b = strength capped at 100, c unused) gets
+    the double's low dword as the angle and its high dword as the strength (capped to 100), and 100 as c. The push
+    order shows the intended call (0xf, angle, 100, 0), the form of 1.2's other kind-0xf call (the shot's jolt
+    (0xf, (int)angle, 0x32, 0)); ours passes that: the angle truncated to whole degrees, strength 100. Was
+    reproduced for a while (round 2's first build, 20:23). spec_w16_move_v12.py logs 1.2's call in the fixed form
+    (its double truncated) and compares the rest exactly (6000 trials; W16MF_MUTATE, strength 50, caught).
+  - World loader (Sim_100dcc12 = 1.2 0x100c1152, w15_world.c): the VIEW chunk's second value two and a half times
+    ([0x1014ca40]); network only: tanks as GREL infantry (AFTER_DLL.md's network list). Needed 1.2's _strlwr
+    (0x100ea880), ported as Crt12_StrLwr (w7r_ctype.c); its locale branch uses 1.0's mapper 0x101053c0 (1.2's takes
+    one more argument); the game never sets a locale.
+  - Target selection (Sim_10016632 = 1.2 0x1000f7d8, w9d_select.c): network only, the own list entry is not held.
+  - Action gate (1.2 0x10010cd2 with its tests 0x10010bb4 / 0x10010bf4 / 0x10010c72 and setter 0x10010cb0; ours
+    Sim12_10010cd2 in w2h_objects.c): replaces 1.0's early-out Sim_10017a05 in the unit actions Sim_10011681
+    (w8t_actions.c), with the opposite sense. A locally driven gear (+0x14 2, or 3 and the player's) does not act
+    while its jets are cut (+0x560 bit 0x20) or it is busy (+0x562 & 0x60e); busy with bit 8 and jets not cut sets
+    control byte +0x55. 1.0 let it act in that last case and did not test the jets. Sim_10017a05 stays (no caller).
+  - Unit update (Sim_10070eb5 = 1.2 0x10060491, w14_unit.c; round 2 owns the file, tools/dev/claims.txt): the
+    player's force-feedback rumble (kind 0x10, strength pitch * 1.25 + 30 with the jets, + 15 without) after the
+    speed; the start-up sound only for the player's own unit (1.0: unless Sim_10052be7 answered 1), with the
+    force-feedback kind 0xe. The pitch starts at 0 as 1.2's local does.
+  - Nothing to port (layout only): groups 0x10017263, ranges 0x10066907 / 0x100689c0, the target point 0x1000f0f4,
+    the steering step Sim_100c0471. Not round 2: the C runtime routine 0x101039a0 (1.2 compiler library), and
+    Sim_1009fada's render mode 0x12 (1.2's mode numbering, translated by the renderer hand-off).
+  - Checker (all exact against 1.2, planted bugs caught): spec_w9d_select_v12.py (3000), spec_w15_world_v12.py
+    (3000; 1.2's gear-type function tables mapped to 1.0's thunks, the removed gear field +0x18 started at 0),
+    spec_w16_move_v12.py (6000; 1.2's ground normal hook, the collision answer's globals mirrored, the C library's
+    math state and errno windows), spec_w2h_gate_v12.py (4000), spec_w8t_actions_v12.py (3000),
+    spec_w14_unit_v12.py (6000). Negative checks: W9DN, W15V / W15T / W7RL, W16MY / W16MJ / W16MF, W2HG, W8TG,
+    W14UF / W14US. w10_common.py's float stubs also hook a 1.2 twin given in FSTUB12. These functions follow 1.2 in
+    every mode, so their 1.0 specs now differ where 1.2 does; the v12 specs are their proof.
+- **Round 3 of the gameplay port: mission flow (round 33, Diego's go).**
+  - Mission won (Sim_1007c42f = 1.2 0x1006932f, w9f_objectives.c): the own side wins as soon as its objectives are
+    done; 1.2 drops 1.0's single-game [0x1015f1e8] test and the wait for pending script events ([0x1015d528]).
+    spec_w9f_won_v12.py (3000; W9FW_MUTATE caught).
+  - HGCAR.CFG in 1.2's 0x21c layout (Diego: "option 1", assemble on write): Sim_10046f7f writes 0x21c bytes (1.2
+    0x1003951f); Sim_10025dac (1.2 0x1001cf2a) builds 1.2's record from our record's first 0x14c bytes, g_w34Kills
+    and the two dwords +0x1cc / +0x1d0; the mission-start clears Sim_10021ac0 / Sim_10025d93 (1.2 0x100186d0 /
+    0x1001cf11) also clear g_w34Kills. 1.2's shell reads hgcar.cfg with fread(0x21c) and ignores the result, so a
+    0x1d4 file was read short (1.0's table taken for 1.2's, two dwords stale), not refused. AFTER_DLL.md: one record
+    after the DLL. spec_w2e_hgcar_v12.py (save 1000, clears 300 each; W2ET / W5YH caught), spec_w8u_hgcar_v12.py
+    (1000; W8UH caught; the path helper's buffers windowed). spec_w8u.py / spec_w32_debris.py: w33_dx12.c added to
+    their extra sources (they had stopped linking when the 3DFX flag moved there; no logic change).
+  - The in-mission / mission-end menu (1.0 0x10048f02, never converted) converted from 1.2's 0x1003ad72 as
+    Sim_10048f02 (src/sim/unsorted_1004/w35_menu.c, hooked by conv_1004.inc): 1.2 no longer clears byte +8 of the
+    game settings [0x1017b8c4] (twice in 1.0); the end phase's main choices are skipped while the pending flag
+    [0x1015ef10] is set (its own branch then takes 0x4b / 0x6b / 0x76); the continue path calls 1.2's new reset
+    0x10089c60 (Sim12_10089c60: [0x1015d1ac] = 0, [0x1015d1cc] = 1, [0x1015d098] = 0) before the respawn. The key
+    test 0x10048c84 and sprintf stay original calls. spec_w35_menu_v12.py (4000; W35C / W35P / W35R caught).
+  - The respawn (Sim_1009d200, w14_spawn.c) in 1.2's form (0x1008a560; Diego: convert it in round 3): no player
+    record -> 0; the gear's +0x150 = 0x80000000; 1.0's network call Sim_1007caab dropped; the start-point check asks
+    the collision probe Sim_1002dc60 (1.2's 0x10022890 is that same probe) instead of comparing every gear's
+    position; a gear of a played side has its actions (Sim_10011093) and group selection (Sim_10016632) redone; a
+    computer gear whose group leader is a remote player's gear is handed to that group (Sim_100526e3, Sim_100128dd,
+    message 0x389 for the local player). Uninitialised read checked: only with a start-zone count of 0, which
+    divides by zero first (both versions) and the zone loader never makes; deterministic. 1.2's two slips in the
+    start-point loop (the probe at the start point's heading instead of its height; no retry when occupied):
+    fixed, Diego's choice 2026-10-31 ("Fix both"; the options were a: 1.2 exactly, b: fix both, c: fix the retry
+    only): the probe at the start point's height (the y the side matrix gives) and the next point tried
+    while occupied, as 1.0's loop did. W14S_FIX_HEIGHT / W14S_FIX_RETRY (w14_spawn.c) flip them; both 0 = 1.2
+    exactly. spec_w14_spawn_v12.py compares the build with both off against 1.2 (6000; W14S_MUTATE and each fix
+    switch differ from 1.2, so both loop paths run in the spec).
+- **Round 4 (weapons, damage, HUD, animation), decided ahead of the port (Diego, 2026-10-31: "Fix: send the real
+  direction"):** 1.2's blast impact (Sim_100246b3 = 1.2 0x1001b3a1) computes, in each of its 7 blast kinds, the
+  direction from the player to an impact within 2000 (0x100b0d4b) and then sends the force-feedback request kind 0xd
+  with the fixed angle 90 (0x5a), strength 50 (0x32), discarding the direction. Ours will send the computed direction
+  instead of 90 (bug fix, like the movement bump's angle). To apply when round 4 is ported (no go yet); its v12 spec
+  will log 1.2's call with the direction in place of the 90 and compare the rest exactly.
+- **Voodoo look for Vulkan (Diego, 2026-10-31: "keep the name. full voodoo. no fog").**
+  - Deviation: 1.2 sets its 3DFX / PowerVR mode (g_w33Voodoo, 1.2 [0x1014b954]) only when the renderer's path holds
+    "3DFX" or "POWERVR". Our sim main (w21_simmain.c) also sets it for "HGVK" (our Vulkan renderer keeps the name
+    HGVK.DLL). Every 1.2 Voodoo branch ported in round 33 now runs with Vulkan: the coloured vertex light, the .TEX
+    textures, the sorting of the last group, the fog state codes, the 565 HUD screen (HGVK's is 565 already).
+  - HGVK's colour combine follows 1.2's 3dfxgear.dll exactly (its Render switch 0x10001590, mode table 0x10001b24;
+    grColorCombine / grAlphaCombine per case). In the sim's 1.0 mode numbers: 0..4 texture x vertex colour (as
+    before); 5..11 texture only, the blended ones (5, 6, 10, 11) with the texture's alpha; 12 the constant colour of
+    the call's colour argument (+4); 13 vertex colour; 14 / 15 vertex colour smooth, blended by its alpha. HGVK is
+    only ever the Voodoo renderer (option 3 draws with 1.2's dx5draw), so no switch. The sim draws with modes 1, 2,
+    6, 13, 15 and 16: in game the change is mode 6 (effects / particles: texture colour and alpha only, no vertex
+    tint or vertex fade).
+  - 1.2 oddity, raised: 3dfxgear's line and point modes (1.0 16..18) set no combine of their own and keep the last
+    polygon's (after a mode-6 effect a line would take texture-only mixing with whatever texture is bound; the sim's
+    lines are the spark sprays, Sim_1009fada, and the models' line polygons, kind 0xa000). Diego's choice 2026-10-31
+    ("Keep their own colour"): HGVK draws lines / points in their own vertex colour.
+  - No fog (no shader compiler): the per-vertex fog factor and FirstDevice's fog switch stay carried and unused.
+  - **Sky over the scene in Voodoo mode (Diego, 2026-10-31: "the sky renders on top of the scene is back"),
+    fixed in HGVK.** Cause (his 23:56 hgvk.log and F12 dump): the cloud layer (Sim_100a0880 = 1.2 0x1008da61, drawn
+    by 0x100a0339 = 1.2 0x1008d51a) is a textured card from z 500 to 40000 (rhw = camera scale / z, 0.008..0.64),
+    nearer than the hills it hangs over (the frame's ground at z ~311000). Before Voodoo mode it went as mode 6,
+    blended, which writes no depth, so the world drawn after it covered it; 1.2's Voodoo branch sends it as mode 2,
+    opaque, so it wrote its near depth and hid them. Checked against 1.2: the sky routine (0x1008dff3) sends state
+    0xc (our 0xd; in 3dfxgear SetState 12 = a depth-only grBufferClear) and then the clouds, every frame, with
+    3dfxgear's W-buffer (FirstDevice: grDepthBufferMode(2), LEQUAL, depth writes on, never switched per mode) and
+    GrVertex oow = the vertex rhw. Note: by that arithmetic a real Voodoo would also put the cards in front (its
+    depth 1/rhw is z / 320 for the clouds, z for the world); not confirmed on hardware. Fix (renderer boundary):
+    HGVK draws the one Render that follows state 0xd (the cloud layer, the only sender) in painter's order, no depth
+    test or write, and keeps its depth out of the last-depth fallback: the sky behind the scene, as it was drawn
+    before Voodoo mode. No sim change; no spec affected.
+    Diego's choice (2026-11-01, option a): keep the cloud layer behind the hills, as built (not the arithmetic of a
+    real Voodoo, which would put it in front of far hills).
+
+## Round 33, round 4: weapons, damage, HUD, animation (Diego, 2026-11-01: "go go go")
+
+Each change is ported from 1.2's code and checked against 1.2 with the checker (a v12 spec, 1.2's run compared with
+the C's); each has a negative check (a planted 1.0 behaviour) that the spec catches.
+
+- **Blast impact force feedback** (Sim_100246b3 = 1.2 0x1001b3a1, w10_effects.c): 1.0's one near-blast request before
+  the switch (its distance from the own unit's +0x58 for all three axes, under 3000, kind 0 through Sim_10045f3b) is
+  gone; 1.2 makes it in each blast kind's 0x400 branch (kinds 59 / 61-72, not 5): with the force-feedback library
+  ([0x1015ef3c]) and the impact within 2000 of the own unit's object (+0x58 / +0x5c / +0x60), request 0xd through
+  Sim_100382fb with strength 50. Bug fix (Diego, 2026-10-31: "Fix: send the real direction"): 1.2 computes the
+  direction (Sim_100cbc6b) and sends the fixed angle 90; ours sends the computed direction (W10E_FIX_DIR, default 1).
+  spec_w10_blast_v12.py (built with W10E_FIX_DIR=0): 6000 trials, 0 mismatches; distances around 2000 / 3000 included;
+  W10E_NEG12=1 (1.0's 3000): 50, =d (the fix on): 108 (every request sent). Only felt with a force-feedback stick.
+- **Selected weapon slot** (1.2's gear field +0x5fb): the gear set-up Sim_1005bb7a (1.2 0x1004e6a0) starts it at -1
+  right after +0xc15 = 0 (the kind-10 part still sets its mount number later, as in 1.0); the weapon mount
+  Sim_10038ad5 (1.2 0x1002cdc5; the survey's "new" function is its 1.2 version) makes the slot it fills the selected
+  one when +0x5fb is -1 (the record's +0x128 and +0x5fb), else copies +0x5fb as 1.0. spec_w2e_mount_v12.py 3000 / 0
+  (W2EW_NEG12: 1419); spec_w14_pof_slot_v12.py: the set-up with the store left out still matches 1.0 exactly (10000 /
+  0: nothing else in it changed; 1.2's other differences there are re-packed tables of the same values and a debug
+  print through its empty log function), with it in only +0x5fb differs (7426 of 10000).
+- **HUD: nothing to port.** The text tables (Sim_100204c4 = 1.2 0x100177d4): both copy the same 316 text pointers
+  (parsed from both DLLs and mapped address by address) - the survey's "46 more lines" was the address shift. The
+  "new formatter" 0x100b2a4a is 1.2's version of the target panel 0x100ce983 (panel 16's draw slot +0x13c, set by
+  1.2 0x10020fc0 / 1.0 0x1002c017); with the side panel 0x100ce586 (1.2 0x100b26e6) and the F12 objectives screen
+  0x100cde94 (1.2 0x100b21ce) they differ from 1.0 only by drawing each line through a new helper (1.2 0x100b1340:
+  the same three-way choice of text routine as 1.0) and 1.2's kill-table ratings (ported in round 3). Checked:
+  spec_w23_100ce586_v12.py 4000 / 0 and spec_w23_100cde94_v12.py 4000 / 0 against 1.2 (negatives 43 / 11); the
+  target panel by side-by-side reading (its spec framework, spec_w9e.py, cannot run against 1.2): the same texts,
+  colours and positions; 1.2 only leaves the colour byte at 0xc between lines that all set 0xc. Diego's choice (2026-11-01,
+  option a): this reading is accepted; no emulator spec rebuilt for it. 1.2 no longer reads
+  the player's gear block in the side panel (1.0 read it unused): dropped.
+- **Weather emitters in 1.2's particle pool (a bug fix of our build).** The nine emitters a mission's world file can
+  set up around the camera (Sim_100d82f6) spawn through Sim_100d9064 (style 1) / Sim_100d965e (style 2) with the
+  callbacks 0x100d8d0a / 0x100d8e43 / 0x100d9306 / 0x100d943f. Round 32 put 1.2's 0x406-byte records into the effect
+  pool in particle mode (Vulkan, 1.2's Direct3D), but these kept 1.0's offsets (up to +0x576 and 32 points of 0x2a
+  bytes): in a mission with these emitters they wrote past their record into the next one. 1.2 (0x100be504 /
+  0x100beafe / 0x100be1aa / 0x100be2e3 / 0x100be7a6 / 0x100be8df) uses its layout: node +0x332, time +0x33e, state
+  +0x346, velocity +0x34e, argument +0x366, 16 points of 0x32 bytes; nothing else changed. New macros W32_REC_TIME /
+  STATE / VEL / PT / NPT (fx/w32.h). spec_w10_weather_v12.py, in particle mode: both spawns 2000 / 0 against 1.2
+  (W10W_NEG12, 1.0's 32 points: 822 each); the callbacks differ from 1.2 only by the layout (fdiff: displacements and
+  the point stride). spec_w10_100d965e.py (1.0 mode) still passes (2000 / 0).
+- **Checker housekeeping:** spec_w2e.py, spec_w6h.py and spec_w8z.py no longer link (their fixed source lists predate
+  rounds 32 / 33: W31_TexMode, the railgun / accelerator systems, g_w34Kills); the new v12 specs build their own
+  closures. Diego's choice (2026-11-01, option a): fixed in the tiny sweep (listed in tools/v12/unsorted.md).

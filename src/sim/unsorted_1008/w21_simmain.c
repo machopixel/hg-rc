@@ -2,6 +2,7 @@
 
 #include "w21.h"
 #include "../render/w31.h"
+#include "../render/w33.h"
 #include "../util/access.h"
 #include "../../platform/plat.h"
 #include "../../platform/sim_platform.h"
@@ -81,6 +82,9 @@ static void W21_Heaps(const uint8_t *memStatus)
         g_w31TexStart = Plat_TicksMs();
 }
 
+/* 1.2 0x1014a590: the CD is needed (round 33) */
+uint32_t g_w33CdNeeded;
+
 // FUNCTION: HGSIM 0x10084feb
 uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, uint8_t *net, uint32_t unused2,
                            uint32_t window)
@@ -93,10 +97,16 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     uint8_t msg[0x1c];          /* [ebp-0x130] */
     uint32_t dc, firstQuit = 0, zero34 = 0, zeroDc = 0, fd, i, j, hasDc, *res;
     int32_t cfg, ret;
+    uint32_t cd;
     const char *name;
 
     (void)unused1;
-    (void)unused2;
+    /* 1.2 (0x1006fb36): the launcher's last argument but one says whether the CD is needed: 1 (1.0's launcher) or
+       without bit 2 yes, with bit 2 ("no CD", round 33) no; 1.2 keeps it in [0x1014a590] (g_w33CdNeeded) */
+    cd = 1;
+    if (unused2 != 1)
+        cd = (unused2 & 2) == 0;
+    g_w33CdNeeded = cd;
     G32(0x1017c8c4) = 1;
     C0(0x1005f6c6);
     G32(0x1017b8f0) = window;
@@ -153,10 +163,12 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         C3(0x1003695b, S(0x1014b1fc), 0, 0);
     if (C0(0x100d1df9) != 0)
         C2(0x100bc280, 0x51, 0);
-    if ((int8_t)C0(0x10099510) == 0)
-        C3(0x100bc280, 0x53, G32(0x101c5148), 0);
-    else
-        SimPlat_GetSystemTime(systemTime);
+    if (g_w33CdNeeded != 0) {          /* 1.2: the CD search only when the CD is needed */
+        if ((int8_t)C0(0x10099510) == 0)
+            C3(0x100bc280, 0x53, G32(0x101c5148), 0);
+        else
+            SimPlat_GetSystemTime(systemTime);
+    }
     C1(0x10086d8d, S(0x109e89e4));
     if (G32(0x101668f4) != 0)
         C0(0x1005f8d0);
@@ -165,8 +177,16 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         G32(0x1017b940) = 0;
     if (C0(0x10034c11) == 0)
         C2(0x100bc280, 0x50, 0);
+    /* 1.0's "3dfx" flag [0x1017d0ac] is 1.2's 3DFX / PowerVR flag [0x1014b954] (g_w33Voodoo): 1.2 also sets it for
+       a "POWERVR" plugin path (1.2 SimMain 0x1006ffb0..) */
+#ifdef W21V_MUTATE /* the checker only: 1.0's test (spec_w21_simmain.py compares with 1.0) */
     if (C2(0x100fc970, P(res) + 4, S(0x1014b210)) != 0)
-        G32(0x1017d0ac) = 1;
+#else
+    /* deviation (Diego, 2026-10-31: "keep the name. full voodoo"): our Vulkan renderer HGVK.DLL counts as 3DFX */
+    if (C2(0x100fc970, P(res) + 4, S(0x1014b210)) != 0 || C2(0x100fc970, P(res) + 4, P("POWERVR")) != 0 ||
+        C2(0x100fc970, P(res) + 4, P("HGVK")) != 0)
+#endif
+        g_w33Voodoo = 1;
     LOGSTEP(0x1014b218);
     C6(0x1003795b, 5, 0, S(0x109e3e20), 0xffffffffu, 0xffffffffu, 0);
     SimPlat_SendMessage(G32(0x1017b8f0), 0x41f, 0, 0);
@@ -392,7 +412,8 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             drv[9] = 0;                     /* -0x64 */
             drv[0xa] = 0x200;               /* -0x60 */
             drv[1] = 8;                     /* -0x84 */
-            drv[2] = 0x80;                  /* -0x80 */
+            /* 1.2: its 3DFX / PowerVR flag here (1.0: 0x80) */
+            drv[2] = g_w31Tex ? (uint32_t)(g_w33Voodoo != 0) : 0x80;    /* -0x80 */
             if (U32(G32(0x1015d1b8), 0x3c) != 0)
                 drv[2] |= 0x200;
             if (G32(0x1017d108) != 0) {
@@ -437,7 +458,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         U8(GBYTES(0x101653fd), 0) = 1;
         G32(0x101655ac) = 0xffffffffu;
         G32(0x1017b934) = 1;
-        if (G32(0x1017b940) != 0) {
+        if (G32(0x1017b940) != 0 || g_w33Voodoo != 0) {      /* 1.2: also in its 3DFX / PowerVR mode */
             C0(0x100a2a66);
             NETPOLL();
             C0(0x10006e52);

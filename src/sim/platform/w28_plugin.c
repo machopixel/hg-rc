@@ -4,6 +4,8 @@
 #include "../unsorted_1003/w2h.h"
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w6i.h"
+#include "../render/w31.h"
+#include "../render/w33.h"
 
 typedef int32_t(__cdecl *W28DescFn)(char *kind, int32_t *id, void *extra);
 typedef int32_t(__cdecl *W28CheckFn)(const char *arg);
@@ -75,6 +77,9 @@ void __cdecl Sim_1003650d(const char *path)
     G32(0x109e3d20) = (uint32_t)id;
     for (i = 0; i < sizeof(kW28Entries) / sizeof(kW28Entries[0]); i++)
         G32(kW28Entries[i][0]) = (uint32_t)(uintptr_t)Plat_LibraryFunction(lib, (const char *)GBYTES(kW28Entries[i][1]));
+    /* round 33: the Direct3D plugin is 1.2's dx5draw.dll, which numbers modes and states as 1.2 does */
+    if (id == 1 && g_w31Tex)
+        W33_WrapD3D12();
 #ifdef W28P_MUTATE /* the checker's negative check only */
     G32(0x1015e5bc) = (uint32_t)id + 1;
 #else

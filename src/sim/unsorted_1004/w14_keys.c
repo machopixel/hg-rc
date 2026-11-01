@@ -5,6 +5,7 @@
 #include "../util/access.h"
 #include "../util/util.h"
 #include "../view/view.h"
+#include "../render/w33.h"
 #include "../unsorted_1000/w5a.h"
 #include "../unsorted_1001/w2k.h"
 #include "../unsorted_1001/w3r.h"
@@ -547,14 +548,26 @@ void __cdecl Sim_1004954e(uint32_t cmd)
         if (U32(unit, 0xbaf) == 0) {
             FlashText_Start(1);
         } else if (G32(0x1014cb1c) == 1 || !W14K_REPORTS()) {
+            /*
+             * 1.2 (0x1003b3ba): the renderer's fog state as (1, 0x200000), 1.0's code 2 (1.0 passed (0x200000, 1),
+             * a code its renderers reject), and in its 3DFX / PowerVR mode state 0xe (1.0's 0xf) on.
+             */
             if (G32(0x1017d108) != 0)
-                (*SIM_PTR(W14kSoundFn, 0x109e3d40))(0x200000, 1);
+                (*SIM_PTR(W14kSoundFn, 0x109e3d40))(2, 0x200000);
             G32(0x1014cb1c) = 0;
+            if (g_w33Voodoo != 0)
+                (*SIM_PTR(W14kSoundFn, 0x109e3d40))(0xf, 1);
         } else {
             G32(0x1014cb1c) = 1;
             G32(0x1014cb20) = 0;
             Sim_100203cf(1, 1);
+#ifdef W14KV_MUTATE /* the checker's negative check only: 1.0's call */
             (*SIM_PTR(W14kSoundFn, 0x109e3d40))(0x200000, 0);
+#else
+            (*SIM_PTR(W14kSoundFn, 0x109e3d40))(2, 0);
+#endif
+            if (g_w33Voodoo != 0)
+                (*SIM_PTR(W14kSoundFn, 0x109e3d40))(0xf, 0);
         }
         break;
     case 0xc6:

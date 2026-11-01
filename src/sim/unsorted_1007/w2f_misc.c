@@ -1,7 +1,9 @@
 #include "w2f.h"
 #include "../util/access.h"
+#include "../unsorted_1004/w3p.h"
 
 // FUNCTION: HGSIM 0x1007b02d
+// FUNCTION: HGSIM12 0x10067f2d
 void __cdecl Sim_1007b02d(void)
 {
     int32_t best = (int32_t)0xffff8001;
@@ -28,7 +30,7 @@ void __cdecl Sim_1007b02d(void)
             int32_t score = 0;
 
             for (col = 0; col < 8; col++) {
-                int32_t v = U16(GBYTES(0x1016552c), row * 16 + col * 2);
+                int32_t v = U16(g_w34Kills, row * 0x14 + col * 2);
 
                 if (row == col)
                     score -= v;

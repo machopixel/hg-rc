@@ -287,6 +287,7 @@ add_executable(HG WIN32
     ../sim/unsorted_1003/w3p_net.c
     ../sim/unsorted_1004/w3p_calc.c
     ../sim/unsorted_1004/w3p_net.c
+    ../sim/unsorted_1004/w35_menu.c
     ../sim/unsorted_1006/w3p_box.c
     ../sim/unsorted_1007/w3p_net.c
     ../sim/unsorted_1009/w3p_box.c
@@ -738,6 +739,7 @@ add_executable(HG WIN32
     ../sim/render/w30_vfx.c
     ../sim/render/w30_hud.c
     ../sim/render/w31_tex.c
+    ../sim/render/w33_dx12.c
     ../sim/fx/w32_partspec.c
     ../sim/fx/w32_pool.c
     ../sim/fx/w32_draw.c
@@ -751,14 +753,19 @@ add_executable(HG WIN32
     ../hooks/hooks_dispprobe.c
     ../hooks/hooks_damagelog.c
     ../hooks/hooks_ddraw.c
+    ../hooks/hooks_cd.c
     ../hooks/hooks_hud.c
     ../hooks/hook_import.c
     ../platform/input_sdl3.c
     ../platform/audio_sdl3.c
+    ../platform/music.c
     ../platform/plat_win32.c
     ../platform/display_sdl3.c
 )
 target_link_libraries(HG PRIVATE user32 gdi32 ole32 winmm SDL3::SDL3-static)
+# The music from the game folder's MUSIC\TrackNN.ogg in place of the CD (platform/music.h). Only the game build
+# has it: the checker's test builds keep the converted functions' 1.0 CD code they are compared against.
+target_compile_definitions(HG PRIVATE HG_MUSIC_FILES)
 
 if(MSVC)
     # Look like the 1997 exe to Windows: fixed base 0x400000, no DEP, the

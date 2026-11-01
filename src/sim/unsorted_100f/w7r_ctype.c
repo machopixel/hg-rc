@@ -1,6 +1,9 @@
 #include "w7r.h"
 #include "w6h.h"
 #include "../util/access.h"
+#include "w6i.h"
+#include "w7q.h"
+#include <string.h>
 
 #define W7R_CTYPE() G32(0x10159450)
 
@@ -43,4 +46,36 @@ int __cdecl Crt_ToLower(int c)
     if (got == 1)
         return out[0];
     return out[0] | (out[1] << 8);
+}
+
+/* 1.2's _strlwr (new in its C library). With a locale handle it maps the string through 0x101053c0 into a
+   malloc'ed copy and copies that back; 1.2 passes its changed mapper one more argument (1), which 1.0's has not:
+   that path runs only with a locale set, which the game never does. */
+// FUNCTION: HGSIM12 0x100ea880
+char *__cdecl Crt12_StrLwr(char *s)
+{
+    char *copy = 0, *p;
+    int n;
+
+    if (G32(0x1017e950) == 0) {
+        copy = s;
+        if (*s != 0) {
+            for (p = s; *p != 0; p++) {
+#ifdef W7RL_MUTATE /* the checker's negative check only: K..Z kept */
+                if (*p > '@' && *p < 'K')
+#else
+                if (*p > '@' && *p < '[')
+#endif
+                    *p = (char)(*p + ' ');
+            }
+            return copy;
+        }
+        return s;
+    }
+    n = W7Q_MAP_STRING(G32(0x1017e950), 0x100, (const uint8_t *)s, -1, 0, 0, 0);
+    if (n != 0 && (copy = (char *)Heap_Malloc((uint32_t)n)) != 0 &&
+        W7Q_MAP_STRING(G32(0x1017e950), 0x100, (const uint8_t *)s, -1, (uint8_t *)copy, n, 0) != 0)
+        memcpy(s, copy, strlen(copy) + 1);
+    Heap_FreeBlock((uint32_t)(uintptr_t)copy);
+    return s;
 }

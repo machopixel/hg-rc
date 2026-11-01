@@ -3,6 +3,7 @@
 exec(open('tools/verify/w10_common.py').read())
 
 SOURCES = closure(['sim/unsorted_1004/w10_anim.c'])
+# round 33: the footsteps call 1.2's dust (w32_explode.c, linked) only in 1.2 mode, off here
 for _a, _c, _n in ((0x1004f1df, 'Sim_1004f1df', 1), (0x1004f158, 'Sim_1004f158', 1), (0x1004ee50, 'Sim_1004ee50', 1),
                    (0x1000ed52, 'Sim_1000ed52', 6)):
     helper(_a, _c, _n)

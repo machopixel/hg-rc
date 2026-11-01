@@ -86,7 +86,16 @@ static void W9b_TallyTeam(int team, int slot, uint32_t cls, int full)
     }
 }
 
+/* one more kill of `victim` by `killer` in 1.2's kill table (rows of 0x14, round 33) */
+static void W9b_Kill(int killer, uint32_t victim)
+{
+    u16a *w = (u16a *)(g_w34Kills + (uint32_t)killer * 0x14u + victim * 2u);
+
+    *w = (uint16_t)(*w + 1);
+}
+
 // FUNCTION: HGSIM 0x1006a12d
+// FUNCTION: HGSIM12 0x10059e9d
 void __cdecl Score_RecordKill(int killer, uint8_t *block)
 {
     int slot = -1;
@@ -108,7 +117,7 @@ void __cdecl Score_RecordKill(int killer, uint8_t *block)
                                           (uint32_t)i * 16);
             Sim_1000ecb0(TEXT(0x101452e0));
         }
-        GBYTES(0x1015d1b0)[U32(ENTRY, 4)] = 1;
+        /* (1.0 also marked the unit in 0x1015d1b0 here; 1.2 does not) */
     }
     if ((S16(ENTRY, 0x1c) & 2) != 0 || (S16(ENTRY, 0x1c) & 4) != 0)
         return;
@@ -118,7 +127,16 @@ void __cdecl Score_RecordKill(int killer, uint8_t *block)
         U16(G32(0x1017e678), 0x24) == U32(ENTRY, 4))
         G32(0x1017e678) = 0;
     U32(ENTRY, 0x150) |= (uint32_t)(int16_t)killer & 0xffff;
-    /* (the original compares the address 0x1016552c with itself here and never counts the kill in that table) */
+    /* 1.2: in a network game, a kind-3 unit of the local player's killed by player 0..9: counted in 1.2's kill table
+       (row killer, column the unit) and sent ("AK") */
+    if (G32(0x1015ec58) != 0 && U32(ENTRY, 0x14) == 3 && U32(ENTRY, 0xc) == SELF && killer >= 0 && killer < 10) {
+#ifdef W34_MUTATE /* the checker's negative check only: the wrong column */
+        W9b_Kill(killer, SELF);
+#else
+        W9b_Kill(killer, U32(ENTRY, 4));
+#endif
+        Sim12_100352b7((uint8_t)SELF, (int)U32(ENTRY, 4));
+    }
     if (U32(ENTRY, 8) == U32(PTRTAB(SELF), 8)) {
         if (U32(ENTRY, 4) == (uint32_t)team1)
             slot = 0;
@@ -131,8 +149,8 @@ void __cdecl Score_RecordKill(int killer, uint8_t *block)
             if (slot >= 0 && slot < 2)
                 W9b_Inc16(0x10165522 + (uint32_t)slot * 2);
         }
-        if (U32(ENTRY, 4) == SELF && killer >= 0 && killer < 8 && G32(0x1015ec58) != 0) {
-            W9b_Inc16(0x1016552c + ((uint32_t)killer << 4) + SELF * 2);
+        if (U32(ENTRY, 4) == SELF && killer >= 0 && killer < 10 && G32(0x1015ec58) != 0) {
+            W9b_Kill(killer, SELF);
             Sim_100413c7();
         }
     }

@@ -1,5 +1,7 @@
 #include "w5y.h"
 #include "../util/access.h"
+#include "../unsorted_1004/w3p.h"
+#include <string.h>
 
 typedef void(__cdecl *Call12Fn)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t,
                                 uint32_t, uint32_t, uint32_t, uint32_t);
@@ -35,10 +37,22 @@ void __cdecl Sim_10024684(uint32_t a1, uint32_t a2)
     SIM_FN(Call12Fn, 0x100246b3)((uint32_t)-2, 0, a1, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 }
 
+/* 1.2 (0x1001cf2c): HGCAR.CFG holds 1.2's 0x21c-byte record: our record's first 0x14c bytes, 1.2's 10 x 10 kill
+   table (ours in g_w34Kills, 0xc8 bytes) and the two dwords that follow (ours at the record's +0x1cc / +0x1d0, 1.2's
+   +0x214 / +0x218). The record is put together here and written by 0x10046f7f (1.2: 0x21c bytes). */
 // FUNCTION: HGSIM 0x10025dac
 int __cdecl Sim_10025dac(void)
 {
-    return SIM_FN(int(__cdecl *)(const void *, const void *), 0x10046f7f)(GBYTES(0x1013489c), GBYTES(0x101653e0));
+    uint8_t rec[0x21c];
+
+    memcpy(rec, GBYTES(0x101653e0), 0x14c);
+#ifdef W5YH_MUTATE /* the checker's negative check only: 1.0's 8 x 8 table */
+    memcpy(rec + 0x14c, GBYTES(0x101653e0) + 0x14c, 0xc8);
+#else
+    memcpy(rec + 0x14c, g_w34Kills, 0xc8);
+#endif
+    memcpy(rec + 0x214, GBYTES(0x101653e0) + 0x1cc, 8);
+    return SIM_FN(int(__cdecl *)(const void *, const void *), 0x10046f7f)(GBYTES(0x1013489c), rec);
 }
 
 // FUNCTION: HGSIM 0x100291a2

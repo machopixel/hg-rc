@@ -182,6 +182,11 @@ EXPORT int FirstDevice(FirstDeviceParams *p)
             p->cacheSize);
     g_hwnd = p->hwnd;
     g_linear = (p->flags & 0x200) != 0;
+    /* round 33: the fog as 1.2's dx5draw reads it (flags bit 2: fog on, colour +0x14; mode 3 linear, start / end
+       +0x18 / +0x1c are D3D light states, which pre-transformed vertices ignore: the fog amount is per vertex) */
+    HgvkLog("FirstDevice: fog %s mode %d colour %08x start %g end %g", (p->flags & 2) ? "on" : "off", p->fogMode,
+            p->fogColor, p->fogStart, p->fogEnd);
+    Vk_SetFog((p->flags & 2) != 0, p->fogColor);
     {
         int rows = SCREEN_H;
 
@@ -222,6 +227,15 @@ EXPORT unsigned GetSocketCaps(void)
 
 #define HGVK_STATE_PAINTER 0x48470001u   /* "HG" 1; the sim's W32_STATE_PAINTER */
 static int g_painter;
+/*
+ * The cloud layer as a backdrop (round 33, Voodoo mode). State 0xd (1.2's 0xc; 3dfxgear: a depth-only buffer clear)
+ * is sent once a frame, by the sky routine just before its cloud layer (1.2 0x1008dff3 -> 0x1008da61; w22_poly.c).
+ * That layer is a textured card with rhw = scale / z, nearer than the ground it hangs over; drawn opaque in mode 2
+ * (Voodoo mode) it wrote depth and hid the hills drawn after it. Before Voodoo mode it went as mode 6, blended, which
+ * writes no depth, so the world covered it. The one Render after state 0xd is drawn in painter's order (no depth
+ * test or write): the sky behind the scene.
+ */
+static int g_skyNext;
 
 EXPORT int SetState(unsigned code, unsigned value)
 {
@@ -244,6 +258,8 @@ EXPORT int SetState(unsigned code, unsigned value)
        draw them in painter's order, as 1.2's renderer drew everything */
     if (code == HGVK_STATE_PAINTER)
         g_painter = value != 0;
+    if (code == 0xd && value != 0)
+        g_skyNext = 1;
     return 0;
 }
 
@@ -291,6 +307,25 @@ static const ModeInfo g_modes[19] = {
     /* 16 */ {0, 0, 0, 0, 1, HGVK_LINES},
     /* 17 */ {0, 0, 0, 0, 0, HGVK_LINES},
     /* 18 */ {0, 0, 0, 0, 1, HGVK_POINTS},
+};
+
+/*
+ * The colour combine of 1.2's 3dfxgear.dll (Diego: "full voodoo"; the sim treats HGVK as its 3DFX renderer, w21).
+ * Its Render switch (3dfxgear 0x10001590, mode -> case byte table 0x10001b24) sets grColorCombine per 1.2 mode; in
+ * the sim's 1.0 numbering (1.0 modes 5..18 are 1.2's 7..20):
+ *   0..4    texture x iterated colour (SCALE_OTHER, LOCAL, ITERATED, TEXTURE)              - HGVK_TEX_COLOUR
+ *   5..11   texture only (SCALE_OTHER, ONE, -, TEXTURE); in 5 / 6 / 10 / 11 the alpha is the texture's
+ *           (grAlphaCombine SCALE_OTHER, ONE, -, TEXTURE) with source-alpha blending          - HGVK_TEX_ONLY
+ *   12      the constant colour grConstantColorValue(tex arg dword +4) (LOCAL, -, CONSTANT)    - HGVK_CONSTANT
+ *   13..15  iterated colour, smooth (LOCAL, -, ITERATED); 14 / 15 blended by the iterated alpha - HGVK_ITERATED
+ *   16..18  lines and points: 1.2 sets no combine and keeps the last polygon's; here their own colour
+ *           (Diego, 2026-10-31: "Keep their own colour")
+ */
+enum { HGVK_TEX_COLOUR, HGVK_TEX_ONLY, HGVK_CONSTANT, HGVK_ITERATED, HGVK_KEEP };
+static const unsigned char g_combine[19] = {
+    HGVK_TEX_COLOUR, HGVK_TEX_COLOUR, HGVK_TEX_COLOUR, HGVK_TEX_COLOUR, HGVK_TEX_COLOUR,
+    HGVK_TEX_ONLY, HGVK_TEX_ONLY, HGVK_TEX_ONLY, HGVK_TEX_ONLY, HGVK_TEX_ONLY, HGVK_TEX_ONLY, HGVK_TEX_ONLY,
+    HGVK_CONSTANT, HGVK_ITERATED, HGVK_ITERATED, HGVK_ITERATED, HGVK_KEEP, HGVK_KEEP, HGVK_KEEP,
 };
 
 static HgvkVertex *g_scratch;
@@ -366,18 +401,23 @@ static HgvkTexture *GetTexture(const void *texArg, int keyed)
     return tex;
 }
 
+/*
+ * The vertex colour exactly as 1.2's dx5draw.dll builds it (0x10004360): each colour byte times the light dword +0x10,
+ * unsigned and wrapping, shifted down 8 and packed by shifting and ORing with no clamp, so a channel over 255 spills
+ * into the next byte. The light can be huge: the particle squares reuse their corners and the textured submitter
+ * shifts the light (light << 3 | 7) at every draw, as in 1.2, so after a few frames it is 0x7fffff .. 0xffffffff,
+ * which this packing turns into white (round 33; a clamped signed product gave black).
+ */
 static uint32_t PackColour(const uint8_t *v, int blend)
 {
-    int light = *(const int *)(v + 0x10);
-    int r = (v[0x14] * light) >> 8;
-    int g = (v[0x15] * light) >> 8;
-    int b = (v[0x16] * light) >> 8;
-    int a = blend ? v[0x17] : 255;
+    uint32_t light = *(const uint32_t *)(v + 0x10);
+    uint32_t r = (uint32_t)v[0x14] * light >> 8;
+    uint32_t g = (uint32_t)v[0x15] * light >> 8;
+    uint32_t b = (uint32_t)v[0x16] * light >> 8;
+    uint32_t d = (((((uint32_t)v[0x17] << 8) | r) << 8 | g) << 8) | b;      /* D3D's ARGB */
+    uint32_t a = blend ? d >> 24 : 255;
 
-    if (r < 0) r = 0; else if (r > 255) r = 255;
-    if (g < 0) g = 0; else if (g > 255) g = 255;
-    if (b < 0) b = 0; else if (b > 255) b = 255;
-    return (uint32_t)r | ((uint32_t)g << 8) | ((uint32_t)b << 16) | ((uint32_t)a << 24);
+    return ((d >> 16) & 0xff) | (((d >> 8) & 0xff) << 8) | ((d & 0xff) << 16) | (a << 24);
 }
 
 static unsigned g_badRhw, g_noTexture;
@@ -415,6 +455,7 @@ static void ReadVertex(HgvkVertex *out, const uint8_t *v, int blend, int flat,
     out->rgba = PackColour(flat ? first : v, blend);
     out->u = *(const float *)(v + 0x1c);
     out->v = *(const float *)(v + 0x20);
+    out->fog = (float)v[0x1b] / 255.0f;
 }
 
 EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
@@ -422,9 +463,10 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
     const ModeInfo *m;
     const uint8_t *src = (const uint8_t *)verts;
     HgvkTexture *texture = NULL;
-    int out = 0, i, needed;
+    int out = 0, i, needed, vblend, sky = g_skyNext;
 
     (void)surf;
+    g_skyNext = 0;          /* only the very next Render, drawn or not */
     g_renders++;
     if (g_verbose >= 2)
         HgvkLog("Render(mode=%d, n=%d)", mode, count);
@@ -492,11 +534,15 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
         }
     }
 
+    /* 1.2's dx5draw never sets the texture blend, so D3D's default MODULATE applies: a texture with alpha (1.2's .TEX
+       effect textures) replaces the vertex alpha with its own; the vertex alpha counts only without texture alpha */
+    vblend = m->blend && !(texture != NULL && Vk_TextureHasAlpha(texture));
+
     if (m->topology == HGVK_TRIANGLES) {
         for (i = 1; i + 1 < count; i++) {
-            ReadVertex(&g_scratch[out++], src, m->blend, m->flat, src);
-            ReadVertex(&g_scratch[out++], src + (size_t)i * VERTEX_STRIDE, m->blend, m->flat, src);
-            ReadVertex(&g_scratch[out++], src + (size_t)(i + 1) * VERTEX_STRIDE, m->blend, m->flat,
+            ReadVertex(&g_scratch[out++], src, vblend, m->flat, src);
+            ReadVertex(&g_scratch[out++], src + (size_t)i * VERTEX_STRIDE, vblend, m->flat, src);
+            ReadVertex(&g_scratch[out++], src + (size_t)(i + 1) * VERTEX_STRIDE, vblend, m->flat,
                        src);
         }
     } else if (m->topology == HGVK_LINES) {
@@ -511,15 +557,43 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
                        src + (size_t)i * VERTEX_STRIDE);
     }
 
+    /* 3dfxgear's colour combine (above) */
+    switch (g_combine[mode]) {
+    case HGVK_TEX_ONLY:
+        for (i = 0; i < out; i++)
+            g_scratch[i].rgba = 0xffffffffu;        /* texture only: its colour and (blended modes) its alpha */
+        break;
+    case HGVK_CONSTANT:
+        if (tex != NULL) {
+            uint32_t c = *(const uint32_t *)((const uint8_t *)tex + 4);      /* Glide's ARGB */
+
+            for (i = 0; i < out; i++)
+                g_scratch[i].rgba = ((c >> 16) & 0xff) | (c & 0xff00) | ((c & 0xff) << 16) | (c & 0xff000000u);
+        }
+        break;
+    case HGVK_ITERATED:
+        if (m->flat && m->topology == HGVK_TRIANGLES) {      /* smooth: each corner its own colour */
+            out = 0;
+            for (i = 1; i + 1 < count; i++) {
+                ReadVertex(&g_scratch[out++], src, vblend, 0, src);
+                ReadVertex(&g_scratch[out++], src + (size_t)i * VERTEX_STRIDE, vblend, 0, src);
+                ReadVertex(&g_scratch[out++], src + (size_t)(i + 1) * VERTEX_STRIDE, vblend, 0, src);
+            }
+        }
+        break;
+    default:
+        break;
+    }
+
     if (g_depth) {
         float nearest = -1.0f;
 
         for (i = 0; i < out; i++)
             if (g_scratch[i].iz > nearest)
                 nearest = g_scratch[i].iz;
-        if (nearest > 0.0f)
+        if (nearest > 0.0f && !sky)         /* the cloud card's depth is not the world's */
             g_lastIz = nearest;
-        else
+        else if (nearest <= 0.0f)
             nearest = g_lastIz;
         for (i = 0; i < out; i++)
             if (g_scratch[i].iz <= 0.0f)
@@ -528,7 +602,7 @@ EXPORT int Render(int mode, void *surf, void *verts, int count, void *tex)
 
     /* a texture with alpha (1.2's .TEX) is not colour-keyed: it blends in the modes with blending, else is opaque */
     Vk_AddDraw(m->topology, m->blend, (m->clamp ? 1 : 0) | (g_linear ? 2 : 0),
-               Vk_TextureHasAlpha(texture) ? 0 : m->keyed, g_painter, texture, g_scratch, out);
+               Vk_TextureHasAlpha(texture) ? 0 : m->keyed, g_painter || sky, texture, g_scratch, out);
     return 0;
 }
 

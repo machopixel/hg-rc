@@ -69,6 +69,7 @@ int __cdecl Net_ProcessMessages(void)
         type = (uint16_t)Sim_1007e984(&extra);
         if (type == 0xfa01)
             break;
+        g_w34NetOver = G32(0x1015f1fc) != 0;        /* 1.2: the receive guard, from the game-over flag */
         G32(0x1015ec6c) += 1;
         tag[0] = (char)RECV[0];
         tag[1] = (char)RECV[1];
@@ -120,8 +121,11 @@ int __cdecl Net_ProcessMessages(void)
             if (extra == 0x16)
                 Sim_10040191(RECV);
         } else if (W9b_Tag(tag, 0x1013accc)) {                      /* "KI" */
-            if (extra == 0xa)
+            if (extra == 0xc)                       /* 1.2: 10 players */
                 Sim_1004158c(RECV, who);
+        } else if (Str_CompareNoCase(tag, "AK") == 0) {            /* 1.2's new message */
+            if (extra == 0xe)
+                Sim12_10035348(RECV);
         } else if (W9b_Tag(tag, 0x1013acd0)) {                      /* "CO" */
             if (extra == 0x1a)
                 Sim_1004170e(RECV, who);

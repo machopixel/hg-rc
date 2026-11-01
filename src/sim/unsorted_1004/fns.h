@@ -49,4 +49,6 @@ int __cdecl Sim_10052aaf(int index); /* dword at 0x109b7d40 + index * 0x6C, 0 if
 int __cdecl Sim_10052be7(int index); /* 0x109e8b40[index] points to a record; dword at 0x109b7d54 + record[+8] * 0x6C */
 int __cdecl Sim_10052c02(int index); /* entry = dword at 0x109e9bb0 + index * 0x50; 2 if negative, else 0x109b8400[entry] */
 
+#include "w35.h"     /* round 33, round 3: the mission menu Sim_10048f02 (hooked in conv_1004.inc) */
+
 #endif

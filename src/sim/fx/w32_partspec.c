@@ -1,6 +1,7 @@
 #include "w32.h"
 #include "../render/w3q.h"
 #include "../render/w31.h"
+#include "../render/w33.h"
 #include "../unsorted_1000/w2f.h"
 #include "../util/access.h"
 #include "../../platform/plat.h"
@@ -102,7 +103,12 @@ void __cdecl Sim12_100790be(void)
     char names[0x20 * 9];
     int32_t slot, rec, n, k;
 
+    /* 1.2: the types are reset only without the 3D mode and its 3DFX / PowerVR mode */
+#ifdef W32PV_MUTATE /* the checker's negative check only: the 3DFX mode not tested */
     if (!W31_TexMode()) {
+#else
+    if (!W31_TexMode() && g_w33Voodoo == 0) {
+#endif
         for (slot = 0; slot < W32_TYPES; slot++)
             W32_ResetType(&g_w32_1011e700[slot]);
         return;

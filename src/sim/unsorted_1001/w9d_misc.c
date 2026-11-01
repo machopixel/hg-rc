@@ -28,8 +28,10 @@ uint32_t __cdecl Sim_1001edd0(int which)
     case 2:
         result = G32(0x101321bc);
         G32(0x101321c0) = G32(0x101321c0) | 8;
+#ifndef HG_MUSIC_FILES /* 1.2 stops the CD only without a WAV map; with the music files there is no CD */
         if (G32(0x1015ec58) == 0)
             Cd_StopWait();
+#endif
         break;
     case 3:
         result = G32(0x101321b0);

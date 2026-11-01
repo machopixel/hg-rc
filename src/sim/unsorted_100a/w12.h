@@ -23,3 +23,9 @@
 void __cdecl Sim_100a0063(const char *mission);
 
 #endif
+
+/* Round 33, 1.2's coloured light from SKYGND.PAR (w12_sky.c; 1.2 0x10138d20..0x10138d74): colours 0..255, unit
+   directions, and the directions in the camera's frame (w3p_view.c, 1.2 0x101181a4 / 0x101181a8 ..) */
+extern int32_t g_w33Ambient[3], g_w33Light1[3], g_w33Light2[3], g_w33Global[3];
+extern float g_w33Light1Dir[3], g_w33Light2Dir[3], g_w33Light1Cam[3], g_w33Light2Cam[3];
+

@@ -7,6 +7,8 @@
 #include "w5z.h"
 #include "w7m.h"
 #include "w3s.h"
+#include "../fx/w32.h"
+#include "../util/util.h"
 
 #define W10_4FL(p, off) (*(float *)(BYTES(p) + (off)))
 #define W10_4R562(rec) U16(rec, 0x562)
@@ -49,13 +51,14 @@ static void W10_4Tier(uint8_t *obj, uint8_t *rec, int32_t kind, int clear, uint3
 void __cdecl Sim_1004f257(uint8_t *obj)
 {
     uint8_t *rec = BYTES(U32(obj, 0x28));
-    float out[3], v;
-    int32_t kind;
+    float out[3], v, a[3], b[3];
+    int32_t kind, moving = 1;
 
     G32(0x1015f3a8) = 1;
     kind = Sim_1004f1df((int)U32(obj, 0x8c));
     if (!(W10_4FL(rec, 0x7c) > *SIM_PTR(float, 0x1012b40c))) {
         /* standing */
+        moving = 0;
         U32(obj, 0x94) = 3;
         if (W10_4Fall(obj, rec, kind, 1)) {
         } else if (W10_4Ready(obj, rec, 0x57)) {
@@ -122,11 +125,29 @@ void __cdecl Sim_1004f257(uint8_t *obj)
         U32(obj, 0x90) = 0x17;
     }
     Sim_1004ee50((uint32_t *)obj);
-    if ((U32(obj, 0x88) & 8) != 0 && U32(obj, 4) == G32(0x1017b8c8)) {
-        U32(obj, 0x88) &= 0xfffffff7u;
-        Sim_1004f19d(obj, out);
-        Sim_1000ed52(*(uint32_t *)&out[0], *(uint32_t *)&out[1], *(uint32_t *)&out[2], 0x1013bab8u, G32(0x1015ef0c),
-                     (uint32_t)(uintptr_t)obj);
+    if ((U32(obj, 0x88) & 8) != 0) {
+        /* 1.2 (0x1003fbb7): a moving unit's step raises dust at the lower foot (+0x4c4, else +0x4c0) against its
+           velocity +0x548 */
+        if (moving && W32_PARTICLES()) {
+            Sim_100a9cfb((void *)(uintptr_t)U32(rec, 0x4c4), (uint32_t *)&a[0], (uint32_t *)&a[1], (uint32_t *)&a[2]);
+            Sim_100a9cfb((void *)(uintptr_t)U32(rec, 0x4c0), (uint32_t *)&b[0], (uint32_t *)&b[1], (uint32_t *)&b[2]);
+#ifdef W10FS_MUTATE /* the checker's negative check only: the higher foot */
+            if (!(a[1] < b[1])) {
+#else
+            if (a[1] < b[1]) {
+#endif
+                b[0] = a[0];
+                b[1] = a[1];
+                b[2] = a[2];
+            }
+            Sim12_10086007(b[0], b[1], b[2], -W10_4FL(rec, 0x548), -W10_4FL(rec, 0x54c), -W10_4FL(rec, 0x550));
+        }
+        if (U32(obj, 4) == G32(0x1017b8c8)) {
+            U32(obj, 0x88) &= 0xfffffff7u;
+            Sim_1004f19d(obj, out);
+            Sim_1000ed52(*(uint32_t *)&out[0], *(uint32_t *)&out[1], *(uint32_t *)&out[2], 0x1013bab8u,
+                         G32(0x1015ef0c), (uint32_t)(uintptr_t)obj);
+        }
     }
     G32(0x1015f3a8) = 0;
 }

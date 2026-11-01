@@ -2,6 +2,9 @@
 #include "w4w_api.h"
 #include "../util/access.h"
 #include <stdarg.h>
+#ifdef HG_MUSIC_FILES
+#include "../../platform/music.h"
+#endif
 
 #define AUX_DEVICE G32(0x1014c9b4)
 
@@ -35,6 +38,12 @@ int __cdecl Win_AuxGetVolume(void)
 // FUNCTION: HGSIM 0x1009eb85
 int __cdecl Win_AuxSetVolume(int volume)
 {
+#ifdef HG_MUSIC_FILES
+    /* 1.2's WAV music volume (1.2 0x1001603f, the music table's slot in place of this function): the music of
+     * platform/music.h instead of the CD's aux volume */
+    Music_SetVolume(volume < 0 ? 0u : (uint32_t)volume);
+    return 1;
+#else
     uint32_t v;
 
     if (!(volume < 0xffff))
@@ -44,6 +53,7 @@ int __cdecl Win_AuxSetVolume(int volume)
     if (AUX_DEVICE == 0xffffffffu)
         return 0;
     return SIM_API(W4wAuxSetFn, W4W_IAT_AUXSETVOLUME)(AUX_DEVICE, v) == 0;
+#endif
 }
 
 // FUNCTION: HGSIM 0x1009ebeb

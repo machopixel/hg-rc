@@ -204,7 +204,11 @@ int __cdecl Sim_10046f7f(const char *name, const void *data)
 
     if (h == -1)
         return -1;
+#ifdef W8UH_MUTATE /* the checker's negative check only: 1.0's size */
     W8U_WRITE_1004((uint32_t)h, data, 0x1d4);
+#else
+    W8U_WRITE_1004((uint32_t)h, data, 0x21c);       /* 1.2 (0x1003951f): its 0x21c-byte HGCAR record */
+#endif
     W8U_CLOSE_1004((uint32_t)h);
     return 0;
 }

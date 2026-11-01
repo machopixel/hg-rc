@@ -27,6 +27,14 @@
 enum { ROUTE_DEFAULT, ROUTE_SIM, ROUTE_SHELL };
 
 /* hgprm.cfg, written by the shell. Only the sim command line is read here. */
+/*
+ * Round 33, 1.2's launcher: the last argument of SimMain and ShellMain is (flags & 2), flags being a build option
+ * stored in 1.2's hg.exe after the bytes 34 12 98 40 f9 37 88 e9 (1.0 passed 1), shipped as 0. The sim reads bit 2 as
+ * "no CD": without it it runs its CD search and stops when it finds no CD (1.2 0x1006fb4a, [0x1014a590]); it gets
+ * bit 2 here. The shell gets the shipped 0 (RunShell's call; DECISIONS.md, round 33).
+ */
+#define HG_LAUNCH_FLAGS 2
+
 #define PRM_SIZE        0x344
 #define PRM_SIM_CMDLINE 0x240
 
@@ -187,6 +195,10 @@ static LRESULT CALLBACK MainWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     case ROUTE_SIM:
         return g_simWndProc(hwnd, msg, wParam, lParam);
     case ROUTE_SHELL:
+        /* 1.2's shell draws only while it holds the focus: logged (round 33) */
+        if (msg == WM_SETFOCUS || msg == WM_KILLFOCUS || msg == WM_DESTROY)
+            DebugPrintf("shell window %p: %s\n", (void *)hwnd,
+                        msg == WM_SETFOCUS ? "focus gained" : msg == WM_KILLFOCUS ? "focus lost" : "destroyed");
         return g_shellWndProc(hwnd, msg, wParam, HooksDDraw_TranslateMouse(msg, lParam));
     default:
         return DefWindowProcA(hwnd, msg, wParam, lParam);
@@ -587,6 +599,13 @@ static int RunSimIsolated(HWND hwnd, const char *cmd, int *result)
     CloseHandle(pi.hThread);
     CloseHandle(pi.hProcess);
     ShowWindow(hwnd, SW_SHOWMAXIMIZED);
+    /* round 33: as in 1998, when the game window was the sim's own and kept the focus: the 1.2 shell that starts
+       next reads its focus once (GetFocus() == its window) and draws nothing without it */
+    SetForegroundWindow(hwnd);
+    SetActiveWindow(hwnd);              /* GetFocus / GetActiveWindow are per thread: make them ours again */
+    SetFocus(hwnd);
+    DebugPrintf("Sim process ended: game window %p brought back, focus %p, foreground %p\n", (void *)hwnd,
+                (void *)GetFocus(), (void *)GetForegroundWindow());
     *result = (int)code;
     return 1;
 }
@@ -736,7 +755,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 return result;
             ShowWindow(hwnd, SW_SHOWMAXIMIZED);
         }
-        return RunSim(hwnd, lpCmdLine, 0, 1);
+        result = RunSim(hwnd, lpCmdLine, 0, HG_LAUNCH_FLAGS & 2);
+        /* round 33: an isolated sim child holds the foreground; let the parent's game window have it back (the
+           1.2 shell reads its focus once when it starts: without it, a black menu after a mission) */
+        AllowSetForegroundWindow(ASFW_ANY);
+        return result;
     }
 
     hwnd = CreateMainWindow(hInstance, 640, 480, 0);
@@ -745,7 +768,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     script = "intro";
     for (;;) {
-        result = RunShell(hwnd, script, 1);
+        /* the shell gets 1.2's shipped 0: it sets its flag [0x10259598] to (arg == 1 ? 0 : !(arg & 2)), so only the
+           shipped 0 gives its full setup (a list of 0x49 entries, as 1.0's shell always has; 1 or 2 give 0x33); its
+           CD search with that flag runs only for the DVD edition's movie path (wavmap.ini), which this install has not */
+        result = RunShell(hwnd, script, 0);
         if (IsFatal(result))
             FatalDllError();
         else if (IsQuit(result))
@@ -775,7 +801,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
          * menus, SDL3 and the renderer, HGSIM.DLL's own address can be taken; it then loads elsewhere, the hooks
          * whose first bytes hold an address do not fit and the game crashed (Diego's option 1 run). */
         if (!(g_isolateSim && !netGame && RunSimIsolated(hwnd, simCmdLine, &result)))
-            result = RunSim(hwnd, simCmdLine, 0, 1);
+            result = RunSim(hwnd, simCmdLine, 0, HG_LAUNCH_FLAGS & 2);
         if (IsFatal(result))
             FatalDllError();
         else if (IsQuit(result))

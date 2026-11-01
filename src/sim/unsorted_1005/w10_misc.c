@@ -7,6 +7,7 @@
 #include "../unsorted_1004/w9f.h"
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w8z.h"
+#include "../unsorted_100a/w12.h"
 
 typedef int(__stdcall *W10HeapFreeFn)(void *heap, uint32_t flags, void *block);
 #define W10_HEAPFREE(block) \
@@ -172,16 +173,28 @@ typedef float(__cdecl *W10FogFn)(uint32_t z, uint32_t arg);
 #define W10_LIGHT(v) SIM_CALL_100a648c(U32(v, 0xc), U32(v, 0x10), U32(v, 0x14), U32(v, 0x30), U32(v, 0x34), U32(v, 0x38))
 
 // FUNCTION: HGSIM 0x10058c5e
+// FUNCTION: HGSIM12 0x1004bad6
+/*
+ * The light of a polygon's points (+0x3c: 0..0x1f), as 1.2 computes it: 1.0's light with, besides, a colour per
+ * point in +0x3c's upper three bytes (red, green, blue: SKYGND.PAR's ambient, plus the global light's, light 1's and
+ * light 2's share in their colours, plus white for every point light reaching it), and the point lights also in 3D
+ * mode with fog on (not for the b000..e000 polygons).
+ */
 void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *const *list, int32_t scale)
 {
-    uint32_t sx, sy, sz, sflag;
-    int mode3, near = 0, minv = 0;
-    int32_t i, q;
+    int32_t rgb[0x80];          /* red, green, blue, light per point (1.2's 0x200-byte local) */
+    uint32_t sx, sy, sz, sflag, kind;
+    int mode3, near = 0, minv = 0, special;
+    int32_t i, q, r, g, b;
     uint8_t *v;
     const uint8_t *src, *corner;
 
     if (list == 0 || poly == 0 || verts == 0)
         return;
+    kind = U16(poly, 0) & 0xf000u;
+    special = kind == 0xb000 || kind == 0xc000 || kind == 0xd000 || kind == 0xe000;
+    for (i = 0; i < 0x80; i++)
+        rgb[i] = 0;
     mode3 = G32(0x1014cb1c) == 3;
     sx = G32(0x109b16c4);
     sy = G32(0x109b16c8);
@@ -206,10 +219,21 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
         if ((U8(v, 0x29) & 2) != 0)
             continue;
         U32(v, 0x3c) = G32(0x101668b4);
+        rgb[i * 4] = g_w33Ambient[0];
+        rgb[i * 4 + 1] = g_w33Ambient[1];
+        rgb[i * 4 + 2] = g_w33Ambient[2];
+        rgb[i * 4 + 3] = W10_V3C(v);
         if (G32(0x10143fd4) != 0 || mode3 || G32(0x101668d8) != 0) {
             q = Render_Ftol((double)(int32_t)(G32(0x10143fbc) * (uint32_t)W10_LIGHT(v)) / GF(0x1012b4b0));
-            if (q > 0)
+            r = q * g_w33Global[0] >> 7;
+            g = q * g_w33Global[1] >> 7;
+            b = q * g_w33Global[2] >> 7;
+            if (q > 0) {
                 U32(v, 0x3c) += (uint32_t)q;
+                rgb[i * 4] += r;
+                rgb[i * 4 + 1] += g;
+                rgb[i * 4 + 2] += b;
+            }
         }
         if (GS32(0x1014cb2c) > 0 && G32(0x1017b940) == 0) {
             if (!((double)GS32(0x1014cb2c) >= *(float *)(v + 8))) {
@@ -228,8 +252,45 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
             }
         }
     }
+    /* 1.2: the two coloured lights, colour only, their directions already in the camera's frame */
+    G32(0x109afdcc) = 1;
+    for (i = 0; i < GS32(0x101c9ea8); i++) {
+        v = list[i];
+        if ((U8(v, 0x29) & 2) != 0)
+            continue;
+        LIGHT_X = g_w33Light1Cam[0];
+        LIGHT_Y = g_w33Light1Cam[1];
+        LIGHT_Z = g_w33Light1Cam[2];
+        q = Render_Ftol((double)(int32_t)((uint32_t)W10_LIGHT(v) * 0xffu) / GF(0x1012b4b0));
+        r = q * g_w33Light1[0] >> 7;
+        g = q * g_w33Light1[1] >> 7;
+        b = q * g_w33Light1[2] >> 7;
+        if (q > 0) {
+            rgb[i * 4] += r;
+            rgb[i * 4 + 1] += g;
+            rgb[i * 4 + 2] += b;
+        }
+        LIGHT_X = g_w33Light2Cam[0];
+        LIGHT_Y = g_w33Light2Cam[1];
+        LIGHT_Z = g_w33Light2Cam[2];
+        q = Render_Ftol((double)(int32_t)((uint32_t)W10_LIGHT(v) * 0xffu) / GF(0x1012b4b0));
+        r = q * g_w33Light2[0] >> 7;
+        g = q * g_w33Light2[1] >> 7;
+#ifdef W10L_MUTATE /* the checker's negative check only: light 2's blue from its green */
+        b = q * g_w33Light2[1] >> 7;
+#else
+        b = q * g_w33Light2[2] >> 7;
+#endif
+        if (q > 0) {
+            rgb[i * 4] += r;
+            rgb[i * 4 + 1] += g;
+            rgb[i * 4 + 2] += b;
+        }
+    }
     G32(0x109afdcc) = 0;
-    if (G32(0x10143fd8) != 0 && !mode3 && G32(0x1017d108) == 0) {
+    /* 1.2: the point lights also in 3D mode with fog on, but not for the b000..e000 polygons; each adds white */
+    if (G32(0x10143fd8) != 0 && !mode3 &&
+        ((G32(0x1017d108) == 0 && G32(0x1017b940) == 0) || (!special && G32(0x1017b940) != 0))) {
         for (src = BYTES(G32(0x101668d0)); src != 0; src = BYTES(U32(src, 0))) {
             if (Sim_1005897b(poly, verts, src) == 0)
                 continue;
@@ -245,8 +306,12 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
                 if ((U8(v, 0x29) & 2) != 0 || W10_V3C(v) >= 0x80)
                     continue;
                 q = near ? 0x80 : W10_LIGHT(v);
-                if (q > 0)
+                if (q > 0) {
                     U32(v, 0x3c) += (uint32_t)q;
+                    rgb[i * 4] += 0xff;
+                    rgb[i * 4 + 1] += 0xff;
+                    rgb[i * 4 + 2] += 0xff;
+                }
             }
         }
     }
@@ -270,6 +335,22 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
             U32(v, 0x3c) = (uint32_t)minv;
         if (W10_V3C(v) > 0x1f)
             U32(v, 0x3c) = 0x1f;
+        r = rgb[i * 4];
+        g = rgb[i * 4 + 1];
+        b = rgb[i * 4 + 2];
+        if (r < 0)
+            r = 0;
+        if (r > 0xff)
+            r = 0xff;
+        if (g < 0)
+            g = 0;
+        if (g > 0xff)
+            g = 0xff;
+        if (b < 0)
+            b = 0;
+        if (b > 0xff)
+            b = 0xff;
+        U32(v, 0x3c) |= (uint32_t)r << 8 | (uint32_t)g << 16 | (uint32_t)b << 24;
         U8(v, 0x29) |= 2;
     }
 }

@@ -17,6 +17,7 @@
 #include "../unsorted_100a/w5z.h"
 #include "../unsorted_100a/w6g.h"
 #include "../unsorted_100c/w10.h"
+#include "../fx/w32.h"
 
 /* 0x100d71b9 stays original (it rounds the 80-bit result of the CRT asin) */
 typedef void(__cdecl *W10dAimFn)(uint8_t *obj, uint32_t node, uint32_t x, uint32_t y, uint32_t z, int big,
@@ -46,7 +47,8 @@ int __cdecl Sim_100d5446(uint8_t *obj, const uint8_t *weapon, uint8_t *slot)
         return 0;
     mine = U32(U32(rec, 0), 4) == G32(0x1017b8c8);
     if (mine) {
-        Sim_10045f3b(U32(weapon, 0xd2), 0x2d, 0x32);
+        if (G32(0x1015ef3c) != 0)       /* 1.2: its force-feedback request (1.0: Sim_10045f3b(kind, 0x2d, 0x32)) */
+            Sim_100382fb(U32(weapon, 0xd2), 0, 0, 0);
         ctl = U32(U32(rec, 0), 0x54);
         if (*(float *)BYTES(ctl + 8) >= *SIM_PTR(float, 0x1012bcd8) && (U16(rec, 0x562) & 1) == 0) {
             v = (int32_t)((uint32_t)U16(weapon, 0x74) + U32(slot, 0x24) - U32(rec, 0xbd7));
@@ -172,6 +174,16 @@ int __cdecl Sim_100d5446(uint8_t *obj, const uint8_t *weapon, uint8_t *slot)
                 Sim_100585e1(S32(p, 0x68), 7, light);
             }
             U32(p, 0x6c) = (uint32_t)Sim_100ac21a(2, p);
+            if (W32_PARTICLES()) {
+                /* 1.2 (0x100bb425): the launch smoke at the weapon's mount node, rising 5 per frame */
+                Sim_100a9cfb((void *)(uintptr_t)U32(rec, 0x498u + U32(slot, 0x11c) * 4u), (uint32_t *)&a,
+                             (uint32_t *)&b, (uint32_t *)&c);
+#ifdef W10G_MUTATE /* the checker's negative check only: sideways */
+                Sim12_1007f19f(a, b, c, 5.0f, 0.0f, 0.0f);
+#else
+                Sim12_1007f19f(a, b, c, 0.0f, 5.0f, 0.0f);
+#endif
+            }
             if (mine) {
                 if (U32(p, 0) == 0x3e || U32(p, 0) == 0x41 || U32(p, 0) == 0x3f)
                     G32(0x1013488c) = (uint32_t)(i - 1);

@@ -3,6 +3,9 @@
 #include "../util/util.h"
 #include "../util/access.h"
 #include "../win/w4u.h"
+#ifdef HG_MUSIC_FILES
+#include "../../platform/music.h"
+#endif
 
 /* The three state changes below are the same except for the stored value and the code. */
 static void SetState(int index, uint32_t state, uint32_t code)
@@ -81,6 +84,18 @@ void __cdecl Sim_1001f3ac(void)
     G32(0x1015d1c4) = 0;
     if (G32(0x1015d1bc) != 0)
         return;
+#ifdef HG_MUSIC_FILES
+    /* 1.2's WAV music poll (1.2 0x10015fbd) with platform/music.h: a track that has finished (8 s after its end,
+     * music.c) starts again */
+    if (GS32(0x101321a8) == -1 || (G32(0x101321c0) & 8) == 0)
+        return;
+#ifdef W5AM_MUTATE /* the checker's negative check only (spec_music_v12.py) */
+    if (Music_IsPlaying() != 0)
+#else
+    if (Music_IsPlaying() == 0)
+#endif
+        Music_Play(GS32(0x101321a8));
+#else
     if ((G32(0x101321c0) & 8) == 0)
         return;
     if (W5A_CALL_1009e5d0() == 0)
@@ -89,4 +104,5 @@ void __cdecl Sim_1001f3ac(void)
         return;
     Cd_PlayTrack(GS32(0x101321a8));
     Cd_UpdateStatus();
+#endif
 }

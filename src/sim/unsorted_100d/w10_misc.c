@@ -1,4 +1,5 @@
 #include "w10.h"
+#include "../fx/w32.h"
 #include "../simmem.h"
 #include "../util/access.h"
 #include "../unsorted_1005/w8v.h"
@@ -91,7 +92,7 @@ void __cdecl Sim_100d965e(uint32_t x, uint32_t y, uint32_t z, float vx, float vy
     slot[6] = 0;
     *(float *)&slot[7] = (float)(Sim_1009c929(0x1f4) - 0xfa);
     U16(obj, 0x10) = 1;
-    rec = U32(U32(obj, 0x552), 0x8c);
+    rec = U32(U32(obj, W32_REC_OBJ), 0x8c);
     *(float *)(BYTES(rec) + 0x50) = (float)Sim_10084a94(vx, vy, vz);
     U32(rec, 0x44) = x;
     U32(rec, 0x48) = y;
@@ -99,21 +100,26 @@ void __cdecl Sim_100d965e(uint32_t x, uint32_t y, uint32_t z, float vx, float vy
     U32(rec, 0x38) = 0;
     U32(rec, 0x3c) = 0;
     U32(rec, 0x40) = 0;
-    *(float *)(obj + 0x56e) = vx;
-    *(float *)(obj + 0x572) = vy;
-    *(float *)(obj + 0x576) = vz;
+    *(float *)(obj + W32_REC_VEL) = vx;
+    *(float *)(obj + W32_REC_VEL + 4) = vy;
+    *(float *)(obj + W32_REC_VEL + 8) = vz;
     sx = vx / GF(0x1012bd6c);
     sy = vy / GF(0x1012bd6c);
     sz = vz / GF(0x1012bd6c);
     px = sx;
     py = sy;
     pz = sz;
-    Sim_100aa39f((void *)(uintptr_t)U32(obj, 0x552));
-    Sim_100a9d47((void *)(uintptr_t)U32(obj, 0x552), x, y, z);
-    Sim_100aa799((void *)(uintptr_t)U32(obj, 0x552));
-    U32(obj, 0x55e) = G32(0x1015dc78);
+    Sim_100aa39f((void *)(uintptr_t)U32(obj, W32_REC_OBJ));
+    Sim_100a9d47((void *)(uintptr_t)U32(obj, W32_REC_OBJ), x, y, z);
+    Sim_100aa799((void *)(uintptr_t)U32(obj, W32_REC_OBJ));
+    U32(obj, W32_REC_TIME) = G32(0x1015dc78);
+    /* 1.2 (0x100beafe): 16 points of 0x32 bytes in its particle layout (1.0: 32 of 0x2a) */
+#ifdef W10W_MUTATE /* the checker's negative check only: 1.0's 32 points */
     for (i = 0; i < 0x20; i++) {
-        uint8_t *p = obj + 0x12 + i * 0x2a;
+#else
+    for (i = 0; i < W32_REC_NPT; i++) {
+#endif
+        uint8_t *p = obj + 0x12 + i * W32_REC_PT;
 
         U16(p, 0x18) = 1;
         px = px + sx;

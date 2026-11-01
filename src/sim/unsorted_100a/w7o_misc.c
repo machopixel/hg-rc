@@ -2,6 +2,8 @@
 #include "w3o.h"
 #include "w5a.h"
 #include "../util/access.h"
+#include "../render/w2m.h"
+#include "../render/w33.h"
 #include "../render/w3r.h"
 #include "../view/view.h"
 #include "../view/w2a.h"
@@ -70,6 +72,8 @@ int32_t __cdecl Sim_100a7e55(int32_t index)
 }
 
 #define DEFERRED(i) (U32(G32(0x1017d168), (uint32_t)(i) * 8))
+/* the renderer's state call [0x109e3d40], 1.0's numbering */
+#define W7O_STATE RENDER_SLOT(int(__cdecl *)(unsigned, unsigned), 0x109e3d40)
 
 // FUNCTION: HGSIM 0x100a4c45
 void __cdecl Sim_100a4c45(void)
@@ -84,6 +88,13 @@ void __cdecl Sim_100a4c45(void)
         for (i = GS32(0x1017d134); i < (int32_t)(G32(0x1017d134) + G32(0x101c9ea0) - G32(0x1017d130)); i++)
             W7O_CALL_100a539e(DEFERRED(i));
     if (G32(0x1017d130) != 0) {
+        /* 1.2 (0x10091065): in its 3DFX / PowerVR mode, around the last group, state 0xe (1.0's 0xf) off and on */
+#ifdef W7OV_MUTATE /* the checker's negative check only: the state call left out */
+        if (0)
+#else
+        if (g_w33Voodoo != 0 && G32(0x1014cb1c) != 1)
+#endif
+            W7O_STATE(0xf, 0);
         Sim_100787f4(saved);
         G32(0x1014caec) = 0;
         G32(0x1014cb24) = 0;
@@ -93,6 +104,8 @@ void __cdecl Sim_100a4c45(void)
              i < (int32_t)(G32(0x1017d134) + G32(0x101c9ea0)); i++)
             W7O_CALL_100a539e(DEFERRED(i));
         Mem_Move(SIM_PTR(void, 0x1014cae8), saved, 0x68);
+        if (g_w33Voodoo != 0 && G32(0x1014cb1c) != 1)
+            W7O_STATE(0xf, 1);
     }
     G32(0x1017d130) = 0;
     G32(0x101c9ea0) = 0;

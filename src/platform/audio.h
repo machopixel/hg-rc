@@ -35,6 +35,17 @@ AudioVoice *Audio_VoiceCreate(uint32_t bytes, uint32_t rate, uint32_t channels, 
 void Audio_VoiceDestroy(AudioVoice *voice);
 uint8_t *Audio_VoiceData(AudioVoice *voice, uint32_t *bytes);
 
+/*
+ * A stream voice (the music): instead of a clip in memory, `fill` gives the 16-bit interleaved samples block by
+ * block (at most `frames` frames; it returns how many it wrote, 0 at the end, after which the voice stops as a
+ * clip played through does). The first block is asked for here, the following ones by the mixer, on the audio
+ * thread with the voice list locked: `fill` must not call the audio functions. Play / Stop / volume / pan /
+ * rate / Destroy as for any voice; looping and positions do not apply. NULL as Audio_VoiceCreate.
+ */
+#define AUDIO_STREAM_FRAMES 4096u
+typedef uint32_t (*AudioFillFn)(void *user, int16_t *out, uint32_t frames);
+AudioVoice *Audio_StreamCreate(uint32_t rate, uint32_t channels, AudioFillFn fill, void *user);
+
 void Audio_VoicePlay(AudioVoice *voice, int loop);
 void Audio_VoiceStop(AudioVoice *voice); /* keeps the play position */
 int Audio_VoiceIsPlaying(AudioVoice *voice);

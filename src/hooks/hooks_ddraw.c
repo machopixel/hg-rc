@@ -28,6 +28,28 @@
 
 #define DD_OK 0
 #define DDERR_UNSUPPORTED_ ((HRESULT)0x80004001)
+#ifdef _MSC_VER
+#include <intrin.h>
+#define DD_CALLER() _ReturnAddress()
+#else
+#define DD_CALLER() __builtin_return_address(0)
+#endif
+
+/* round 33: every "unsupported" answer is logged once per method, so a run shows what a shell asks for that the
+   stand-in does not do (1.2's shell, Diego's blue screen) */
+static HRESULT Unsupported(const char *method)
+{
+    static const char *seen[64];
+    int i;
+
+    for (i = 0; i < 64 && seen[i] != NULL; i++)
+        if (seen[i] == method)
+            return DDERR_UNSUPPORTED_;
+    if (i < 64)
+        seen[i] = method;
+    DebugPrintf("DirectDraw stand-in: %s answered unsupported\n", method);
+    return DDERR_UNSUPPORTED_;
+}
 #define DDERR_INVALIDPARAMS_ ((HRESULT)0x80070057)
 #define DDERR_OUTOFMEMORY_ ((HRESULT)0x8007000E)
 #define DDERR_NOTFOUND_ ((HRESULT)0x887600FE)
@@ -106,6 +128,8 @@ static LARGE_INTEGER g_lastFlip, g_freq;
 static WINDOWPLACEMENT g_savedPlacement;
 static LONG_PTR g_savedStyle;
 static int g_windowSaved;
+/* 1.2's shell's movie popup while it exists (see StandInCreateWindowExA) */
+static HWND g_shellPopup;
 
 #define M(ret) static ret __stdcall
 
@@ -229,7 +253,7 @@ M(HRESULT) PalQueryInterface(DdPalette *p, const GUID *iid, void **out)
     (void)p; (void)iid;
     if (out != NULL)
         *out = NULL;
-    return DDERR_UNSUPPORTED_;
+    return Unsupported("PalQueryInterface");
 }
 M(ULONG) PalAddRef(DdPalette *p) { return (ULONG)InterlockedIncrement(&p->refs); }
 M(ULONG) PalRelease(DdPalette *p)
@@ -266,7 +290,7 @@ M(HRESULT) PalGetEntries(DdPalette *p, DWORD flags, DWORD start, DWORD count, ui
 M(HRESULT) PalInitialize(DdPalette *p, void *dd, DWORD flags, const void *entries)
 {
     (void)p; (void)dd; (void)flags; (void)entries;
-    return DDERR_UNSUPPORTED_;
+    return Unsupported("PalInitialize");
 }
 M(HRESULT) PalSetEntries(DdPalette *p, DWORD flags, DWORD start, DWORD count, const uint8_t *in)
 {
@@ -329,7 +353,7 @@ M(HRESULT) SurfQueryInterface(DdSurface *s, const GUID *iid, void **out)
     (void)s; (void)iid;
     if (out != NULL)
         *out = NULL;
-    return DDERR_UNSUPPORTED_;
+    return Unsupported("SurfQueryInterface");
 }
 M(ULONG) SurfAddRef(DdSurface *s) { return (ULONG)InterlockedIncrement(&s->refs); }
 M(ULONG) SurfRelease(DdSurface *s)
@@ -581,7 +605,7 @@ M(HRESULT) SurfSetColorKey(DdSurface *s, DWORD flags, const uint32_t *key)
 M(HRESULT) SurfGetColorKey(DdSurface *s, DWORD flags, uint32_t *key)
 {
     if (!(flags & DDCKEY_SRCBLT) || !s->hasKey || key == NULL)
-        return DDERR_UNSUPPORTED_;
+        return Unsupported("SurfGetColorKey");
     key[0] = key[1] = s->keyLow;
     return DD_OK;
 }
@@ -599,27 +623,27 @@ M(HRESULT) SurfGetFlipStatus(DdSurface *s, DWORD flags) { (void)s; (void)flags; 
 M(HRESULT) SurfGetBltStatus(DdSurface *s, DWORD flags) { (void)s; (void)flags; return DD_OK; }
 
 /* Not needed: each takes the argument count of the real method (stdcall). */
-M(HRESULT) SurfAddAttachedSurface(DdSurface *s, void *a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfAddOverlayDirtyRect(DdSurface *s, void *a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfBltBatch(DdSurface *s, void *a, DWORD b, DWORD c) { (void)s; (void)a; (void)b; (void)c; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfDeleteAttachedSurface(DdSurface *s, DWORD a, void *b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfEnumAttachedSurfaces(DdSurface *s, void *a, void *b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfEnumOverlayZOrders(DdSurface *s, DWORD a, void *b, void *c) { (void)s; (void)a; (void)b; (void)c; return DDERR_UNSUPPORTED_; }
+M(HRESULT) SurfAddAttachedSurface(DdSurface *s, void *a) { (void)s; (void)a; return Unsupported("SurfAddAttachedSurface"); }
+M(HRESULT) SurfAddOverlayDirtyRect(DdSurface *s, void *a) { (void)s; (void)a; return Unsupported("SurfAddOverlayDirtyRect"); }
+M(HRESULT) SurfBltBatch(DdSurface *s, void *a, DWORD b, DWORD c) { (void)s; (void)a; (void)b; (void)c; return Unsupported("SurfBltBatch"); }
+M(HRESULT) SurfDeleteAttachedSurface(DdSurface *s, DWORD a, void *b) { (void)s; (void)a; (void)b; return Unsupported("SurfDeleteAttachedSurface"); }
+M(HRESULT) SurfEnumAttachedSurfaces(DdSurface *s, void *a, void *b) { (void)s; (void)a; (void)b; return Unsupported("SurfEnumAttachedSurfaces"); }
+M(HRESULT) SurfEnumOverlayZOrders(DdSurface *s, DWORD a, void *b, void *c) { (void)s; (void)a; (void)b; (void)c; return Unsupported("SurfEnumOverlayZOrders"); }
 M(HRESULT) SurfGetCaps(DdSurface *s, uint32_t *caps)
 {
     caps[0] = s->primary ? DDSCAPS_PRIMARYSURFACE : 0;
     return DD_OK;
 }
-M(HRESULT) SurfGetClipper(DdSurface *s, void **a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfGetDC(DdSurface *s, void **a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfGetOverlayPosition(DdSurface *s, LONG *a, LONG *b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfInitialize(DdSurface *s, void *a, void *b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfReleaseDC(DdSurface *s, void *a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfSetClipper(DdSurface *s, void *a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfSetOverlayPosition(DdSurface *s, LONG a, LONG b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfUpdateOverlay(DdSurface *s, void *a, void *b, void *c, DWORD d, void *e) { (void)s; (void)a; (void)b; (void)c; (void)d; (void)e; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfUpdateOverlayDisplay(DdSurface *s, DWORD a) { (void)s; (void)a; return DDERR_UNSUPPORTED_; }
-M(HRESULT) SurfUpdateOverlayZOrder(DdSurface *s, DWORD a, void *b) { (void)s; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
+M(HRESULT) SurfGetClipper(DdSurface *s, void **a) { (void)s; (void)a; return Unsupported("SurfGetClipper"); }
+M(HRESULT) SurfGetDC(DdSurface *s, void **a) { (void)s; (void)a; return Unsupported("SurfGetDC"); }
+M(HRESULT) SurfGetOverlayPosition(DdSurface *s, LONG *a, LONG *b) { (void)s; (void)a; (void)b; return Unsupported("SurfGetOverlayPosition"); }
+M(HRESULT) SurfInitialize(DdSurface *s, void *a, void *b) { (void)s; (void)a; (void)b; return Unsupported("SurfInitialize"); }
+M(HRESULT) SurfReleaseDC(DdSurface *s, void *a) { (void)s; (void)a; return Unsupported("SurfReleaseDC"); }
+M(HRESULT) SurfSetClipper(DdSurface *s, void *a) { (void)s; (void)a; return Unsupported("SurfSetClipper"); }
+M(HRESULT) SurfSetOverlayPosition(DdSurface *s, LONG a, LONG b) { (void)s; (void)a; (void)b; return Unsupported("SurfSetOverlayPosition"); }
+M(HRESULT) SurfUpdateOverlay(DdSurface *s, void *a, void *b, void *c, DWORD d, void *e) { (void)s; (void)a; (void)b; (void)c; (void)d; (void)e; return Unsupported("SurfUpdateOverlay"); }
+M(HRESULT) SurfUpdateOverlayDisplay(DdSurface *s, DWORD a) { (void)s; (void)a; return Unsupported("SurfUpdateOverlayDisplay"); }
+M(HRESULT) SurfUpdateOverlayZOrder(DdSurface *s, DWORD a, void *b) { (void)s; (void)a; (void)b; return Unsupported("SurfUpdateOverlayZOrder"); }
 
 static const void *const g_surfVtbl[] = {
     (void *)SurfQueryInterface, (void *)SurfAddRef, (void *)SurfRelease,
@@ -664,7 +688,7 @@ M(HRESULT) DevQueryInterface(DdDevice *d, const GUID *iid, void **out)
     (void)d; (void)iid;
     if (out != NULL)
         *out = NULL;
-    return DDERR_UNSUPPORTED_;
+    return Unsupported("DevQueryInterface");
 }
 M(ULONG) DevAddRef(DdDevice *d) { return (ULONG)InterlockedIncrement(&d->refs); }
 M(ULONG) DevRelease(DdDevice *d)
@@ -812,15 +836,32 @@ M(HRESULT) DevSetDisplayMode(DdDevice *d, DWORD w, DWORD h, DWORD bpp)
     d->modeW = (int)w;
     d->modeH = (int)h;
     d->modeBpp = (int)bpp;
+    /* 1.2's shell plays its movies in 16 bits through DirectShow, in a child window of this window; under the
+       SDL3 picture only their sound comes through (round 33, parked: the video round plays them ourselves) */
     PlaceWindow(d->window, (int)w, (int)h);
     if (Display_IsOpen())
         Display_Close();
     if (!Display_Open(d->window, (int)w, (int)h)) {
         DebugPrintf("DirectDraw stand-in: the display could not be opened\n");
-        return DDERR_UNSUPPORTED_;
+        return Unsupported("DevSetDisplayMode");
     }
-    DebugPrintf("DirectDraw stand-in: mode %lux%lux%lu\n", (unsigned long)w, (unsigned long)h,
-                (unsigned long)bpp);
+    DebugPrintf("DirectDraw stand-in: mode %lux%lux%lu (called from %p)\n", (unsigned long)w, (unsigned long)h,
+                (unsigned long)bpp, DD_CALLER());
+    /*
+     * In 1998 an exclusive full-screen mode switch activated the game window, and 1.2's shell asks for its whole
+     * screen and palette to be drawn only on that WM_SETFOCUS (ShellWindowProc 7 -> +0x1f8 and +0x1dc; nothing
+     * else sets +0x1dc). Here the window may already hold the focus (after a mission, Diego's black menu), so the
+     * message is posted: the shell's own loop handles it once its screen is set up (round 33).
+     */
+    if (d->window != NULL && GetFocus() == d->window) {
+        PostMessageA(d->window, WM_SETFOCUS, 0, 0);
+        DebugPrintf("DirectDraw stand-in: WM_SETFOCUS posted after the mode switch\n");
+    } else if (d->window != NULL) {
+        SetForegroundWindow(d->window);
+        SetFocus(d->window);
+        DebugPrintf("DirectDraw stand-in: focus given to the game window after the mode switch (now %p)\n",
+                    (void *)GetFocus());
+    }
     return DD_OK;
 }
 
@@ -832,15 +873,15 @@ M(HRESULT) DevWaitForVerticalBlank(DdDevice *d, DWORD flags, HANDLE event)
 }
 
 M(HRESULT) DevCompact(DdDevice *d) { (void)d; return DD_OK; }
-M(HRESULT) DevCreateClipper(DdDevice *d, DWORD a, void **b, void *c) { (void)d; (void)a; (void)b; (void)c; return DDERR_UNSUPPORTED_; }
-M(HRESULT) DevDuplicateSurface(DdDevice *d, void *a, void **b) { (void)d; (void)a; (void)b; return DDERR_UNSUPPORTED_; }
-M(HRESULT) DevEnumDisplayModes(DdDevice *d, DWORD a, void *b, void *c, void *e) { (void)d; (void)a; (void)b; (void)c; (void)e; return DDERR_UNSUPPORTED_; }
-M(HRESULT) DevEnumSurfaces(DdDevice *d, DWORD a, void *b, void *c, void *e) { (void)d; (void)a; (void)b; (void)c; (void)e; return DDERR_UNSUPPORTED_; }
+M(HRESULT) DevCreateClipper(DdDevice *d, DWORD a, void **b, void *c) { (void)d; (void)a; (void)b; (void)c; return Unsupported("DevCreateClipper"); }
+M(HRESULT) DevDuplicateSurface(DdDevice *d, void *a, void **b) { (void)d; (void)a; (void)b; return Unsupported("DevDuplicateSurface"); }
+M(HRESULT) DevEnumDisplayModes(DdDevice *d, DWORD a, void *b, void *c, void *e) { (void)d; (void)a; (void)b; (void)c; (void)e; return Unsupported("DevEnumDisplayModes"); }
+M(HRESULT) DevEnumSurfaces(DdDevice *d, DWORD a, void *b, void *c, void *e) { (void)d; (void)a; (void)b; (void)c; (void)e; return Unsupported("DevEnumSurfaces"); }
 M(HRESULT) DevFlipToGDISurface(DdDevice *d) { (void)d; return DD_OK; }
 M(HRESULT) DevGetFourCCCodes(DdDevice *d, DWORD *n, DWORD *codes) { (void)d; (void)codes; if (n != NULL) *n = 0; return DD_OK; }
-M(HRESULT) DevGetGDISurface(DdDevice *d, void **a) { (void)d; (void)a; return DDERR_UNSUPPORTED_; }
+M(HRESULT) DevGetGDISurface(DdDevice *d, void **a) { (void)d; (void)a; return Unsupported("DevGetGDISurface"); }
 M(HRESULT) DevGetMonitorFrequency(DdDevice *d, DWORD *hz) { (void)d; *hz = 60; return DD_OK; }
-M(HRESULT) DevGetScanLine(DdDevice *d, DWORD *line) { (void)d; *line = 0; return DDERR_UNSUPPORTED_; }
+M(HRESULT) DevGetScanLine(DdDevice *d, DWORD *line) { (void)d; *line = 0; return Unsupported("DevGetScanLine"); }
 M(HRESULT) DevGetVerticalBlankStatus(DdDevice *d, LONG *in) { (void)d; *in = 0; return DD_OK; }
 M(HRESULT) DevInitialize(DdDevice *d, const GUID *guid) { (void)d; (void)guid; return DD_OK; }
 
@@ -925,6 +966,54 @@ LPARAM HooksDDraw_TranslateMouse(UINT msg, LPARAM lParam)
     return MAKELPARAM((WORD)(short)x, (WORD)(short)y);
 }
 
+/*
+ * 1.2's shell plays its movies in a popup window of its own and draws only while
+ * its main window has the keyboard focus. Logged to see where the focus goes.
+ */
+static HWND __stdcall StandInCreateWindowExA(DWORD exStyle, LPCSTR className, LPCSTR title,
+                                             DWORD style, int x, int y, int w, int h,
+                                             HWND parent, HMENU menu, HINSTANCE inst, LPVOID param)
+{
+    HWND window = CreateWindowExA(exStyle, className, title, style, x, y, w, h, parent, menu,
+                                  inst, param);
+
+    DebugPrintf("shell window: created %p (style %08lx, %dx%d), focus %p\n", (void *)window,
+                (unsigned long)style, w, h, (void *)GetFocus());
+    if (window != NULL && parent == NULL && (style & WS_POPUP) && window != g_device.window)
+        g_shellPopup = window;
+    return window;
+}
+
+/*
+ * On a 1998 desktop the game window, next in line, took the focus back when the movie popup went away, and the
+ * shell's WM_SETFOCUS set its drawing flag again. Here the window under the popup is SDL's, so that is done by
+ * hand: the game window is brought forward and given the focus, which sends the shell its WM_SETFOCUS.
+ */
+static BOOL __stdcall StandInDestroyWindow(HWND window)
+{
+    HWND main = g_device.window;
+    BOOL ok = DestroyWindow(window);
+
+    if (window == g_shellPopup)
+        g_shellPopup = NULL;
+    DebugPrintf("shell window: destroyed %p, focus now %p, foreground %p, main %p\n",
+                (void *)window, (void *)GetFocus(), (void *)GetForegroundWindow(), (void *)main);
+    if (ok && main != NULL && window != main && IsWindow(main) && GetFocus() != main) {
+        SetForegroundWindow(main);
+        SetFocus(main);
+        DebugPrintf("shell window: focus given back to %p (now %p)\n", (void *)main,
+                    (void *)GetFocus());
+    } else if (ok && main != NULL && window != main && IsWindow(main)) {
+        /* the focus came back already (the mode switch raised this window): the shell still needs the
+           WM_SETFOCUS of 1998, which is what makes it redraw its whole screen and palette (Diego's blue box).
+           Posted, not sent: it must arrive from the shell's own message loop after its movie routine has
+           reloaded the menu screen (sent from here it redrew too early: Diego's black screen) */
+        PostMessageA(main, WM_SETFOCUS, (WPARAM)window, 0);
+        DebugPrintf("shell window: WM_SETFOCUS posted to %p after its popup closed\n", (void *)main);
+    }
+    return ok;
+}
+
 /* ---- entry points that replace DDRAW.DLL's ---- */
 
 static HRESULT __stdcall StandInDirectDrawCreate(const GUID *guid, DdDevice **out, void *outer)
@@ -970,6 +1059,7 @@ void HooksDDraw_OnShellExit(void)
     }
     RestoreWindow(g_device.window);
     g_front = NULL;
+    g_shellPopup = NULL;
 }
 
 int Hooks_DisplayWanted(void)
@@ -990,5 +1080,7 @@ void HooksDDraw_OnShellLoaded(HMODULE shell)
     n += Hook_PatchImport(shell, "USER32.dll", "ScreenToClient", (void *)StandInScreenToClient);
     n += Hook_PatchImport(shell, "USER32.dll", "ClientToScreen", (void *)StandInClientToScreen);
     n += Hook_PatchImport(shell, "USER32.dll", "GetWindowRect", (void *)StandInGetWindowRect);
+    n += Hook_PatchImport(shell, "USER32.dll", "CreateWindowExA", (void *)StandInCreateWindowExA);
+    n += Hook_PatchImport(shell, "USER32.dll", "DestroyWindow", (void *)StandInDestroyWindow);
     DebugPrintf("HGSHELL.DLL: %d DirectDraw import(s) replaced by the SDL3 stand-in\n", n);
 }

@@ -19,6 +19,7 @@ W32S_SIX(Sim12_100805dc)
 W32S_SIX(Sim12_10082556)
 W32S_SIX(Sim12_10084362)
 W32S_SIX(Sim12_1007e25c)
+W32S_SIX(Sim12_10086007)
 
 void __cdecl Sim12_1007c1a1(float x, float y, float z, float dx, float dy, float dz, int32_t strength)
 {

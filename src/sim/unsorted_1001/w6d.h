@@ -93,6 +93,9 @@ void __cdecl Sim_1001c107(int index, void *obj);
  * The first time ([0x1015d1c0] 0, then 1) reads the track number [0x101321a8] from the text 0x1015dcb5 (format
  * 0x1013221c). The track becomes -1 when the CD is not open, its status is 1, the track is not in range, or (when
  * [0x101321c0] has bit 8 and it was played) the status after playing is not 3. Ends with [0x101321ac] = -1.
+ * With HG_MUSIC_FILES (the game build): 1.2's WAV music start (1.2 0x10015e83) on the Ogg files of
+ * platform/music.h: the track becomes -1 when it is negative or past Music_LastTrack(); otherwise, with bit 8,
+ * Music_Play(track) and [0x1015d1bc] = 0. No CD, and [0x101321ac] is left alone (as 1.2's).
  */
 void __cdecl Sim_1001f26e(void);
 /*

@@ -1,4 +1,5 @@
 #include "w6h.h"
+#include "../fx/w32.h"
 #include "fns.h"
 #include "w2d.h"
 #include "../unsorted_1005/w3q.h"
@@ -109,27 +110,27 @@ void __cdecl Sim_100d7111(void *obj, void *dst)
 /* Sim_100d8d0a and Sim_100d9306: the same code with another limit and state. */
 static int W6h_MoveOrDrop(void *obj, uint32_t limit_at, uint32_t state)
 {
-    uint32_t rec = U32(obj, 0x57a);
+    uint32_t rec = U32(obj, W32_REC_ARG);
     uint32_t px, py, pz;
 
-    Sim_100a9cfb(W6H_PTR(U32(obj, 0x552)), &px, &py, &pz);
+    Sim_100a9cfb(W6H_PTR(U32(obj, W32_REC_OBJ)), &px, &py, &pz);
     if (BitsToFloat(py) > GFL32(limit_at)) {
         double scale = (double)GS32(0x1015dc80);
         float dx, dy, dz;
         int n;
 
-        dx = (float)(((double)FL32(obj, 0x56e) + (double)FL32(rec, 0x14)) * scale / (double)GFL32(0x1012bd64));
+        dx = (float)(((double)FL32(obj, W32_REC_VEL) + (double)FL32(rec, 0x14)) * scale / (double)GFL32(0x1012bd64));
         n = Sim_1009c929(10);
-        dy = (float)((((double)FL32(obj, 0x572) - (double)n) + (double)FL32(rec, 0x18)) * scale
+        dy = (float)((((double)FL32(obj, W32_REC_VEL + 4) - (double)n) + (double)FL32(rec, 0x18)) * scale
                      / (double)GFL32(0x1012bd64));
-        dz = (float)(((double)FL32(obj, 0x576) + (double)FL32(rec, 0x1c)) * scale / (double)GFL32(0x1012bd64));
-        Sim_100a9d7c(W6H_PTR(U32(obj, 0x552)), dx, dy, dz);
-        Sim_100aa799(W6H_PTR(U32(obj, 0x552)));
-        U32(obj, 0x566) = state;
+        dz = (float)(((double)FL32(obj, W32_REC_VEL + 8) + (double)FL32(rec, 0x1c)) * scale / (double)GFL32(0x1012bd64));
+        Sim_100a9d7c(W6H_PTR(U32(obj, W32_REC_OBJ)), dx, dy, dz);
+        Sim_100aa799(W6H_PTR(U32(obj, W32_REC_OBJ)));
+        U32(obj, W32_REC_STATE) = state;
         return 1;
     }
     U16(obj, 0x10) &= 0xfffe;
-    Sim_100aa351(W6H_PTR(U32(obj, 0x552)));
+    Sim_100aa351(W6H_PTR(U32(obj, W32_REC_OBJ)));
     SlotPool_Release(W6H_PTR(U32(rec, 0x20)), (int)U32(rec, 0));
     return 0;
 }
@@ -174,7 +175,7 @@ void __cdecl Sim_100d9064(float x, float y, float z, float vx, float vy, float v
     U32(slot, 0x18) = 0;
     U32(slot, 0x14) = 0;
     U16(o, 0x10) = 1;
-    node = U32(U32(o, 0x552), 0x8c);
+    node = U32(U32(o, W32_REC_OBJ), 0x8c);
     FL32(node, 0x50) = (float)Sim_10084a94(vx, vy, vz);
     FL32(node, 0x44) = x;
     FL32(node, 0x48) = y;
@@ -182,21 +183,26 @@ void __cdecl Sim_100d9064(float x, float y, float z, float vx, float vy, float v
     U32(node, 0x38) = 0;
     U32(node, 0x3c) = 0;
     U32(node, 0x40) = 0;
-    FL32(o, 0x56e) = vx;
-    FL32(o, 0x572) = vy;
-    FL32(o, 0x576) = vz;
+    FL32(o, W32_REC_VEL) = vx;
+    FL32(o, W32_REC_VEL + 4) = vy;
+    FL32(o, W32_REC_VEL + 8) = vz;
     sx = (float)((double)vx / (double)GFL32(0x1012bd6c));
     sy = (float)((double)vy / (double)GFL32(0x1012bd6c));
     sz = (float)((double)vz / (double)GFL32(0x1012bd6c));
     dx = sx;
     dy = sy;
     dz = sz;
-    Sim_100aa39f(W6H_PTR(U32(o, 0x552)));
-    Sim_100a9d47(W6H_PTR(U32(o, 0x552)), W6h_Bits(x), W6h_Bits(y), W6h_Bits(z));
-    Sim_100aa799(W6H_PTR(U32(o, 0x552)));
-    U32(o, 0x55e) = G32(0x1015dc78);
+    Sim_100aa39f(W6H_PTR(U32(o, W32_REC_OBJ)));
+    Sim_100a9d47(W6H_PTR(U32(o, W32_REC_OBJ)), W6h_Bits(x), W6h_Bits(y), W6h_Bits(z));
+    Sim_100aa799(W6H_PTR(U32(o, W32_REC_OBJ)));
+    U32(o, W32_REC_TIME) = G32(0x1015dc78);
+    /* 1.2 (0x100be504): 16 points of 0x32 bytes in its particle layout (1.0: 32 of 0x2a) */
+#ifdef W10W_MUTATE /* the checker's negative check only: 1.0's 32 points */
     for (i = 0; i < 0x20; i++) {
-        uint8_t *part = o + i * 0x2a + 0x12;
+#else
+    for (i = 0; i < W32_REC_NPT; i++) {
+#endif
+        uint8_t *part = o + i * W32_REC_PT + 0x12;
 
         U16(part, 0x18) = 1;
         dx = (float)((double)dx + (double)sx);

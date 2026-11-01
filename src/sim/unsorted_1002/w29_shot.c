@@ -12,6 +12,8 @@
 #include "../unsorted_1001/w6d.h"
 #include "../unsorted_1001/w8t.h"
 #include "../unsorted_1004/fns.h"
+#include "../unsorted_1004/w2k.h"
+#include "../render/w2n.h"
 #include "../unsorted_1005/w2h.h"
 #include "../unsorted_1006/w10.h"
 #include "../unsorted_1006/w6e.h"
@@ -128,10 +130,14 @@ void __cdecl Sim_100232d7(int idx)
             U32(p, 8) |= 0x100;
             if ((U32(p, 0x7e) & 0x40) != 0)
                 U32(p, 8) |= 0x1000;
-            /* the heading difference wrapped by fmod; the original never reads the result back */
+            /* the heading difference wrapped by fmod; the original never reads the wrapped value back */
             unit = BYTES(PTRTAB(tgt));
             ang = (float)((double)FL(unit, 0x68) - Sim_1008486e(FL(p, 0x18), FL(p, 0x20)));
-            (void)SIM_FN(W29FmodFn, 0x100fcb30)((double)ang, 360.0);
+            ang = (float)SIM_FN(W29FmodFn, 0x100fcb30)((double)ang, 360.0);
+            /* 1.2 (0x10019f1d): a force-feedback jolt from that heading when the own unit is hit (1.2 also turns a copy
+               to 0..360 and by 180, and never reads it) */
+            if (G32(0x1015ef3c) != 0 && tgt == W29_SELF())
+                Sim_100382fb(0xf, Render_Ftol((double)ang), 0x32, 0);
             if (G32(0x10134898) == W29_SELF()) {
                 switch (Sim_10052be7((int)tgt)) {
                 case 0: U16(SIM_PTR(uint8_t, 0x101653f9), 0)++; break;

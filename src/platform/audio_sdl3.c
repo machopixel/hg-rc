@@ -26,6 +26,8 @@ struct AudioVoice {
     int playing, looping;
     int32_t volume, pan;
     float gainL, gainR; /* from volume and pan */
+    AudioFillFn fill;   /* a stream: data holds the last block it gave, refilled when played through */
+    void *user;
 };
 
 static SDL_AudioStream *g_stream;
@@ -82,7 +84,15 @@ static void MixVoice(AudioVoice *v, float *out, int count)
         out[i * 2] += (l0 + (l1 - l0) * frac) * v->gainL;
         out[i * 2 + 1] += (r0 + (r1 - r0) * frac) * v->gainR;
         v->position += step;
-        if (v->position >= v->frames) {
+        if (v->position >= v->frames && v->fill != NULL) {
+            /* next block of the stream; none left: the stream has ended */
+            v->position -= v->frames;
+            v->frames = v->fill(v->user, (int16_t *)v->data, v->bytes / v->frameBytes);
+            if (v->frames == 0) {
+                v->playing = 0;
+                v->position = 0;
+            }
+        } else if (v->position >= v->frames) {
             if (v->looping) {
                 v->position = fmod(v->position, (double)v->frames);
             } else {
@@ -228,6 +238,24 @@ AudioVoice *Audio_VoiceCreate(uint32_t bytes, uint32_t rate, uint32_t channels, 
     }
     g_voices[i] = v;
     g_stats.voicesCreated++;
+    SDL_UnlockMutex(g_lock);
+    return v;
+}
+
+AudioVoice *Audio_StreamCreate(uint32_t rate, uint32_t channels, AudioFillFn fill, void *user)
+{
+    AudioVoice *v;
+
+    if (fill == NULL)
+        return NULL;
+    v = Audio_VoiceCreate(AUDIO_STREAM_FRAMES * channels * 2, rate, channels, 16);
+    if (v == NULL)
+        return NULL;
+    /* the first block now, in the caller's thread; the mixer asks for the next ones */
+    v->frames = fill(user, (int16_t *)v->data, AUDIO_STREAM_FRAMES);
+    SDL_LockMutex(g_lock);
+    v->fill = fill;
+    v->user = user;
     SDL_UnlockMutex(g_lock);
     return v;
 }

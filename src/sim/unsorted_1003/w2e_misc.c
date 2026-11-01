@@ -36,6 +36,7 @@ void __cdecl Path_StripDirectory(char *path)
 }
 
 // FUNCTION: HGSIM 0x10038ad5
+// FUNCTION: HGSIM12 0x1002cdc5
 void __cdecl Sim_10038ad5(void *obj, void *rec)
 {
     int n = 0;
@@ -53,7 +54,17 @@ void __cdecl Sim_10038ad5(void *obj, void *rec)
     if (!found)
         return;
 
+    /* 1.2 (0x1002cdc5): with no selected slot yet (+0x5fb -1, set by the gear set-up) the first one mounted becomes it */
+#ifdef W2EW_MUTATE /* the checker's negative check only: 1.0's copy alone */
     U32(rec, 0x128) = U32(obj, 0x5fb);
+#else
+    if (S32(obj, 0x5fb) == -1) {
+        U32(rec, 0x128) = (uint32_t)i;
+        U32(obj, 0x5fb) = (uint32_t)i;
+    } else {
+        U32(rec, 0x128) = U32(obj, 0x5fb);
+    }
+#endif
     Mem_Move(slot, BYTES(rec) + 0xc, 0x128);
     U32(slot, 0x104) = (uint32_t)i;
     if ((U32(slot, 0x38) == U32(slot, 0x108) + 1 && S16(rec, U32(slot, 0x108) * 0x24u + 0x136) == 0)

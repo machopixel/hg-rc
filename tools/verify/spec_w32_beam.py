@@ -9,7 +9,7 @@ import os
 exec(open('tools/verify/w32_common.py').read())
 
 SOURCES = closure(['sim/fx/w32_beam.c', 'sim/fx/w32_family.c', 'sim/fx/w32_partspec.c', 'sim/fx/w32_draw.c'])
-CFLAGS = list(CFLAGS) + ['-DW32_LOOP32'] + (['-DW32B_MUTATE', '-DW32X_MUTATE'] if os.environ.get('W32_NEG') else [])
+CFLAGS = list(CFLAGS) + (['-DW32B_MUTATE', '-DW32X_MUTATE'] if os.environ.get('W32_NEG') else [])
 DRV = 0x1010d3e6
 helper(DRV, None, 3, deref={1: 4 * 0x24})
 stub12(0x10090c7d, 'Sim_10090c7d', 4, 0x10079c54)

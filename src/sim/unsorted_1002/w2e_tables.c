@@ -1,3 +1,4 @@
+#include "../unsorted_1004/w3p.h"
 #include "w2e.h"
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
@@ -32,6 +33,9 @@ void __cdecl Sim_10021ac0(void)
     G32(0x1015dbe4) = G32(0x1015dbec);
     G32(0x1015dbf0) = 0;
     Mem_Fill(GBYTES(0x101653e0), 0, 0x1d4);
+#ifndef W2ET_MUTATE /* the checker's negative check only: the kill table kept */
+    Mem_Fill(g_w34Kills, 0, sizeof(g_w34Kills));   /* 1.2 (0x100186d0 / 0x1001cf11): its record holds the table */
+#endif
 }
 
 // FUNCTION: HGSIM 0x10021be0
@@ -86,6 +90,9 @@ void __cdecl Sim_10021c3c(int index)
 void __cdecl Sim_10025d93(void)
 {
     Mem_Fill(GBYTES(0x101653e0), 0, 0x1d4);
+#ifndef W2ET_MUTATE /* the checker's negative check only: the kill table kept */
+    Mem_Fill(g_w34Kills, 0, sizeof(g_w34Kills));   /* 1.2 (0x100186d0 / 0x1001cf11): its record holds the table */
+#endif
 }
 
 // FUNCTION: HGSIM 0x10028571

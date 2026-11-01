@@ -35,6 +35,7 @@ def file_to12(m):
     w32_(m, A12(0x10105048), 1)
     w32_(m, A12(0x1014a5f0), 0)
     w32_(m, A12(0x107ee400), STATE)
+    w32_(m, A12(0x1014b954), r32_(m, m.syms['g_w33Voodoo']))     # round 33: 1.0's [0x1017d0ac] is the C's g_w33Voodoo
 
 
 def file_from12(m):
@@ -51,6 +52,7 @@ def g2(ctx):
     w32(ctx, ctx.m.syms['g_w31Tex'], 1)
     w32(ctx, 0x109e3d40, STATE)
     w32(ctx, 0x1014cb1c, r.choice([0, 1, 2]))
+    w32(ctx, ctx.m.syms['g_w33Voodoo'], r32(ctx, 0x1017d0ac))     # the generator's 1.0 flag, now the C's
     wf(ctx, 0x1012ba50, 4.0)   # the real value: 1.2 keeps its copy read-only (the 1.0 spec also tries -10.0)
     return args
 

@@ -18,6 +18,12 @@
 #include "../unsorted_100a/w5y.h"
 #include "../unsorted_100a/w5z.h"
 #include "../unsorted_100b/w4w.h"
+#include "../unsorted_1001/w2l.h"
+#include "../unsorted_1001/w8t.h"
+#include "../unsorted_1001/w9d.h"
+#include "../unsorted_1004/fns.h"
+#include "../unsorted_1005/w3s.h"
+#include "../unsorted_1007/w2e.h"
 
 #define W14S_UNIT(rec) BYTES(U32(rec, 0))
 #define W14S_NODE(rec) ((void *)(uintptr_t)U32(W14S_UNIT(rec), 0x48))
@@ -34,15 +40,29 @@ static uint32_t W14S_Foot(uint8_t *rec, uint32_t off, uint16_t bit)
     return y;
 }
 
+/*
+ * 1.2 (0x1008a560) round 3. Its start-point loop has two slips (DECISIONS.md, round 3): it asks 1.0's collision
+ * probe Sim_1002dc60 at the start point's heading instead of its height, and on "occupied" it leaves the loop (only
+ * moving the index on for the next time) instead of trying the next point. W14S_FIX_HEIGHT / W14S_FIX_RETRY choose
+ * the fixes; both 0 is 1.2 exactly. Both on: Diego's choice 2026-10-31 ("Fix both").
+ */
+#ifndef W14S_FIX_HEIGHT
+#define W14S_FIX_HEIGHT 1
+#endif
+#ifndef W14S_FIX_RETRY
+#define W14S_FIX_RETRY 1
+#endif
+
 // FUNCTION: HGSIM 0x1009d200
 int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_t unused4)
 {
     static const uint8_t cleared[] = {0x1e, 0x1f, 0x20, 0x21, 0x22, 0x26, 0x27, 0x2f, 0x30, 0x59,
                                       0x31, 0x46, 0x56, 0x5b, 0x55, 0x59};
-    uint8_t *rec = 0, *zone;
+    uint8_t *rec = 0, *zone, *entry;
     uint16_t word;
     uint32_t design, i, low;
-    int32_t pick, tries = 0, done = 0, g;
+    int32_t pick, tries = 0, done = 0, lead;
+    void *found;
     /* Set by every pass of the start-point loop. Its first test exits only with a zone count <= 0, which cannot
      * happen: the zone loader 0x100daea4 makes the count (size - 0x18) / 0xc unsigned and below 9, and a count of 0
      * divides by zero in Sim_1009c929 before (DECISIONS.md round 14). */
@@ -51,10 +71,14 @@ int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_
     union {
         float f;
         uint32_t u;
-    } px, pz, foot0, foot1;
+    } px, pz, foot0, foot1, probe;
 
     (void)unused3;
     (void)unused4;
+    /* 1.2: the player record first; none, nothing to do */
+    entry = BYTES(PTRTAB(index));
+    if (entry == 0)
+        return 0;
     if (index >= 0 && index < 0x19)
         rec = BYTES(U32(PTRTAB(index), 0x28));
     if (rec == 0)
@@ -87,10 +111,12 @@ int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_
     U32(W14S_UNIT(rec), 0x24) = 0xffffffffu;
     U32(W14S_UNIT(rec), 0xf0) = 0x1000;
     U32(W14S_UNIT(rec), 0x164) = 0;
+#ifndef W14S_MUTATE /* the checker's negative check only: 1.0's, without it */
+    U32(W14S_UNIT(rec), 0x150) = 0x80000000u;              /* 1.2 */
+#endif
     word = (uint16_t)((word & 0xbff8) | 0x10);
     U16(PTRTAB(index), 0x1c) = word;
-    if (G32(0x1015ec58) != 0)
-        Sim_1007caab(index);
+    /* 1.2 drops 1.0's network call Sim_1007caab(index) here */
     Sim_100500ab(W14S_UNIT(rec));
     Sim_1006da46(W14S_UNIT(rec));
     zone = SIM_PTR(uint8_t, 0x109b8420 + U32(W14S_UNIT(rec), 8) * 0x74);
@@ -104,19 +130,21 @@ int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_
         heading = U32(zone, 0x50 + pick * 4);
         Mat3x4_TransformPoint(SIM_PTR(const float, 0x109b7d7c + U32(W14S_UNIT(rec), 8) * 0x6c), &x, &y, &z);
         done = 1;
-        for (g = 0; g < GS32(0x1015dc64); g++) {
-            uint8_t *other = BYTES(PTRTAB(g));
-
-            if (!(FL(other, 0x58) < x) && !(FL(other, 0x58) > x) &&
-                !(FL(other, 0x5c) < FL(W14S_UNIT(rec), 0x5c)) && !(FL(other, 0x5c) > FL(W14S_UNIT(rec), 0x5c)) &&
-                !(FL(other, 0x60) < z) && !(FL(other, 0x60) > z)) {
-                done = 0;
-                tries++;
-                pick++;
-                if (pick == S32(zone, 0x70))
-                    pick = 0;
-                break;
-            }
+        /* 1.2: something solid at the start point? (1.0 compared every gear's position) */
+#if W14S_FIX_HEIGHT
+        probe.f = y;
+#else
+        probe.u = heading;
+#endif
+        if (Sim_1002dc60(x, probe.f, z, &found) != 0) {
+            done = 0;
+            tries++;
+            pick++;
+            if (pick == S32(zone, 0x70))
+                pick = 0;
+#if !W14S_FIX_RETRY
+            break;
+#endif
         }
     }
     S32(W14S_UNIT(rec), 0x280) = pick;
@@ -150,7 +178,26 @@ int __cdecl Sim_1009d200(int32_t index, int32_t force, uint32_t unused3, uint32_
     Sim_100aa799(W14S_NODE(rec));
     Sim_100a9cfb(W14S_NODE(rec), (uint32_t *)(void *)(W14S_UNIT(rec) + 0x58),
                  (uint32_t *)(void *)(W14S_UNIT(rec) + 0x5c), (uint32_t *)(void *)(W14S_UNIT(rec) + 0x60));
+    /* 1.2: a gear of a played side has its actions and its group's selection redone */
+    if (S32(W14S_UNIT(rec), 0x14) == 3 || S32(W14S_UNIT(rec), 0x14) == 2) {
+        Sim_10011093(W14S_UNIT(rec));
+        Sim_10016632(S32(W14S_UNIT(rec), 8));
+    }
     GS32(0x1014c99c) = -1;
     *GBYTES(0x1015d1b0 + U32(W14S_UNIT(rec), 4)) = 0;
+    /* 1.2: a computer gear (+0x14 0 or 1) whose group leader is a remote player's gear (state 3) is handed to that
+       leader's group, with a message when it is the local player's */
+    if (S32(entry, 0x14) == 0 || S32(entry, 0x14) == 1) {
+        uint32_t group = U32(entry, 8);
+
+        lead = Sim_10052aaf((int)group);
+        if (lead > -1 && lead != S32(entry, 4) && S32(PTRTAB(lead), 0x14) == 3) {
+            Sim_100526e3((int)group, (int)U32(entry, 4));
+            Sim_100128dd((int)group, lead, U32(entry, 4));
+            if (U32(entry, 4) == G32(0x1017b8c8))
+                Sim_1007df6c((const char *)(uintptr_t)G32(0x101c4554), (const char *)(uintptr_t)G32(0x109b98c0),
+                             0x389, 0x50);
+        }
+    }
     return 1;
 }

@@ -3,6 +3,8 @@
 # ground path with no hit) with the bytes of the shot's own path segment (what the fixed C cuts), and [ebp-0x2c]
 # (compared on the type-5 near-miss path, which shipped data never reaches) with -1, the C's value. So the checker
 # compares against the fixed behaviour; everything else is exact. W29_NEG=1 builds W29S_MUTATE.
+# Controls round: the C makes 1.2's force-feedback jolt (Sim_100382fb, stubbed as FFC) only while [0x1015ef3c] is
+# set; 1.0 has none, so the flag is clear here (spec_w29_100232d7_v12.py checks it set).
 exec(open('tools/verify/w10_common.py').read())
 
 if os.environ.get('W29_NEG'):
@@ -26,6 +28,8 @@ DEREF[0x1002dda9] = {0: SEG}
 DEREF[0x100241ed] = {4: 4, 5: 4, 6: 4}
 MASK[(0x10015630, 1)] = 0xffff
 MASK[(0x10015630, 2)] = 0xffff
+FFC = 0x00F00F00                       # Sim_100382fb has no 1.0 address
+helper(FFC, 'Sim_100382fb', 4)
 ACTIVE = tuple(HELPERS)
 
 
@@ -102,6 +106,7 @@ def fl(r, sc):
 
 
 SHOTS, SHOT = 0x1096fc80, 0x156
+FF = {'flag': 0}
 
 
 def g(ctx):
@@ -110,6 +115,7 @@ def g(ctx):
     self_ = r.randrange(0, 8)
     w32(ctx, 0x1017b8c8, self_)
     w32(ctx, 0x1015ecd0, r.choice([0, 0, 1]))
+    w32(ctx, 0x1015ef3c, FF['flag'])
     w32(ctx, 0x1015dc80, r.choice([0, 1, r.randrange(0, 60), r.randrange(0, 60), -5 & 0xffffffff]))
     units = []
     for i in range(8):

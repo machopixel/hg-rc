@@ -1,4 +1,6 @@
 #include "w2k.h"
+#include "../render/w33.h"
+#include "../unsorted_1003/w2l.h"
 #include "../util/access.h"
 
 // FUNCTION: HGSIM 0x100877a5
@@ -7,9 +9,17 @@ void __cdecl Sim_100877a5(void)
     U32(G32(0x1015E698), 0) = 0;
 }
 
+/*
+ * The start of display mode 6 (the renderer plugin, device class 3). 1.2 (0x10071b9c): in its 3DFX / PowerVR mode it
+ * first sets the colour masks of the screen format record (1.2 0x107edf60 = 1.0 0x109e3880) to 5:6:5.
+ */
 // FUNCTION: HGSIM 0x100877bc
 int __cdecl Sim_100877bc(void)
 {
+#ifndef W2KV_MUTATE /* the checker's negative check only: 1.0's empty start */
+    if (g_w33Voodoo != 0)
+        Sim_1003772b(SIM_PTR(uint32_t, 0x109e3880), 0xf800, 0x7e0, 0x1f, 0);
+#endif
     return 0;
 }
 

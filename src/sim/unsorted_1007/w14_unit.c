@@ -28,6 +28,8 @@
 #include "../unsorted_100c/w9g.h"
 #include "../unsorted_100d/fns.h"
 #include "../unsorted_100d/w10.h"
+#include "../unsorted_1004/w2k.h"
+#include "../render/w2n.h"
 #include "../unsorted_100d/w2i.h"
 
 /* fabs and sprintf of the DLL (left original). */
@@ -299,7 +301,7 @@ void __cdecl Sim_10070eb5(uint8_t *rec)
 {
     int player;
     int32_t kind;
-    float pitch, throttle, speed, lean, f;
+    float pitch = 0.0f, throttle, speed, lean, f;      /* pitch: 1.2 sets its [ebp-0x18] to 0 at the start */
     double t;
     char text[40];
 
@@ -392,6 +394,17 @@ void __cdecl Sim_10070eb5(uint8_t *rec)
         U32(rec, 0x38) = 0;
         if (Sim_10079feb(kind) != 0)
             U32(rec, 0x48) = 0;
+    }
+    /* 1.2 (0x10060491): the player's force-feedback rumble (kind 0x10) from the pitch, stronger with the jets */
+    if (player && G32(0x1015ef3c) != 0) {
+#ifdef W14UF_MUTATE /* the checker's negative check only: the same strength either way */
+        if (0)
+#else
+        if ((U16(rec, 0x562) & 1) != 0)
+#endif
+            Sim_100382fb(0x10, 0, 0, (uint32_t)Render_Ftol((double)pitch * 1.25 + 30.0));
+        else
+            Sim_100382fb(0x10, 0, 0, (uint32_t)Render_Ftol((double)pitch * 1.25 + 15.0));
     }
 
     if (player && G32(0x1015f1e0) != 0)
@@ -502,8 +515,17 @@ void __cdecl Sim_10070eb5(uint8_t *rec)
         U32(rec, 0x4d8) = G32(0x1015dc78) + (uint32_t)Sim_1009c929(0x16a) + 0x43e;
         U32(rec, 0x4f0) = 1;
         U16(W14U_UNIT, 0x1c) &= 0xdfff;
-        if (Sim_10052be7(S32(W14U_UNIT, 4)) != 1)
+        /* 1.2: the start-up sound for the player's own unit only (1.0: for any not answered 1 by Sim_10052be7),
+           with the force-feedback kind 0xe */
+#ifdef W14US_MUTATE /* the checker's negative check only: 1.0's test */
+        if (Sim_10052be7(S32(W14U_UNIT, 4)) != 1) {
+#else
+        if (player) {
+#endif
             Sim_1000ebfb(SIM_PTR(const char, 0x101454a0), 0xfffff830u, 0, 5, 0x32);
+            if (G32(0x1015ef3c) != 0)
+                Sim_100382fb(0xe, 0, 0, 0);
+        }
         break;
     case 1:
         if (GS32(0x1015dc78) > S32(rec, 0x4d8)) {

@@ -29,6 +29,14 @@
 #define W32_REC_UPDATE (W32_PARTICLES() ? 0x336u : 0x556u)
 #define W32_REC_DRAW (W32_PARTICLES() ? 0x33au : 0x55au)
 #define W32_REC_ARG (W32_PARTICLES() ? 0x366u : 0x57au)
+/* round 33, round 4: the fields the old point effects (the weather emitters, 1.0 0x100d9064 / 0x100d965e and their
+   callbacks) keep above the points, 0x220 lower in 1.2 (time, state, velocity), and the points from +0x12 (1.2: 16
+   of 0x32 bytes; 1.0: 32 of 0x2a) */
+#define W32_REC_TIME (W32_PARTICLES() ? 0x33eu : 0x55eu)
+#define W32_REC_STATE (W32_PARTICLES() ? 0x346u : 0x566u)
+#define W32_REC_VEL (W32_PARTICLES() ? 0x34eu : 0x56eu)
+#define W32_REC_PT (W32_PARTICLES() ? 0x32u : 0x2au)
+#define W32_REC_NPT (W32_PARTICLES() ? 0x10 : 0x20)
 /* 1.2 0x1014b58c: set by the draw dispatcher, (Sim_100448ff() == 1) */
 extern int32_t g_w32_1014b58c;
 
@@ -215,6 +223,13 @@ int __cdecl Sim12_1007dd89(uint8_t *rec);
 /* 1.2 0x1007e25c: the skate dust along the velocity (node d / 256, particles d / 8), each particle on one of the two
    frame rows at 0x10215b20. */
 void __cdecl Sim12_1007e25c(float x, float y, float z, float dx, float dy, float dz);
+
+/* ---- the footstep dust (type 0x15, new in 1.2) ---- */
+/* 1.2 0x10085992 / 0x10085b34 (update / draw): byte for byte the skate dust's (Sim12_1007dbe7 / Sim12_1007dd89). */
+int __cdecl Sim12_10085992(uint8_t *rec);
+int __cdecl Sim12_10085b34(uint8_t *rec);
+/* 1.2 0x10086007: the skate dust's spawn with type 0x15 (called from the unit animation, 1.0 Sim_1004f257). */
+void __cdecl Sim12_10086007(float x, float y, float z, float dx, float dy, float dz);
 
 /* ---- the shockwave (type 4; replaces 1.0's Sim_10092f9d) ---- */
 /* 1.2 0x1007bb48 (update): until the end frame +0x342 moves the node (y plus 0..9), size from 0x10215bb0 by age,

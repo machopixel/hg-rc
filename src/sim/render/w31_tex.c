@@ -1,5 +1,6 @@
 #include "w31.h"
 #include "w2m.h"
+#include "w33.h"
 #include "../util/access.h"
 
 uint8_t g_w31TexNames[W31_GROUPS * W31_GROUP_SIZE];
@@ -31,9 +32,14 @@ void W31_DescribeFileTex(W31Texture *tex, const uint8_t *image, uint32_t handleA
     G32(handleAddr) = (uint32_t)(uintptr_t)tex;
 }
 
+/* 1.2's .TEX flag 0x10105048: set by its SimMain for the 3D mode or its 3DFX / PowerVR mode (round 33) */
 int W31_TexMode(void)
 {
+#ifdef W31V_MUTATE /* the checker's negative check only: the 3D mode alone */
     return g_w31Tex != 0 && G32(0x1017b940) != 0;
+#else
+    return g_w31Tex != 0 && (G32(0x1017b940) != 0 || g_w33Voodoo != 0);
+#endif
 }
 
 void W31_MirrorRows(uint8_t *pixels, int32_t width, int32_t height)

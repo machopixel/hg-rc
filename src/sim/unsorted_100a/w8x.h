@@ -41,5 +41,6 @@ int __cdecl Sim_100a4933(void *obj);
  * 0x100a539e. A list whose +8 is 0 or equal to its +4 is retried for ever, as in the original.
  */
 void __cdecl Sim_100a4d8e(void);
+void __cdecl Sim12_10090a85(uint32_t first, uint32_t last);
 
 #endif

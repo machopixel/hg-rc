@@ -31,6 +31,7 @@
 #include "../view/view.h"
 #include "../render/w7o.h"
 #include "../render/w2n.h"
+#include "../unsorted_1004/w2k.h"
 
 /* The C library of the DLL, called at its address as the original does (results in st(0)). */
 #define W16M_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
@@ -321,6 +322,22 @@ static void W16M_Height(W16Move *m)
     }
 }
 
+/* 1.2 (0x1005d75c): after a contact sound, the force-feedback bump (kind 0xf) towards the contact direction, at
+   strength 100, only with the force-feedback library ([0x1015ef3c]). Bug fix (Diego): 1.2 pushes the angle
+   (0x1006f4ee, Sim_1008486e's twin, a double) without converting it, so the request gets its low / high dwords as
+   angle and strength and 100 as the unused third value; here it gets what that push order means: the angle in whole
+   degrees (truncated, as 1.2's other kind-0xf call in the shot does), strength 100, 0. */
+static void W16M_Bump(void)
+{
+    if (G32(0x1015ef3c) == 0)
+        return;
+#ifdef W16MF_MUTATE /* the checker's negative check only: strength 50 */
+    Sim_100382fb(0xf, Render_Ftol((double)Sim_1008486e(GFL(0x1015dd58), GFL(0x1015dd60))), 0x32, 0);
+#else
+    Sim_100382fb(0xf, Render_Ftol((double)Sim_1008486e(GFL(0x1015dd58), GFL(0x1015dd60))), 0x64, 0);
+#endif
+}
+
 /* The crash sound of a hard contact, its volume from the speed. */
 static void W16M_Crash(W16Move *m)
 {
@@ -350,6 +367,7 @@ static void W16M_Crash(W16Move *m)
     level = (float)((double)level * W16M_C(0x1012b6dc));
     Sim_1000ebfb(name, (uint32_t)W16M_Ftol((double)level), 0, 5, 0x32);
     Sim_10061f8e(GFL(0x1015dd58), GFL(0x1015dd5c), GFL(0x1015dd60));
+    W16M_Bump();
 }
 
 /* The move with its collision tests (Sim_100663c0 twice: the move, then the slide along the contact). Returns 0 when
@@ -412,6 +430,7 @@ static int W16M_Collide(W16Move *m)
                     level = 25.0f;
                 level = (float)((double)GFL(0x1012b6f8) * level / W16M_C(0x1012b6a4) / W16M_C(0x1012b6fc));
                 Sim_1000ebfb(SIM_PTR(const char, 0x101453e0), (uint32_t)W16M_Ftol((double)level), 0, 5, 0x32);
+                W16M_Bump();
             }
         }
         return 1;
@@ -535,7 +554,12 @@ static void W16M_Place(W16Move *m)
                 U32(rec, 0x58) = 0;
             U32(unit, 0x64) = U32(rec, 0x5c);
         }
+        /* 1.2 (0x1005d75c): the body's height +0x68 unless [0x10179ce0] is set */
+#ifdef W16MY_MUTATE /* the checker's negative check only: 1.0's */
         m->py = FL(rec, 0x6c);
+#else
+        m->py = G32(0x10179ce0) != 0 ? FL(rec, 0x6c) : FL(rec, 0x68);
+#endif
     }
     FL(unit, 0x58) = m->px;
     FL(unit, 0x5c) = m->py;
@@ -614,10 +638,16 @@ static void W16M_Stance(W16Move *m)
     if (S32(rec, 0xc15) > 0 && (W16M_R562(m) & 4) == 0 && (W16M_R562(m) & 0x400) == 0) {
         uint32_t a, b, c;
 
-        if (S32(rec, 0xc15) == 1)
+        /* 1.2: the force-feedback lean (kind 0x11) to one side or the other */
+        if (S32(rec, 0xc15) == 1) {
             W16M_R562(m) |= 0x400;
-        else
+            if (m->own && G32(0x1015ef3c) != 0)
+                Sim_100382fb(0x11, 0, 0, 0);
+        } else {
             W16M_R562(m) |= 4;
+            if (m->own && G32(0x1015ef3c) != 0)
+                Sim_100382fb(0x11, 0xb4, 0, 0);
+        }
         U32(rec, 0xc19) = U32(rec, 0xc15);
         U32(rec, 0xc1d) = 0;
         U32(rec, 0xc15) = 0;
@@ -720,7 +750,12 @@ static void W16M_Dodge(W16Move *m)
     }
     if ((W16M_R562(m) & 1) == 0)
         return;
+    /* 1.2 (0x1005d75c): +0x560 bit 0x20 cuts the jets whatever the throttle */
+#ifdef W16MJ_MUTATE /* the checker's negative check only: 1.0's */
     if (!((double)FL(W16M_BLK(m), 8) > W16M_C(0x1012b6dc)) &&
+#else
+    if (((U16(rec, 0x560) & 0x20) != 0 || !((double)FL(W16M_BLK(m), 8) > W16M_C(0x1012b6dc))) &&
+#endif
         (G32(0x1015ec58) == 0 || m->own || (U32(unit, 0x14) == 3 && U32(unit, 0xc) == G32(0x1017b8c8)))) {
         if (m->own) {
             Sim_1000ecb0(SIM_PTR(const char, 0x1014544c));

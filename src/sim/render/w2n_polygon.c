@@ -1,4 +1,5 @@
 #include "w2n.h"
+#include "w33.h"
 
 #define F32(addr) (*SIM_PTR(float, addr))
 #define U32(addr) (*SIM_PTR(uint32_t, addr))
@@ -8,6 +9,8 @@
 #define PROJECTED_LIST ((unsigned char **)SIM_PTR(unsigned char *, 0x101c76a0))
 #define MAX_POLY 255 /* the projected list holds at most 0xff vertices */
 #define ONE_BITS 0x3f800000u
+/* the renderer's state call [0x109e3d40], 1.0's numbering */
+#define RENDER_STATE RENDER_SLOT(int(__cdecl *)(unsigned, unsigned), 0x109e3d40)
 
 /* Fields of a 36-byte plugin vertex taken from a projected vertex: screen x, y as floats, camera z. */
 static void ScreenPosition(unsigned char *v, const unsigned char *p)
@@ -48,7 +51,8 @@ int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, in
             *(uint32_t *)(v + 0x18) = 0xff000000u;
         v += 0x24;
     }
-    if (U32(0x1017d0ac) != 0)
+    /* 1.2 (0x1008d51a): its 3DFX / PowerVR flag here, where 1.0 tested its own "3dfx" one [0x1017d0ac] */
+    if (g_w33Voodoo != 0)
         RENDER_CALL(2, RENDER_PLUGIN, buf, count, texture);
     else
         RENDER_CALL(6, RENDER_PLUGIN, buf, count, texture);
@@ -100,7 +104,8 @@ void __cdecl Render_SubmitClipped_100ac738(unsigned char *verts, unsigned count)
             float u;
 
             ScreenPosition(out, p);
-            *(uint32_t *)(out + 0xc) = ONE_BITS;
+            /* 1.2 (0x100974e8): rhw 1 / z (1.0: 1) */
+            *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
             *(uint32_t *)(out + 0x1c) = ONE_BITS;
             *(uint32_t *)(out + 0x20) = ONE_BITS;
             *(uint32_t *)(out + 0x10) = 0xfe;
@@ -110,8 +115,23 @@ void __cdecl Render_SubmitClipped_100ac738(unsigned char *verts, unsigned count)
             *(uint32_t *)(out + 0x18) =
                 (uint32_t)Render_FogLevel(*(const float *)(p + 8), *(const float *)(verts + 0x10)) << 24;
             u = *(const float *)(p + 0x20);
-            out[0x17] = (!(u < F32(0x1012baa4)) && !(u > F32(0x1012baa4))) ? 0x40 : 0;
+            if (!(u < F32(0x1012baa4)) && !(u > F32(0x1012baa4))) {
+                out[0x17] = 0x40;
+                if (g_w33Voodoo != 0)                   /* 1.2's 3DFX / PowerVR mode: the fog byte 0xbf */
+#ifdef W2NS_MUTATE /* the checker's negative check only: 0xff instead */
+                    *(uint32_t *)(out + 0x18) = 0xff000000u;
+#else
+                    *(uint32_t *)(out + 0x18) = 0xbf000000u;
+#endif
+            } else {
+                out[0x17] = 0;
+                if (g_w33Voodoo != 0)
+                    *(uint32_t *)(out + 0x18) = 0xff000000u;
+            }
         }
+        /* 1.2: its 3DFX / PowerVR mode with fog on turns the renderer's fog off here (1.2's state 1 = our 2) */
+        if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
+            RENDER_STATE(2, 0);
         desc[1] = 0xfe;
         RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
     } else if (n >= 3) {
@@ -159,17 +179,27 @@ void __cdecl Sim_100ad1f3(unsigned char *obj, unsigned char *part)
             const unsigned char *p = *next++;
 
             ScreenPosition(out, p);
-            *(uint32_t *)(out + 0xc) = ONE_BITS;
+            /* 1.2 (0x10097ff0): rhw 1 / z (1.0: 1), light 0xff (1.0: 0xfe) */
+            *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
             *(uint32_t *)(out + 0x1c) = ONE_BITS;
             *(uint32_t *)(out + 0x20) = ONE_BITS;
+#ifdef W2NS_MUTATE /* the checker's negative check only: 1.0's light */
             *(uint32_t *)(out + 0x10) = 0xfe;
+#else
+            *(uint32_t *)(out + 0x10) = 0xff;
+#endif
             out[0x14] = 0;
             out[0x16] = 0;
             out[0x15] = 0;
             out[0x17] = 0x80;
-            *(uint32_t *)(out + 0x18) = (uint32_t)Render_FogLevel(*(const float *)(p + 8), fogParam) << 24;
+            if (g_w33Voodoo == 0)
+                *(uint32_t *)(out + 0x18) = (uint32_t)Render_FogLevel(*(const float *)(p + 8), fogParam) << 24;
+            else                                        /* 1.2's 3DFX / PowerVR mode: the fog byte 0x80 */
+                *(uint32_t *)(out + 0x18) = 0x80000000u;
         }
-        desc[1] = 0xfe;
+        desc[1] = 0xff;                                 /* 1.2: 0xff (1.0: 0xfe) */
+        if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
+            RENDER_STATE(2, 0);
         RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
     } else {
         unsigned char buf[MAX_POLY * 0x24];

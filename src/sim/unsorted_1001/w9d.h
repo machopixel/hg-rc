@@ -32,6 +32,7 @@ void __cdecl Sim_10017b3e(void *obj, uint32_t value);
 /*
  * Settings by number: 0 [0x101321b4], 1 [0x101321b8], 2 [0x101321bc] (also sets bit 3 of [0x101321c0] and calls
  * Cd_StopWait unless [0x1015ec58]), 3 [0x101321b0], 4 bit 1 of [0x101321c0] as 0 / 1; anything else 0.
+ * With HG_MUSIC_FILES (the game build) there is no Cd_StopWait (1.2 with a WAV map, 0x10015450).
  */
 uint32_t __cdecl Sim_1001edd0(int which);
 

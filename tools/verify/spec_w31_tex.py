@@ -22,10 +22,12 @@ exec(open('tools/verify/w31_map.py').read())
 
 SOURCES = ['sim/render/w31_tex.c', 'sim/render/w2m_texture.c', 'sim/render/w2n_texture.c',
            'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2h_reset.c', 'sim/unsorted_100f/w2e_string.c',
-           '../tools/verify/plat_stub.c']
+           '../tools/verify/plat_stub.c', 'sim/render/w33_dx12.c']
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 if os.environ.get('W31_NEG'):
     CFLAGS.append('-DW31T_MUTATE')
+if os.environ.get('W33V_NEG'):
+    CFLAGS.append('-DW2NV_MUTATE')
 
 BASE12 = 0x20000000
 
@@ -200,7 +202,7 @@ def to12(m):
         w32(uc, A12(a12), r32(uc, a10))
     w32(uc, A12(0x10105048), 1)                     # 1.2's .TEX flag
     w32(uc, A12(0x1014a5f0), 0)
-    w32(uc, A12(0x1014b954), 0)
+    w32(uc, A12(0x1014b954), r32(uc, m.syms['g_w33Voodoo']))   # round 33: 1.2's 3DFX / PowerVR mode
     w32(uc, A12(0x1012d3f8), r32(uc, m.syms['g_w31TexStart']))
     w32(uc, A12(0x107ee3f0), STUB_RENDER)
     w32(uc, A12(0x107ee414), STUB_PRELOAD)
@@ -282,6 +284,7 @@ def g_sub(extra):
         args = [idx & 0xffffffff, n, verts(ctx, n)]
         if extra == 'flag':
             args.append(r.choice([0, 0, 1]))
+        w32(ctx.m.uc, ctx.m.syms['g_w33Voodoo'], r.choice([0, 0, 1]))     # round 33: its 3DFX / PowerVR branch
         return args
     return g
 

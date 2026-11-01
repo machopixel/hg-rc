@@ -392,14 +392,24 @@ void __cdecl Sim_1007c42f(void)
                 Sim_1007b1d0(side, block[0x38]);
                 U32(block, 8) = NOW;
             }
+        /* 1.2 (0x1006932f): the own side wins once its objectives are done, with no [0x1015f1e8] test in a single
+           game and no wait for pending script events ([0x1015d528]) */
+#ifdef W9FW_MUTATE /* the checker's negative check only: 1.0's tests */
         } else if (side == OWN_SIDE && (NETWORKED != 0 || G32(0x1015f1e8) == 0)) {
+#else
+        } else if (side == OWN_SIDE) {
+#endif
             int allDone = 1;
 
             if (NETWORKED != 0 && block[0x38] != 2) {
                 for (k = 0; k < SIDE_COUNT; k++)
                     allDone &= W9F_SIDE(k)[0x38] != 0;
             }
+#ifdef W9FW_MUTATE
             if (allDone != 0 && G32(0x1015d528) == 0 && G32(0x1015f1fc) == 0) {
+#else
+            if (allDone != 0 && G32(0x1015f1fc) == 0) {
+#endif
                 G32(0x1015f1fc) = 1;
                 G32(0x1015f1e4) = 0;
                 G32(0x1015f1d0) = 0;

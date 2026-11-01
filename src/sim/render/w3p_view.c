@@ -2,6 +2,7 @@
 #include "w2n.h"
 #include "../util/access.h"
 #include "../util/w3p.h"
+#include "../unsorted_100a/w12.h"
 
 #define MAX_POLY 255
 
@@ -36,6 +37,17 @@ void __cdecl Sim_1005874a(const void *matrix)
     GF32(0x10143fc0) = x;
     GF32(0x101668b8) = y;
     GF32(0x101668bc) = z;
+    /* 1.2 (0x1004b44a): SKYGND.PAR's two coloured lights' directions into the camera's frame too (no origin) */
+#ifdef W3PL_MUTATE /* the checker's negative check only: light 1's z left out */
+    g_w33Light1Cam[0] = Dot3(m, 0, 0xc, 0x18, g_w33Light1Dir[0], g_w33Light1Dir[1], 0.0f);
+#else
+    g_w33Light1Cam[0] = Dot3(m, 0, 0xc, 0x18, g_w33Light1Dir[0], g_w33Light1Dir[1], g_w33Light1Dir[2]);
+#endif
+    g_w33Light1Cam[1] = Dot3(m, 4, 0x10, 0x1c, g_w33Light1Dir[0], g_w33Light1Dir[1], g_w33Light1Dir[2]);
+    g_w33Light1Cam[2] = Dot3(m, 8, 0x14, 0x20, g_w33Light1Dir[0], g_w33Light1Dir[1], g_w33Light1Dir[2]);
+    g_w33Light2Cam[0] = Dot3(m, 0, 0xc, 0x18, g_w33Light2Dir[0], g_w33Light2Dir[1], g_w33Light2Dir[2]);
+    g_w33Light2Cam[1] = Dot3(m, 4, 0x10, 0x1c, g_w33Light2Dir[0], g_w33Light2Dir[1], g_w33Light2Dir[2]);
+    g_w33Light2Cam[2] = Dot3(m, 8, 0x14, 0x20, g_w33Light2Dir[0], g_w33Light2Dir[1], g_w33Light2Dir[2]);
     for (node = BYTES(G32(0x101668d0)); node != 0; node = BYTES(U32(node, 0))) {
         float dx = (float)((double)F32(node, 0x14) - (double)tx);
         float dy = (float)((double)F32(node, 0x18) - (double)ty);

@@ -3,6 +3,7 @@
 #include "w22.h"
 #include "w2n.h"
 #include "w31.h"
+#include "w33.h"
 #include "../util/access.h"
 #include "../unsorted_1008/w8w.h"
 #include "../util/util.h"
@@ -816,7 +817,7 @@ void __cdecl Sim_100a0def(void *view)
         break;
     }
 
-    if (haze && G32(0x1014caec) != 0 && G32(0x1017d0ac) == 0) {
+    if (haze && G32(0x1014caec) != 0 && g_w33Voodoo == 0) {   /* 1.0's [0x1017d0ac] = 1.2's 3DFX flag */
         sw[0][0] = z.x0;
         sw[0][1] = z.y0;
         sw[1][0] = z.x1;

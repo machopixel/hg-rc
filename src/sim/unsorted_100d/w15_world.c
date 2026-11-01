@@ -45,6 +45,8 @@
 #include "../unsorted_100b/w3p.h"
 #include "../unsorted_100b/w4v.h"
 #include "../unsorted_100b/w5a.h"
+#include "../unsorted_1005/w5a.h"
+#include "../unsorted_100f/w7r.h"
 #include "../unsorted_100b/w5z.h"
 #include "../unsorted_100c/w4v.h"
 #include "../unsorted_100d/w14.h"
@@ -873,6 +875,24 @@ static int W15_Gps(W15State *s, uint8_t *c)
     int32_t type, gear_index = 0;
     uint8_t *gp, *u;
 
+    if (G32(0x1015ec58) != 0) {
+        /* 1.2 (0x100c1152), network games only: a gear whose type name holds "tank" comes as infantry */
+        Str_CopyN(design_name, (const char *)c + 0x36, 0x16);
+        design_name[0x15] = 0;
+        Crt12_StrLwr(design_name);
+#ifdef W15T_MUTATE /* the checker's negative check only: no swap */
+        if (0) {
+#else
+        if (W5A_STRSTR(design_name, "tank") != 0) {
+#endif
+            U16(c, 8) = 0;
+            U16(c, 0xa) = 0;
+            Str_CopyN((char *)c + 0x24, "d01infnt", 8);
+            Str_CopyN((char *)c + 0x2d, "mmb00std", 8);
+            Str_CopyN((char *)c + 0x36, "Infantry", 0x16);
+            Str_CopyN((char *)c + 0x4c, "GREL", 0x16);
+        }
+    }
     Mem_Fill(design_name, 0, 0x100);
     Str_CopyN(n1, (const char *)c + 0x24, 8);
     n1[8] = 0;
@@ -1025,7 +1045,12 @@ static int W15_Chunk(W15State *s, uint8_t *c)
         Str_Copy(SIM_PTR(char, 0x1015da30), (const char *)c + 8);
     } else if (tag == W15_TAG(0x10134ad4)) {
         GFL(0x1014ca3c) = (float)S32(c, 8);
+        /* 1.2 (0x100c1152): the second value two and a half times */
+#ifdef W15V_MUTATE /* the checker's negative check only: 1.0's */
         GFL(0x1014ca40) = (float)S32(c, 0xc);
+#else
+        GFL(0x1014ca40) = (float)((double)S32(c, 0xc) * 2.5);
+#endif
     } else if (tag == W15_TAG(0x10134aec)) {
         Str_Copy(SIM_PTR(char, 0x10a3ae80), (const char *)c + 0xa);
     } else if (tag == W15_TAG(0x10134ae4)) {

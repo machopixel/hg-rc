@@ -90,7 +90,12 @@ void __cdecl Sim_10016632(int index)
             continue;
         Sim_10016a6b((void *)(uintptr_t)rec, 2, (int16_t)(bit + 1), idx);
         if (G32(0x1015ec58) != 0) {
+            /* 1.2 (0x1000f7d8): the network game's own list entry ([0x1014c99c]) is never held back */
+#ifdef W9DN_MUTATE /* the checker's negative check only: 1.0's test */
             if (W9d_Held(index, idx))
+#else
+            if (W9d_Held(index, idx) && GS32(0x1014c99c) != i)
+#endif
                 continue;
         } else if ((int32_t)idx == GS32(0x1017b8c8) && G32(0x1015d120 + (uint32_t)index * 4) != 0) {
             continue;

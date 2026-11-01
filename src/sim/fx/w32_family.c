@@ -15,6 +15,27 @@ const uint32_t g_w32_1011e9d0[24] = {
     0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000, 0x3f800000, 0x40000000,
 };
 
+/*
+ * One particle mark (0xffffffff at a particle's frame) of 1.2's spawn loop. 1.2's 0x20 marks for a record of 16 run
+ * past the record; for the last record of the pool (1.2 0x10191060, 1000 x 0x406, ending at 0x1028c7d0) they run
+ * past the pool into the data 1.2 keeps there. Ours has the same data after its pool (1.0's layout, which also follows
+ * its pool), at other addresses: 1.2 0x1028c7e0..0x1028c95f is ours + 0xe2900 (the saved camera 0x1036f0e0, the
+ * view's floats 0x1036f1c0.., the saved 0x1014cae8 at 0x1036f1e0, the grid row 0x1036f248), 0x1028c960..0x1028caab
+ * ours + 0xe2940 (the cell list 0x1036f2a0); pairs from the identical functions' relocations (tools/v12, round 32).
+ * Our pool keeps 1.2's records in 1.0's larger buffer, so a mark past its 1000th record is sent to that address.
+ */
+static void W32_Mark(uint8_t *p)
+{
+    uint8_t *end = SIM_PTR(uint8_t, 0x10217c20 + 1000 * 0x406);
+    uint32_t a12;
+
+    if (p >= end && p < end + 0x2e0) {
+        a12 = 0x1028c7d0u + (uint32_t)(p - end);
+        p = SIM_PTR(uint8_t, a12 + (a12 < 0x1028c960u ? 0xe2900u : 0xe2940u));
+    }
+    U32(p, 0) = 0xffffffffu;
+}
+
 uint8_t *W32_NewSystem(uint32_t update, uint32_t draw, uint32_t arg, int force, int32_t type)
 {
     uint8_t *rec;
@@ -28,14 +49,11 @@ uint8_t *W32_NewSystem(uint32_t update, uint32_t draw, uint32_t arg, int force, 
     U16(rec, 0x10) = 1;
     U32(rec, 0x402) = (uint32_t)type;
     U32(rec, 0x3fa) = 0xffffffffu;
-    /* Bug fix (1.2): 1.2 marks 0x20 particles, writing past the 16 of the record into the next one */
-#ifdef W32_LOOP32 /* the checker only: 1.2's count */
+    /* As 1.2 (Diego: "do as 1.2 does"): 0x20 particles marked in a record of 16, the last 16 marks landing in the
+       record itself and in the next one (W32_Mark: past the last record, where 1.2's memory has) */
     n = 0x20;
-#else
-    n = 0x10;
-#endif
     for (i = 0; i < n; i++)
-        U32(rec + i * 0x32, 0x30) = 0xffffffffu;
+        W32_Mark(rec + i * 0x32 + 0x30);
     U32(rec, 0x3fe) = 0;
     if (g_w32_1011e700[type].count != 0) {
         switch (g_w32_1011e700[type].order) {

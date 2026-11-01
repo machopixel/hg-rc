@@ -22,6 +22,7 @@ int __cdecl Win_AuxGetVolume(void);
 /*
  * Sets the volume of the aux device 0x1014c9b4 to min(volume, 0xffff) & 0xffff in both channels.
  * Returns 1 when auxSetVolume succeeded, 0 when it failed or there is no device (-1).
+ * With HG_MUSIC_FILES (the game build): 1.2's WAV music volume (1.2 0x1001603f), Music_SetVolume(volume) and 1.
  */
 int __cdecl Win_AuxSetVolume(int volume);
 

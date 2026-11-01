@@ -1,5 +1,6 @@
 #include "w2n.h"
 #include "w31.h"
+#include "w33.h"
 
 #define F32(addr) (*SIM_PTR(float, addr))
 #define U32(addr) (*SIM_PTR(uint32_t, addr))
@@ -59,13 +60,33 @@ static void *TexImage(int index, int16_t *width, int16_t *height, void **palette
     return Render_GetTextureImage(index, width, height);
 }
 
-/* The part all three builders share: 1/z and the colour bytes of one vertex. */
-static void FinishVertex(unsigned char *v)
+/*
+ * The part all three builders share: 1/z and the colour bytes of one vertex. 1.2 (0x100010d9 / 0x100012c5 /
+ * 0x10001513): in its 3DFX / PowerVR mode (g_w33Voodoo, 1.2 [0x1014b954]) the colour is the vertex's specular colour
+ * (the coloured light of Sim_10058c5e, put there by the queued polygon) times the channel factors / 256; the first
+ * two builders then also make the vertex opaque (round 33).
+ */
+static void FinishVertex(unsigned char *v, int opaque)
 {
+    uint32_t spec;
+
     *(float *)(v + 0xc) = F32(0x10111000) / *(float *)(v + 8);
-    v[0x14] = (unsigned char)U32(0x10143fdc);
-    v[0x15] = (unsigned char)U32(0x10143fe0);
-    v[0x16] = (unsigned char)U32(0x10143fe4);
+    if (g_w33Voodoo == 0) {
+        v[0x14] = (unsigned char)U32(0x10143fdc);
+        v[0x15] = (unsigned char)U32(0x10143fe0);
+        v[0x16] = (unsigned char)U32(0x10143fe4);
+        return;
+    }
+    spec = *(const uint32_t *)(v + 0x18);
+    v[0x14] = (unsigned char)(U32(0x10143fdc) * (spec >> 16 & 0xff) >> 8);
+    v[0x15] = (unsigned char)(U32(0x10143fe0) * (spec >> 8 & 0xff) >> 8);
+#ifdef W2NV_MUTATE /* the checker's negative check only: blue from green */
+    v[0x16] = (unsigned char)(U32(0x10143fe4) * (spec >> 8 & 0xff) >> 8);
+#else
+    v[0x16] = (unsigned char)(U32(0x10143fe4) * (spec & 0xff) >> 8);
+#endif
+    if (opaque)
+        v[0x17] = 0xff;
 }
 
 /* Runs the luma-table reload the first call after [0x1012da34] was set. */
@@ -96,7 +117,7 @@ int __cdecl Render_SubmitVerts_10006609(int index, int count, unsigned char *ver
     ReloadLumaIfPending();
     v = verts;
     for (i = 0; i < count; i++, v += 0x24) {
-        FinishVertex(v);
+        FinishVertex(v, 1);
         if (U32(0x1017b940) != 0)
             *(uint32_t *)(v + 0x10) = (*(uint32_t *)(v + 0x10) << 3) | 7;
         else
@@ -132,7 +153,7 @@ int __cdecl Render_SubmitVerts_10006744(int index, int count, unsigned char *ver
     ReloadLumaIfPending();
     v = verts;
     for (i = 0; i < count; i++, v += 0x24) {
-        FinishVertex(v);
+        FinishVertex(v, 1);
         /* 1.2 (0x100012c5) keeps the caller's alpha (0x40 / 0x80 / [0x101cfc8c]); it sets 0xff only for its
            3DFX / PowerVR vertex colours, which our renderers never take (round 31: 1.2 with Vulkan) */
         if (!g_w31Tex)
@@ -180,7 +201,7 @@ int __cdecl Render_SubmitVerts_100068d9(int index, int count, unsigned char *ver
     ReloadLumaIfPending();
     v = verts;
     for (i = 0; i < count; i++, v += 0x24) {
-        FinishVertex(v);
+        FinishVertex(v, 0);
         if (U32(0x1017b940) != 0)
             *(uint32_t *)(v + 0x10) = 0xff;
         else

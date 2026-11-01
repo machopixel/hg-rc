@@ -19,6 +19,7 @@
 #include "../sim/unsorted_1003/w2b.h"
 #include "../sim/unsorted_1004/fns.h"
 #include "../sim/unsorted_1004/w2b.h"
+#include "../sim/unsorted_1004/w2k.h"
 #include "../sim/unsorted_1004/w2c.h"
 #include "../sim/unsorted_1005/fns.h"
 #include "../sim/unsorted_1007/fns.h"
@@ -955,10 +956,10 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     }
     sdlaudio = HooksAudio_SdlSound();   /* the one decision hooks_audio.c uses too */
     sdlplat = Hooks_SdlPlatform();      /* round 28: conv_w28.inc only with the SDL3 platform */
-    g_w8yPatch = !noconv && Hooks_VulkanRenderer(); /* round 31: 1.2's Patch folder with Vulkan only */
-    g_w31Tex = g_w8yPatch;              /* round 31: 1.2's .TEX textures, with Vulkan in 3D mode */
+    g_w8yPatch = !noconv && Hooks_Renderer12(); /* 1.2's game: Vulkan, and Direct3D on 1.2's dx5draw (round 33) */
+    g_w31Tex = g_w8yPatch;              /* round 31: 1.2's .TEX textures (in 3D mode), particles and the rest */
     g_w31TexLoaded = g_w31TexFallback = g_w31TexMissing = 0;
-    DebugPrintf("HGSIM.DLL: Patch folder and .TEX textures %s\n", g_w8yPatch ? "on (Vulkan)" : "off");
+    DebugPrintf("HGSIM.DLL: 1.2 game (Patch folder, .TEX textures, particles) %s\n", g_w8yPatch ? "on" : "off");
     LogFpuControlWord("at sim load");
     g_frameTapCalls = 0;
     if (!sdlaudio)
@@ -971,6 +972,7 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     }
     if (noconv)
         return;
+    W2k_FfTable12();                    /* the force-feedback table in 1.2's form, for 1.2's FFORCE.DLL */
     use = (HookDesc *)malloc(total * sizeof(HookDesc));
     if (use == NULL)
         return;

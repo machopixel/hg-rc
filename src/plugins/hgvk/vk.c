@@ -1239,6 +1239,15 @@ fail:
 
 /* ---- Frame -------------------------------------------------------------- */
 
+static int g_fogOn;
+static uint32_t g_fogColour;
+
+void Vk_SetFog(int enabled, uint32_t colour)
+{
+    g_fogOn = enabled != 0;
+    g_fogColour = colour;
+}
+
 void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, HgvkTexture *tex,
                 const HgvkVertex *verts, int count)
 {

@@ -788,15 +788,16 @@ int __cdecl Sim12_1007dd89(uint8_t *rec)
     return 1;
 }
 
-// FUNCTION: HGSIM12 0x1007e25c
-void __cdecl Sim12_1007e25c(float x, float y, float z, float dx, float dy, float dz)
+/* the skate dust's spawn; 1.2's footsteps (0x10086007) are a copy of it with type 0x15 and their own copies of its
+   update and draw */
+static void W32e_Dust(float x, float y, float z, float dx, float dy, float dz, int32_t type, uint32_t update,
+                      uint32_t draw)
 {
     uint8_t *rec, *p;
     float step[3], ax, ay, az;
     int32_t i;
 
-    rec = W32_Explosion(x, y, z, dx, dy, dz, 5, (uint32_t)(uintptr_t)Sim12_1007dbe7,
-                        (uint32_t)(uintptr_t)Sim12_1007dd89, 0, 256.0, 8.0, step);
+    rec = W32_Explosion(x, y, z, dx, dy, dz, type, update, draw, 0, 256.0, 8.0, step);
     if (rec == 0)
         return;
     ax = step[0];
@@ -820,6 +821,34 @@ void __cdecl Sim12_1007e25c(float x, float y, float z, float dx, float dy, float
 #endif
     }
     U32(rec, 0xc) = 1;
+}
+
+// FUNCTION: HGSIM12 0x1007e25c
+void __cdecl Sim12_1007e25c(float x, float y, float z, float dx, float dy, float dz)
+{
+    W32e_Dust(x, y, z, dx, dy, dz, 5, (uint32_t)(uintptr_t)Sim12_1007dbe7, (uint32_t)(uintptr_t)Sim12_1007dd89);
+}
+
+// FUNCTION: HGSIM12 0x10085992
+int __cdecl Sim12_10085992(uint8_t *rec)
+{
+    return Sim12_1007dbe7(rec);
+}
+
+// FUNCTION: HGSIM12 0x10085b34
+int __cdecl Sim12_10085b34(uint8_t *rec)
+{
+    return Sim12_1007dd89(rec);
+}
+
+// FUNCTION: HGSIM12 0x10086007
+void __cdecl Sim12_10086007(float x, float y, float z, float dx, float dy, float dz)
+{
+#ifdef W32FS_MUTATE /* the checker's negative check only: the skate dust's type */
+    W32e_Dust(x, y, z, dx, dy, dz, 5, (uint32_t)(uintptr_t)Sim12_10085992, (uint32_t)(uintptr_t)Sim12_10085b34);
+#else
+    W32e_Dust(x, y, z, dx, dy, dz, 0x15, (uint32_t)(uintptr_t)Sim12_10085992, (uint32_t)(uintptr_t)Sim12_10085b34);
+#endif
 }
 
 // FUNCTION: HGSIM12 0x1007bb48

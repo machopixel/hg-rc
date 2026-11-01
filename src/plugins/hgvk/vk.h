@@ -15,7 +15,13 @@ typedef struct HgvkVertex {
     uint32_t rgba; /* bytes R, G, B, A in memory order */
     float u, v;
     float iz;      /* 1 / camera depth for the depth buffer; <= 0: farthest */
+    float fog;     /* round 33: D3D's vertex fog factor, the specular alpha byte +0x1b / 255 (1: no fog); not yet
+                      read by the shaders */
 } HgvkVertex;
+
+/* Round 33: the fog FirstDevice asks for (flags bit 2), as 1.2's dx5draw takes it: FOGENABLE, FOGCOLOR (0xAARRGGBB
+   from the sim, alpha unused by D3D's fog). Kept for the shader step; nothing draws with it yet. */
+void Vk_SetFog(int enabled, uint32_t colour);
 
 enum { HGVK_TRIANGLES, HGVK_LINES, HGVK_POINTS };
 

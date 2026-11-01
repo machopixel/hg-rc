@@ -100,7 +100,12 @@ void __cdecl Sim_10011681(void *obj)
         *SIM_PTR(u16a, 0x10a38a74) = 0;
     if (S16(obj, 0x1a6) == 0xc)
         return;
-    if (Sim_10017a05(obj) != 0)
+    /* 1.2 (0x1000a811): its action gate 0x10010cd2 in place of 1.0's early-out Sim_10017a05 */
+#ifdef W8TG_MUTATE /* the checker's negative check only: 1.0's sense */
+    if (Sim12_10010cd2(obj) != 0)
+#else
+    if (Sim12_10010cd2(obj) == 0)
+#endif
         return;
     if (U32(obj, 4) == (uint32_t)Sim_10052aaf((int)U32(obj, 8)))
         W8T_CALL_10017263(U32(obj, 8));

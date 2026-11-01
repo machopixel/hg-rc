@@ -15,6 +15,7 @@
 #include "w9c.h"
 #include "../unsorted_100f/w8z.h"
 #include "../render/w2n.h"
+#include "../render/w31.h"
 #include "../unsorted_1000/w8t.h"
 #include "../unsorted_1000/w5a.h"
 #include "../unsorted_1009/w6f.h"
@@ -78,6 +79,22 @@ void __cdecl Sim_1006ad98(int32_t killer, uint8_t *b, int32_t part, int32_t flag
 
     if (part == 0)
         return;
+    /* 1.2 (0x1005ab68, round 32): in a network game, the local player destroying part 2 of a kind-4 unit sets off 16
+       shockwaves at the unit's two nodes and scores it, without marking the part */
+    if (g_w31Tex && U32(unit, 0) == 4 && G32(0x1015ec58) != 0 && part == 2 && (uint32_t)killer == G32(0x1017b8c8)) {
+        Sim_100a9cfb((void *)(uintptr_t)U32(b, 0x4c0), (uint32_t *)&x, (uint32_t *)&y, (uint32_t *)&z);
+        for (i = 0; i < 6; i++)
+            Sim_10092f9d(x, y, z, 0.0f, 0.0f, 0.0f, S32(b, 0xbdb));
+        Sim_100a9cfb((void *)(uintptr_t)U32(b, 0x4c4), (uint32_t *)&x, (uint32_t *)&y, (uint32_t *)&z);
+#ifdef W10N_MUTATE /* the checker's negative check only: one shockwave fewer */
+        for (i = 0; i < 9; i++)
+#else
+        for (i = 0; i < 10; i++)
+#endif
+            Sim_10092f9d(x, y, z, 0.0f, 0.0f, 0.0f, S32(b, 0xbdb));
+        Score_RecordKill(killer, b);
+        return;
+    }
     pp = BYTES(U32(b, 0x88) + (uint32_t)part * 0x3cu - 0x3cu);
     if ((S16(pp, 0x36) & 0x2000) != 0)
         return;
@@ -215,8 +232,14 @@ void __cdecl Sim_1006b52f(int32_t killer, uint8_t *b, int32_t part, int32_t k, i
             if (U32(b, 0xbaf) != 0) {
                 Sim_100203cf(1, 3);
                 U32(b, 0xbaf) = 0;
+                /* 1.2 (0x1005b5c6): the fog state as (1, 0x200000), 1.0's code 2 (1.0 passed (0x200000, 1), a code
+                   its renderers reject) */
                 if (G32(0x1017d108) != 0)
+#ifdef W10F_MUTATE /* the checker's negative check only: 1.0's call */
                     (*SIM_PTR(W10_6SlotFn, 0x109e3d40))(0x200000, 1);
+#else
+                    (*SIM_PTR(W10_6SlotFn, 0x109e3d40))(2, 0x200000);
+#endif
                 G32(0x1014cb1c) = 0;
             }
             if (U32(b, 0xbb3) != 0) {

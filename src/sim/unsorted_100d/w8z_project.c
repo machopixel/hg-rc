@@ -1,4 +1,5 @@
 #include "w8z.h"
+#include "../fx/w32.h"
 #include "../util/util.h"
 
 // FUNCTION: HGSIM 0x100d2669
@@ -57,12 +58,12 @@ int __cdecl Sim_100d8e43(void *obj)
 
     if (obj == 0)
         return 0;
-    Sim_100a9cfb((void *)(uintptr_t)U32(obj, 0x552), &ox, &oy, &oz);
-    vx = (float)((double)W8Z_FL(obj, 0x56e) / (double)W8Z_GF(0x1012bd6c));
-    vy = (float)((double)W8Z_FL(obj, 0x572) / (double)W8Z_GF(0x1012bd6c));
-    vz = (float)((double)W8Z_FL(obj, 0x576) / (double)W8Z_GF(0x1012bd6c));
+    Sim_100a9cfb((void *)(uintptr_t)U32(obj, W32_REC_OBJ), &ox, &oy, &oz);
+    vx = (float)((double)W8Z_FL(obj, W32_REC_VEL) / (double)W8Z_GF(0x1012bd6c));
+    vy = (float)((double)W8Z_FL(obj, W32_REC_VEL + 4) / (double)W8Z_GF(0x1012bd6c));
+    vz = (float)((double)W8Z_FL(obj, W32_REC_VEL + 8) / (double)W8Z_GF(0x1012bd6c));
     for (i = 0; i < 2; i++) {
-        point = (uint32_t)(uintptr_t)obj + (uint32_t)i * 0x2au;
+        point = (uint32_t)(uintptr_t)obj + (uint32_t)i * W32_REC_PT;     /* 1.2 0x100be2e3: 0x32 apart */
         x0 = (float)((double)W8Z_FL(point, 0x12) + (double)W8z_Float(ox));
         y0 = (float)((double)W8Z_FL(point, 0x16) + (double)W8z_Float(oy));
         z0 = (float)((double)W8Z_FL(point, 0x1a) + (double)W8z_Float(oz));
@@ -100,8 +101,8 @@ int __cdecl Sim_100d943f(void *obj)
 
     if (obj == 0)
         return 0;
-    Sim_100a9cfb((void *)(uintptr_t)U32(obj, 0x552), &ox, &oy, &oz);
-    rec = U32(obj, 0x57a);
+    Sim_100a9cfb((void *)(uintptr_t)U32(obj, W32_REC_OBJ), &ox, &oy, &oz);
+    rec = U32(obj, W32_REC_ARG);
     table = U32(rec, 0x20);
     vx = (float)((double)W8Z_FL(rec, 0x14) / (double)W8Z_GF(0x1012bd78));
     vy = (float)((double)W8Z_FL(rec, 0x18) / (double)W8Z_GF(0x1012bd78));

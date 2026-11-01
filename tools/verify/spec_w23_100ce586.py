@@ -56,7 +56,9 @@ def g(ctx):
             w16(ctx, u + 0x1c, r.choice([0, 0x800, 0x4000, 0x13]))
             wb(ctx, u + 0x124, ctx.buf(1, b'x') and b'Unit%d\0' % i)
         w32(ctx, 0x109e8b40 + 4 * i, u)
-        w16(ctx, 0x1015d0f0 + 2 * i, r.getrandbits(16))
+        rating = r.getrandbits(16)
+        w16(ctx, 0x1015d0f0 + 2 * i, rating)
+        w16(ctx, ctx.m.syms['g_w34Rating'] + 2 * i, rating)   # round 33: the C reads 1.2's ratings (same values)
     me = r.randrange(0, 8)          # the player's unit exists in the game (its +0x28 is read)
     if r32(ctx, 0x109e8b40 + 4 * me) == 0:
         w32(ctx, 0x109e8b40 + 4 * me, newbuf(ctx, 0x140))

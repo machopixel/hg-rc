@@ -360,6 +360,8 @@ def fstubs(ctx):
         m.raw.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
         if cname is not None:
             m.raw.hook_add(UC_HOOK_CODE, cb, None, m.syms[cname], m.syms[cname])
+        if addr in globals().get('FSTUB12', {}):        # round 33: a 1.2 spec's twin of the stubbed callee
+            m.raw.hook_add(UC_HOOK_CODE, cb, None, FSTUB12[addr], FSTUB12[addr])
 
 
 # ---- platform math library for the interpreted functions (DECISIONS.md): the C side's sin / cos / asin / acos /

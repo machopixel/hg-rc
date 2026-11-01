@@ -21,6 +21,17 @@ uint32_t __cdecl Sim_10044311(void);
  */
 void __cdecl Sim_10045f3b(unsigned kind, uint32_t a, uint32_t b);
 
+/*
+ * 1.2's force-feedback request (1.2 0x100382fb), for 1.2's FFORCE.DLL: c and b capped at 100, a (an angle) to
+ * 0..0x167; kind 0..17 marks one record of 1.2's table (kept at 1.0's 0x1013af00, sent each frame by Sim_10045db9)
+ * with bit 0 and stores a / b / c or a fixed effect code, setting a "changed" bit when the code or value is new.
+ * Any other kind does nothing. Callers test the library flag 0x1015ef3c first, as 1.2 does.
+ */
+void __cdecl Sim_100382fb(unsigned kind, int32_t a, uint32_t b, uint32_t c);
+
+/* Sets the size dword of the force-feedback table to 1.2's 0xc0 (called once by the hook layer). */
+void W2k_FfTable12(void);
+
 /* Returns 1. */
 int __cdecl Sim_1004c5b7(void);
 

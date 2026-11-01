@@ -123,6 +123,9 @@ void __cdecl Sim_1001cedf(uint32_t a);
  * 1 -> [0x101321b8] with bit 2 of [0x101321c0] (0x10001dfc when changed), 2 -> [0x101321bc] (when changed:
  * 0x10003102 if Sim_1009eb24(), Sim_1001f26e if it was 0; always Sim_1009e441), 3 -> [0x101321b0]. Every
  * index except 2 first calls Sim_1001f335.
+ * With HG_MUSIC_FILES (the game build), index 2 is 1.2's WAV-map version (1.2 0x1001550d) on platform/music.h:
+ * when changed, 0x10003102 (the volume) always and Sim_1001f26e if it was 0; then, when no music plays,
+ * Sim_1001f26e (with track 2 when [0x101321a8] is -1), else Sim_1001f367 when paused.
  */
 void __cdecl Sim_1001ee7c(int index, uint32_t value);
 

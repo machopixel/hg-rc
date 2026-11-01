@@ -41,7 +41,8 @@ void __cdecl Sim_10040f5f(const uint8_t *a, int w, int b, int c);
 int __cdecl Sim_10041203(int kind, uint32_t value);
 /* Message 0x1013adec: two bytes and a dword. */
 int __cdecl Sim_100412cb(int kind, int sub, uint32_t value);
-/* Message 0x1013adf0: for the first table entries (up to 8), byte 0x1016552c[(i << 4) + 2 * self]; then Sim_10041444(). */
+/* Message "KI" (0x1013adf0, 1.2: 12 bytes): for the first table entries (up to 10), the kills of player i by the local
+   player (g_w34Kills); then Sim_10041444(). */
 void __cdecl Sim_100413c7(void);
 /*
  * Word table 0x1015d0f0 (8 words) is rebuilt from the 8 x 8 word table at 0x1016552c (row stride 16 bytes): for every pair (i, j)
@@ -49,7 +50,8 @@ void __cdecl Sim_100413c7(void);
  * changed, the function at dword 0x1015eb20 is called with (session, hi | word 0x1013acac, the new word sign-extended).
  */
 void __cdecl Sim_10041444(void);
-/* Stores the bytes msg[2 + i] into words 0x1016552c[(i << 4) + 2 * column], then Sim_10041444() and Sim_1007b02d(). */
+/* Stores the bytes msg[2 + i] into the kill table's column `column` (not once the game is over), then Sim_10041444()
+   and Sim_1007b02d(). */
 void __cdecl Sim_1004158c(const uint8_t *msg, int column);
 /* Message 0x1013adf4 from three floats and three floats of the block of self's entry (+0x554..), each as trunc(x * 65536 +- 0.5), sent to the player of Sim_1003dbc0(id). */
 int __cdecl Sim_100415eb(int id, float x, float y, float z);
@@ -89,3 +91,11 @@ void __cdecl Sim_1004bce5(int32_t *p, int a, int b, int c, int d);
 int __cdecl Sim_1004be11(int a, int b);
 
 #endif
+
+/* Round 33, 1.2's 10-player rating (w3p_net.c) */
+extern uint8_t g_w34Kills[10 * 0x14];
+extern int16_t g_w34Rating[10];
+extern uint32_t g_w34NetOver;
+extern uint8_t g_w34AkBuf[0x100];
+void __cdecl Sim12_100352b7(uint8_t killer, int unit);
+void __cdecl Sim12_10035348(const uint8_t *msg);

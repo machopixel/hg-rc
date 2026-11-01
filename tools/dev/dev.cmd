@@ -7,6 +7,8 @@ rem   dev.cmd            shows a menu and asks what to run
 rem   dev.cmd hgvk       build, deploy, run with the Vulkan plugin (HGVK)
 rem   dev.cmd dx5        build, deploy, run with the original Direct3D plugin
 rem   dev.cmd dx5noconv  as dx5, but with all converted code off (noconv)
+rem   dev.cmd ref12      the untouched 1.2 game (C:\Coding\HeavyGear\Ref12: 1.2's own DLLs and plugins, our
+rem                      launcher with noconv and 1.2's own "no CD" setting), mission M01_SCN1, Direct3D
 rem   dev.cmd build      build and deploy only, do not start the game
 rem   dev.cmd direct     Vulkan plugin, skipping the menus and the Windows 256-colour
 rem                      compatibility layer: starts mission M01_SCN1 straight away
@@ -27,6 +29,7 @@ rem A second argument picks the mission of the direct modes, e.g. "dev.cmd direc
 setlocal
 set "REPO=%~dp0..\.."
 set "GAME=C:\Coding\HeavyGear\Project"
+set "REF12=C:\Coding\HeavyGear\Ref12"
 set "MODE=%~1"
 set "MISSION=%~2"
 if "%MISSION%"=="" set "MISSION=M01_SCN1"
@@ -48,11 +51,11 @@ if "%MODE%"=="" (
     echo   E  M09 watcher run, original: like D, but with the original unconverted code
     echo   F  M06 watcher run, converted: mission M06_SCN1, stack watchers on
     echo   G  M06 watcher run, original: like F, but with the original unconverted code
-    echo   H  Like 3, original Direct3D renderer, but with all converted code off (noconv)
+    echo   H  Untouched 1.2 game, mission %MISSION%, Direct3D (the reference, in C:\Coding\HeavyGear\Ref12)
     echo.
     choice /c 123456789ABCDEFGH /n /m "Pick 1-9 or A-H: "
     if errorlevel 17 (
-        set "MODE=dx5noconv"
+        set "MODE=ref12"
     ) else if errorlevel 16 (
         set "MODE=watch06noconv"
     ) else if errorlevel 15 (
@@ -179,6 +182,17 @@ if /i "%MODE%"=="watch09noconv" (
     set "MODE=direct"
     set "MISSION=M09_SCN1"
     set "CFGWORDS= uninittrace noconv"
+)
+if /i "%MODE%"=="ref12" (
+    copy /y build\src\launcher\Release\HG.exe "%REF12%\HG.EXE" > nul
+    >"%REF12%\DLLFILE.INI" echo DX5DRAW.DLL
+    >"%REF12%\hgrc.cfg" echo d3d noconv
+    set "HG_DEBUG=4"
+    echo [5/5] Starting the untouched 1.2 game, mission %MISSION%
+    pushd "%REF12%"
+    HG.EXE %MISSION% /HIGH /D3D
+    popd
+    goto :done
 )
 if /i "%MODE%"=="direct" (
     >"%GAME%\DLLFILE.INI" echo HGVK.DLL

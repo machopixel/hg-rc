@@ -68,6 +68,17 @@ void __cdecl Sim_10016a6b(void *obj, int16_t slot, int16_t sel, int16_t other);
  * obj[0x54] to 1 unless word r+0x560 has bit 0x20, and returns 0.
  */
 int __cdecl Sim_10017a05(const void *obj);
+/*
+ * 1.2's replacement (1.2 0x10010cd2): may the unit act this tick? 1 for any unit that is not a gear (+0 1 or 9)
+ * driven here (+0x14 2, or 3 with +0xc the player); for those 0 while its jets are cut (unit +0x560 bit 0x20) or it
+ * is busy (+0x562 & 0x60e), and then, busy with bit 8 and the jets not cut, control byte +0x55 = 1. The tests
+ * 0x10010bb4 (busy), 0x10010bf4 (jets cut), 0x10010c72 (bit 8) and the setter 0x10010cb0 are 1.2's own functions.
+ */
+int __cdecl Sim12_10010bb4(const void *obj);
+int __cdecl Sim12_10010bf4(const void *obj, int unused);
+int __cdecl Sim12_10010c72(const void *obj);
+void __cdecl Sim12_10010cb0(const void *obj);
+int __cdecl Sim12_10010cd2(const void *obj);
 /* Returns 0x2c. */
 int __cdecl Sim_10019d96(void);
 /* Returns 0. */

@@ -1247,4 +1247,4 @@ SPECS = [
 ]
 
 # round 32: the debris update calls 1.2's smoke in 1.2 mode (off here): a stand-in, and the mode switch
-SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', 'sim/render/w33_dx12.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]
