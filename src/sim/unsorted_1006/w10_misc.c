@@ -24,6 +24,7 @@
 #include "../unsorted_1001/w8t.h"
 #include "../unsorted_1003/w6e.h"
 #include "../unsorted_1009/w2j.h"
+#include "../libm/hg_math.h"
 
 typedef int(__cdecl *W10Fn100687a3)(uint32_t box, float x, float y, float z, uint32_t radius, float *outX,
                                     float *outY, float *outZ);
@@ -518,7 +519,7 @@ void __cdecl Sim_1006c161(int32_t killer, uint8_t *b, int32_t flag, uint8_t *sho
             W10_6Sparks(unit, part, shot, 0);
         }
     }
-    if (!(Crt_Fabs((double)hit) < (double)W10_6C(0x1012b684))) {
+    if (!(hg_fabs((double)hit) < (double)W10_6C(0x1012b684))) {
         if (!(W10_6F(pp, 8) > *SIM_PTR(double, 0x1012b688)) && (S16(pp, 0x36) & 0x2000) == 0) {
             g_simDestroyShot = shot;        /* for the damage log only (w8w.h) */
             Sim_1006abf6((uint32_t)killer, b, part);

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -39,7 +40,7 @@
 /* Not converted: one step of the wait loop of Sim_1008b78f. */
 #define W8X8_CALL_10055048 SIM_FN(void(__cdecl *)(void), 0x10055048)
 /* Not converted: the C library fmod (result in st(0)). */
-#define W8X8_CALL_100fcb30 SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W8X8_CALL_100fcb30 hg_fmod
 /* Not converted (in the w8w list): table lookups of one / two floats, result in st(0). */
 #define W8X8_CALL_10084766 SIM_FN(double(__cdecl *)(float), 0x10084766)
 #define W8X8_CALL_1008486e SIM_FN(double(__cdecl *)(float, float), 0x1008486e)

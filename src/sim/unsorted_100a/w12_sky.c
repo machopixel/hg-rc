@@ -9,10 +9,11 @@
 #include "../unsorted_100f/w6h.h"
 #include "../unsorted_100f/w8z.h"
 #include "../unsorted_1010/w6k.h"
+#include "../libm/hg_math.h"
 
 #define W12_FOPEN SIM_FN(void *(__cdecl *)(const char *, const char *), 0x100fd850)
 /* the DLL's C library sqrt (0x100fca04), on a double */
-#define W12_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W12_SQRT hg_sqrt
 
 /* Round 33, 1.2's coloured light (SKYGND.PAR "hambient", "l1", "l2", "gl"; 1.2 0x1008ceab): the ambient colour (1.2
    0x10138d20), light 1's colour (0x10138d38) and unit direction (0x10138d2c), light 2's (0x10138d58 / 0x10138d4c) and
@@ -34,7 +35,7 @@ static void W12_UnitDir(float *out, int32_t x, int32_t y, int32_t z)
                                           (uint32_t)z * (uint32_t)z));
     float len = (float)s;
 
-    if (!(Crt_Fabs(s) >= 1.0000000116860974e-07))  /* fcomp / test ah, 1: below or unordered skips */
+    if (!(hg_fabs(s) >= 1.0000000116860974e-07))  /* fcomp / test ah, 1: below or unordered skips */
         return;
     out[0] = (float)((double)x / (double)len);
     out[1] = (float)((double)y / (double)len);

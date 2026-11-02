@@ -27,6 +27,7 @@
 #include "../unsorted_1009/w6g.h"
 #include "../unsorted_100a/w5y.h"
 #include "../unsorted_100b/w2j.h"
+#include "../libm/hg_math.h"
 
 typedef double(__cdecl *W29FmodFn)(double x, double y);
 
@@ -133,7 +134,7 @@ void __cdecl Sim_100232d7(int idx)
             /* the heading difference wrapped by fmod; the original never reads the wrapped value back */
             unit = BYTES(PTRTAB(tgt));
             ang = (float)((double)FL(unit, 0x68) - Sim_1008486e(FL(p, 0x18), FL(p, 0x20)));
-            ang = (float)SIM_FN(W29FmodFn, 0x100fcb30)((double)ang, 360.0);
+            ang = (float)hg_fmod((double)ang, 360.0);
             /* 1.2 (0x10019f1d): a force-feedback jolt from that heading when the own unit is hit (1.2 also turns a copy
                to 0..360 and by 180, and never reads it) */
             if (G32(0x1015ef3c) != 0 && tgt == W29_SELF())

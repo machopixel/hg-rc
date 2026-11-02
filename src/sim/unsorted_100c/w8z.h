@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include "../simmem.h"
 #include "../unsorted_100f/w8z.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -54,8 +55,8 @@ typedef void(__cdecl *W8zCallbackFn)(void *obj, uint32_t value);
 #define W8Z_CALL_1000a6f0 SIM_FN(W8zUnitIntFn, 0x1000a6f0)
 #define W8Z_CALL_100cada2 SIM_FN(W8zPickFn, 0x100cada2)
 #define W8Z_CALL_10064824 SIM_FN(W8zRecordOutFn, 0x10064824)
-#define W8Z_CALL_100fcb30 SIM_FN(W8zFmodFn, 0x100fcb30)
-#define W8Z_CALL_100fca04 SIM_FN(W8zSqrtFn, 0x100fca04)
+#define W8Z_CALL_100fcb30 hg_fmod
+#define W8Z_CALL_100fca04 hg_sqrt
 #define W8Z_CALL_1008486e SIM_FN(W8zAngle2Fn, 0x1008486e)
 #define W8Z_CALL_10084766 SIM_FN(W8zAngle1Fn, 0x10084766)
 #define W8Z_CALL_100652e8 SIM_FN(W8zLabelFn, 0x100652e8)
@@ -130,7 +131,7 @@ int __cdecl Sim_100c4e1c(void *unit, void *entry, int32_t *slot);
  * For the difference (dx, dy, dz): a = 0x1008486e(dx, dz); c = dx / 0x10084766(a) when |dz| < |dx| (or not
  * comparable), else dz / 0x10084766(a + [0x1012bc58]); d = 0x1008486e(dy, c); b = c / 0x10084766(d +
  * [0x1012bc58]). A divisor whose size is below [0x1012bc54] (or NaN) gives 0 instead. Stores a, c, b, d in that
- * order (0x1008486e / 0x10084766 answer float values in st(0); fabs is Crt_Fabs).
+ * order (0x1008486e / 0x10084766 answer float values in st(0); fabs is OpenLibm's hg_fabs).
  */
 void __cdecl Sim_100cbc6b(float dx, float dy, float dz, float *a, float *b, float *c, float *d);
 /*

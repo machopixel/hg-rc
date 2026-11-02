@@ -1,6 +1,6 @@
 /*
  * Body of the interpreted functions (DECISIONS.md), compiled twice:
- *   w10_interp.c      W10I_K_* = the platform math library (asin, acos, sin, cos); the hooked version
+ *   w10_interp.c      W10I_K_* = OpenLibm (hg_asin, hg_acos, hg_sin, hg_cos; src/sim/libm); the hooked version
  *   w10_interp_x87.c  W10I_K_* = x87 code as the original's C runtime runs it; the bit-exact reference (not hooked)
  * Everything but the four math kernels is shared, so the two differ only in the math.
  */
@@ -10,7 +10,7 @@ typedef union {
 } W10iBits;
 
 /* The original's C runtime (inside HGSIM) reports a domain error by storing EDOM (33) in its errno at 0x1017e888
- * and answers the x87 "indefinite" NaN (or the NaN it was given). The platform library would not touch that errno
+ * and answers the x87 "indefinite" NaN (or the NaN it was given). OpenLibm would not touch that errno
  * and its NaN may carry another sign, so these wrappers keep the original's behaviour outside the domain and use the
  * kernel W10I_K_* inside it. */
 #define W10I_ERRNO 0x1017e888u
@@ -216,7 +216,7 @@ typedef void(__cdecl *W10iMatFn)(float *m);
 typedef void(__cdecl *W10iMatFixFn)(float *m, int order);
 typedef void(__cdecl *W10iMatCopyFn)(float *from, float *to);
 typedef double(__cdecl *W10iFabsFn)(double x);
-#define W10I_SMALL(v) (!(SIM_FN(W10iFabsFn, 0x100fcb70)((double)(v)) >= (double)*SIM_PTR(const float, 0x1012b510)))
+#define W10I_SMALL(v) (!(hg_fabs((double)(v)) >= (double)*SIM_PTR(const float, 0x1012b510)))
 
 // FUNCTION: HGSIM 0x10060220
 void __cdecl W10I_FN(Sim_10060220)(float *m, float ax, float ay, float az, uint32_t tx, uint32_t ty, uint32_t tz,

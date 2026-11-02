@@ -9,10 +9,10 @@
 # their original address and their C symbol, so each function is checked on its own logic; the stubs of this
 # letter's own functions (used by their callers here) are only active in the specs of those callers. Function
 # pointers (object routines, the driver tables, the plugin slot) point at `ret` bytes with logging hooks.
-# Run for real on both sides: fabs (0x100fcb70 / Crt_Fabs) with 0x10103ad0 and Sim_10103940, the float
+# Run for real on both sides: fabs (0x100fcb70 / OpenLibm hg_fabs) with 0x10103ad0 and Sim_10103940, the float
 # truncation 0x100fcb08, Sim_1004b804, Mem_Fill, Mem_Move, Str_Copy, Str_CopyN.
 #
-# Crt_Fabs and Sim_100c9572 answer in st(0): both versions are called through the same kind of machine-code
+# Sim_100c9572 answers in st(0): both versions are called through the same kind of machine-code
 # trampoline, which stores st(0) as all 80 bits at OUTF (compared like all memory). No float tolerance is used:
 # every function here must match bit for bit.
 import struct
@@ -365,8 +365,8 @@ STUBS = {
     0x100c6c39: Stub(3, p_tar, 'Tar_ReadHeader'),
     0x100fe970: Stub(1, pv(0xe970, [0, 0x200, 0x12345, 0xffffffff]), 'Crt_FTell'),
     0x1010c9f0: Stub(1, p_str(0xc9f0, [0x00A81000, 0x00A81000, 0x00A81000, 0]), 'Sim_1010c9f0'),
-    0x100fcb30: Stub(4, pv(0xcb30, [0]), kind='double'),
-    0x100fca04: Stub(2, pv(0xca04, [0]), kind='double'),
+    0x100fcb30: Stub(4, pv(0xcb30, [0]), 'hg_fmod', kind='double'),     # the C calls OpenLibm (C runtime replacement)
+    0x100fca04: Stub(2, pv(0xca04, [0]), 'hg_sqrt', kind='double'),
     0x100fd9a0: Stub(2, pv(0xd9a0, [0, 4, 0x84]), 'Crt_IsCType'),
     0x100fd1b0: Stub(1, p_str(0xd1b0, [0, 7, 0x12345, 0xffff8000]), 'Crt_AToI'),
     # ---- unit helpers
@@ -511,7 +511,7 @@ def install(m):
 
     for addr, st in STUBS.items():
         m.raw.hook_add(UC_HOOK_CODE, make(addr, st), None, addr, addr)
-        if st.csym:
+        if st.csym and (st.csym in m.syms or not st.csym.startswith("hg_")):   # OpenLibm: only when linked
             c = m.syms[st.csym]
             m.raw.hook_add(UC_HOOK_CODE, make(addr, st), None, c, c)
 
@@ -534,7 +534,7 @@ def install(m):
     m.raw.mem_write(SNIP + 0x20, b'\xdd\x44\x24\x08\xc3')
     m.raw.mem_write(SNIP + 0x28, b'\xdd\x44\x24\x14\xc3')
     # st(0) trampolines: (original, C) pairs; the C one is registered as a symbol for the spec's `c`
-    for i, (target, nargs, csym) in enumerate([(0x100fcb70, 2, 'Crt_Fabs'), (0x100c9572, 3, 'Sim_100c9572')]):
+    for i, target, nargs, csym in [(1, 0x100c9572, 3, 'Sim_100c9572')]:     # slot 0 was the exact fabs copy (gone)
         m.raw.mem_write(TRAMP + 0x80 * i, tramp_st0(target, nargs))
         m.raw.mem_write(TRAMP + 0x80 * i + 0x40, tramp_st0(m.syms[csym], nargs))
         m.syms['Tramp_' + csym] = TRAMP + 0x80 * i + 0x40
@@ -1113,7 +1113,6 @@ STUBS[0x1002dda9].pol = p_2dda_dispatch
 
 SPECS = [
     spec('Crt_SPrintf', 0x100fc780, g_sprintf, 400),
-    dict(name='Crt_Fabs', orig=TRAMP, c='Tramp_Crt_Fabs', gen=g_fabs, trials=800),
     spec('Crt_FClose', 0x100fd760, g_fclose, 400),
     spec('Crt_FSOpen', 0x100fd820, g_fsopen, 300),
     spec('Sim_100c0670', 0x100c0670, g_unit_key, 1000, void=True),
@@ -1150,3 +1149,16 @@ SPECS = [
     spec('Sim_100daa08', 0x100daa08, lambda ctx: g_list(ctx, 1), 600, api=HEAP_API),
     spec('Sim_100e122f', 0x100e122f, g_load, 400),
 ]
+
+
+# C runtime replacement (DECISIONS.md), recorded exception: the original's fabs (0x100fcb70) reports a NaN or infinite
+# argument to the C runtime's maths error routine 0x10102e30 (its only other caller is the runtime's shared x87 error
+# path 0x1010a59d); OpenLibm's fabs, which the C calls now, reports nothing (the value is the same). Those calls are
+# dropped from both call logs; every other call is still compared.
+def _no_math_error(log_o, log_c):
+    keep = lambda log: [e for e in log if e[0] != 'stub_10102e30']
+    return keep(log_o), keep(log_c)
+
+
+for _s in SPECS:
+    _s.setdefault('log_map', _no_math_error)

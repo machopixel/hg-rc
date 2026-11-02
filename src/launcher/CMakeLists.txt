@@ -740,6 +740,30 @@ add_executable(HG WIN32
     ../sim/unsorted_1002/w29_shot.c
     ../sim/render/w30_vfx.c
     ../sim/render/w30_hud.c
+    ../sim/gfx/w37_info.c
+    ../sim/gfx/w37_text.c
+    ../sim/gfx/w37_gif.c
+    ../sim/gfx/w37_math.c
+    ../sim/gfx/w37_draw.c
+    ../sim/gfx/w37_encode.c
+    ../sim/gfx/w37_line.c
+    ../sim/gfx/w37_rotate.c
+    ../sim/libm/olm_e_sqrt.c
+    ../sim/libm/olm_e_fmod.c
+    ../sim/libm/olm_s_fabs.c
+    ../sim/libm/olm_e_pow.c
+    ../sim/libm/olm_s_sin.c
+    ../sim/libm/olm_s_cos.c
+    ../sim/libm/olm_k_sin.c
+    ../sim/libm/olm_k_cos.c
+    ../sim/libm/olm_e_rem_pio2.c
+    ../sim/libm/olm_k_rem_pio2.c
+    ../sim/libm/olm_s_atan.c
+    ../sim/libm/olm_e_asin.c
+    ../sim/libm/olm_e_acos.c
+    ../sim/libm/olm_s_scalbn.c
+    ../sim/libm/olm_s_copysign.c
+    ../sim/libm/olm_s_floor.c
     ../sim/render/w31_tex.c
     ../sim/render/w33_dx12.c
     ../sim/fx/w32_partspec.c
@@ -765,6 +789,9 @@ add_executable(HG WIN32
     ../platform/display_sdl3.c
 )
 target_link_libraries(HG PRIVATE user32 gdi32 ole32 winmm SDL3::SDL3-static)
+# C runtime replacement: OpenLibm (src/sim/libm wrappers); our shim headers before upstream's
+target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/openlibm/hg
+                                     ${CMAKE_SOURCE_DIR}/third_party/openlibm/include)
 # The music from the game folder's MUSIC\TrackNN.ogg in place of the CD (platform/music.h). Only the game build
 # has it: the checker's test builds keep the converted functions' 1.0 CD code they are compared against.
 target_compile_definitions(HG PRIVATE HG_MUSIC_FILES)

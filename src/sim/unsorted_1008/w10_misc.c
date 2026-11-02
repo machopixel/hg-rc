@@ -5,6 +5,7 @@
 #include "../util/access.h"
 #include "../view/view.h"
 #include "../unsorted_100f/w2e.h"
+#include "../libm/hg_math.h"
 
 #define GF(addr) (*SIM_PTR(float, addr))
 
@@ -58,7 +59,7 @@ int32_t *__cdecl Sim_1008eaaf(const void *rect, float angle, int32_t *out)
     uint32_t mode = 0;
     float a, s, c;
 
-    a = (float)SIM_FN(W10_8FmodFn, 0x100fcb30)(SIM_FN(W10_8FmodFn, 0x100fcb30)((double)angle, 360.0) +
+    a = (float)hg_fmod(hg_fmod((double)angle, 360.0) +
                                                    *SIM_PTR(double, 0x1012b918), 360.0);
     /* sar, not a division: rounds down */
     centre[0] = (int32_t)(U32(rect, 0xc) - U32(rect, 4) + 1u) >> 1;
@@ -70,7 +71,7 @@ int32_t *__cdecl Sim_1008eaaf(const void *rect, float angle, int32_t *out)
     s = Sim_10084766(a + GF(0x1012b920));
     c = Sim_10084766(a);
     c = c * *(float *)(BYTES(G32(0x1014cae0)) + 0x44);
-    if (!((float)SIM_FN(W10_8FabsFn, 0x100fcb70)((double)s) >= GF(0x1012b914)))
+    if (!((float)hg_fabs((double)s) >= GF(0x1012b914)))
         mode |= 4;
     return Sim_1008ec46(rect, centre, mode, Sim_1008486e(c, -s), out);
 }

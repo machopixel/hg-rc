@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -19,7 +20,7 @@
 /* The C library of the DLL: sprintf 0x100fc780, fclose 0x100fd760, fabs 0x100fcb70 (double in, st(0) out). */
 #define W8U_SPRINTF_1002 SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 #define W8U_FCLOSE_1002 SIM_FN(int(__cdecl *)(void *), 0x100fd760)
-#define W8U_FABS_1002 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W8U_FABS_1002 hg_fabs
 /* Not converted: (name, extension pointer, 0); upper-cases both texts in place, returns a resource record or 0. */
 #define W8U_CALL_100ba7d5 SIM_FN(uint8_t *(__cdecl *)(void *, uint32_t, int), 0x100ba7d5)
 /* Patched by src/hooks/hooks_sim.c (TapSystemError): (code, format, ...). */

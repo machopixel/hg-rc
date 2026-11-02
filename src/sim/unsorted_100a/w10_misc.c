@@ -2,6 +2,7 @@
 #include "w2h.h"
 #include "../simmem.h"
 #include "../util/access.h"
+#include "../libm/hg_math.h"
 
 #define GF(addr) (*SIM_PTR(float, addr))
 
@@ -33,7 +34,7 @@ uint32_t __cdecl Sim_100a6ee4(const float *a, const float *b, float z)
     /* x87 at 53-bit precision: the difference is tested as the 53-bit value, used as the stored float */
     d53 = (double)hi[2] - (double)lo[2];
     d = (float)d53;
-    if (SIM_FN(W10aFabsFn, 0x100fcb70)(d53) >= (double)GF(0x1012ba74)) {     /* NaN keeps a's values */
+    if (hg_fabs(d53) >= (double)GF(0x1012ba74)) {     /* NaN keeps a's values */
         t = (float)((double)z - (double)lo[2]);
         for (i = 0; i < 7; i++) {
             int k = kW10aField[i];

@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -24,9 +25,9 @@
 /* Not converted: table lookup of two floats, returns a float value in st(0) (0x1008486e). */
 #define W8T_CALL_1008486e_1002 SIM_FN(double(__cdecl *)(float, float), 0x1008486e)
 /* The C library fmod (x, y) of the DLL on doubles; the result in st(0) (0x100fcb30). */
-#define W8T_FMOD_1002 SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W8T_FMOD_1002 hg_fmod
 /* A C library function of the DLL on a double, the result in st(0) (0x100fcc74). */
-#define W8T_CALL_100fcc74 SIM_FN(double(__cdecl *)(double), 0x100fcc74)
+#define W8T_CALL_100fcc74 hg_asin
 /* Not converted: (0x12, time, 2) (0x100d3510). */
 #define W8T_CALL_100d3510 SIM_FN(void(__cdecl *)(uint32_t, uint32_t, uint32_t), 0x100d3510)
 /* Not converted here (it reads fields of its record argument that the original leaves uninitialised): the

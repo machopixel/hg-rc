@@ -9,15 +9,16 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-/* C library _assert(expression, file, line), fabs(x) and sqrt(x) (results in st(0)). */
+/* C library _assert(expression, file, line) of the DLL; fabs and sqrt from OpenLibm (hg_fabs, hg_sqrt). */
 #define W8V_ASSERT SIM_FN(void(__cdecl *)(const char *, const char *, int), 0x100ff860)
-#define W8V_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
-#define W8V_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W8V_FABS hg_fabs
+#define W8V_SQRT hg_sqrt
 /* Patched by hooks_view.c: steps of the camera (camera). */
 #define W8V_CALL_100d2306 SIM_FN(void(__cdecl *)(void *), 0x100d2306)
 #define W8V_CALL_100d1f90 SIM_FN(void(__cdecl *)(void *), 0x100d1f90)

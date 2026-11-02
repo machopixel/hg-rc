@@ -17,6 +17,7 @@
 #include "../unsorted_1006/w10.h"
 #include "w6d.h"
 #include "../render/w2n.h"
+#include "../libm/hg_math.h"
 
 /* The original's fcomp tests: "not below" fails for an unordered compare, "equal" holds for it. */
 #define W10_2NOT_BELOW(a, b) ((a) >= (b))
@@ -112,7 +113,7 @@ typedef void(__cdecl *W10_2PanelFn)(uint32_t panel);
 typedef double(__cdecl *W10_2FmodFn)(double, double);
 
 #define GF(addr) (*SIM_PTR(float, addr))
-#define W10_2FMOD SIM_FN(W10_2FmodFn, 0x100fcb30)
+#define W10_2FMOD hg_fmod
 
 /* The original subtracts in the 53-bit register, tests that value against +-180 and wraps the stored float. */
 static float W10_2Wrap(double d53)

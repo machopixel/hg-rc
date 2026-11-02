@@ -7,13 +7,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: takes a double on the stack, returns its absolute value in st(0). */
-#define SIM_FABS_C SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define SIM_FABS_C hg_fabs
 /* Not converted: takes the value that Sim_100988fc stores. */
 #define SIM_CALL_100a96d8 SIM_FN(void(__cdecl *)(uint32_t), 0x100a96d8)
 /* Not converted: fills the dword at 0x1017cc3c. */

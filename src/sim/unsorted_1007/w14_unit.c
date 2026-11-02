@@ -31,9 +31,10 @@
 #include "../unsorted_1004/w2k.h"
 #include "../render/w2n.h"
 #include "../unsorted_100d/w2i.h"
+#include "../libm/hg_math.h"
 
 /* fabs and sprintf of the DLL (left original). */
-#define W14U_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W14U_FABS hg_fabs
 #define W14U_SPRINTF SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 
 /* The unit and its control block, read again at every use as the original does. */

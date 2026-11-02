@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -26,7 +27,7 @@
 /* Not converted: a float function of one float (C library 0x100fcb70 inside), result in st(0). */
 #define W7O_CALL_10084766 SIM_FN(double(__cdecl *)(float), 0x10084766)
 /* Not converted: C library function of a double, result in st(0). */
-#define W7O_CALL_100fcb70 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W7O_CALL_100fcb70 hg_fabs
 /* Not converted: called by Sim_1009b99b when Sim_1009b8d8 finds nothing. */
 #define W7O_CALL_10099c36 SIM_FN(void(__cdecl *)(void), 0x10099c36)
 /* Not converted: C library character conversion used by Str_CopyUpper (to upper case). */

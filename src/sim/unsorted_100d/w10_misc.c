@@ -19,6 +19,7 @@
 #include "../unsorted_1000/w7l.h"
 #include "../unsorted_1009/w3o.h"
 #include "../unsorted_1009/w6f.h"
+#include "../libm/hg_math.h"
 
 typedef void(__cdecl *W10dMethodFn)(void *pane, const char *text);
 typedef void *(__cdecl *W10dLoadFn)(void *name, void *key, uint32_t zero);
@@ -291,7 +292,7 @@ int __cdecl Sim_100d4f71(uint8_t *obj, const uint8_t *weapon, uint8_t *slot)
 
 typedef double(__cdecl *W10dFmodFn)(double x, double y);
 
-#define W10D_FMOD(x) SIM_FN(W10dFmodFn, 0x100fcb30)((x), 360.0)
+#define W10D_FMOD(x) hg_fmod((x), 360.0)
 #define W10D_F(p, off) (*(float *)(BYTES(p) + (off)))
 #define W10D_FLAGS(b) U16(b, 0x560)
 
@@ -362,8 +363,8 @@ void __cdecl Sim_100d6833(uint8_t *b)
         side = (float)W10D_FMOD((double)W10D_F(b, 0x1c) + W10D_F(unit, 0xec));
         w86 = U32(wdef, 0x86);
         /* below [0x1012bd30], an unordered compare counting as below */
-        if ((!(Crt_Fabs((double)yaw) >= *SIM_PTR(double, 0x1012bd30)) &&
-             !(Crt_Fabs((double)side) >= *SIM_PTR(double, 0x1012bd30))) ||
+        if ((!(hg_fabs((double)yaw) >= *SIM_PTR(double, 0x1012bd30)) &&
+             !(hg_fabs((double)side) >= *SIM_PTR(double, 0x1012bd30))) ||
             ((w86 & 0x20) != 0 && (w86 & 1) != 0)) {
             W10D_FLAGS(b) |= 0x8000;
             if ((W10D_FLAGS(b) & 0x40) == 0) {

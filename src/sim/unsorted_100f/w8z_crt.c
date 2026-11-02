@@ -40,35 +40,6 @@ int __cdecl Crt_SPrintf(char *buf, const char *format, ...)
     return written;
 }
 
-// FUNCTION: HGSIM 0x100fcb70
-double __cdecl Crt_Fabs(double x)
-{
-    union {
-        double d;
-        uint32_t w[2];
-    } u;
-    uint32_t saved = W8Z_CALL_10103ad0(0x133f, 0xffff);
-
-    u.d = x;
-    if ((u.w[1] & 0x7ff00000u) == 0x7ff00000u) {
-        switch (Sim_10103940(x)) {
-        case 1:
-            W8Z_CALL_10103ad0(saved, 0xffff);
-            return x;
-        case 2:
-            W8Z_CALL_10103ad0(saved, 0xffff);
-            return -x;
-        case 3:
-            return W8Z_CALL_10102e30(0x15, x, saved);
-        default:
-            return W8Z_CALL_10102f00(8, 0x15, x, x - W8Z_GD(0x1012bdd8), saved);
-        }
-    }
-    u.w[1] &= 0x7fffffffu;
-    W8Z_CALL_10103ad0(saved, 0xffff);
-    return u.d;
-}
-
 // FUNCTION: HGSIM 0x100fd760
 int __cdecl Crt_FClose(void *stream)
 {

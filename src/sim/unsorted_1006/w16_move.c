@@ -32,12 +32,13 @@
 #include "../render/w7o.h"
 #include "../render/w2n.h"
 #include "../unsorted_1004/w2k.h"
+#include "../libm/hg_math.h"
 
-/* The C library of the DLL, called at its address as the original does (results in st(0)). */
-#define W16M_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
-#define W16M_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
-#define W16M_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
-#define W16M_ATAN SIM_FN(double(__cdecl *)(double), 0x100fcc74)
+/* OpenLibm (src/sim/libm) in place of the C library: fabs, sqrt, fmod, asin (0x100fcb70 / fca04 / fcb30 / fcc74). */
+#define W16M_FABS hg_fabs
+#define W16M_SQRT hg_sqrt
+#define W16M_FMOD hg_fmod
+#define W16M_ASIN hg_asin
 #define W16M_C(addr) ((double)GFL(addr))
 #define W16M_CODE(node) ((int8_t)U8(U32(node, 0x90), 0))
 
@@ -816,7 +817,7 @@ static void W16M_Aim(W16Move *m)
         tz = (float)((double)FL(seg, 0x14) - W16M_F(c));
         len = Sim_10084a94(tx, ty, tz);
         q = (double)ty / len;
-        q = W16M_ATAN(q) * *SIM_PTR(const double, 0x1012b740);
+        q = W16M_ASIN(q) * *SIM_PTR(const double, 0x1012b740);
         pitch = (float)(-q - (double)tilt);
         if (kind == 1 || kind == 9) {
             if (U32(rec, 0x494) != 0)

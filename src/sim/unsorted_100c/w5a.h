@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -22,7 +23,7 @@
 /* Not converted: (a, b, c, 28000.0f as a dword, out dword pointer); returns a count. */
 #define W5A_CALL_10033eb3 SIM_FN(int(__cdecl *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t *), 0x10033eb3)
 /* Not converted: the C library's fmod(x, y). */
-#define W5A_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W5A_FMOD hg_fmod
 /* Not converted: the C library's case-insensitive string compare. */
 #define W5A_STRICMP SIM_FN(int(__cdecl *)(const char *, const char *), 0x100ff1e0)
 

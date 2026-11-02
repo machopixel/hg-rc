@@ -7,13 +7,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: takes a double on the stack, returns its absolute value in st(0). */
-#define SIM_FABS_C SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define SIM_FABS_C hg_fabs
 /* Not converted: the C library sprintf (destination, format, ...). */
 #define SIM_CALL_100fc780 SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* Not converted: (dword, word, three out pointers (the dwords l4, lc, l8 used below), dword). */

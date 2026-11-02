@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -29,7 +30,7 @@
 #define W8T_CALL_10011c28 SIM_FN(void(__cdecl *)(void), 0x10011c28)
 #define W8T_CALL_10012af0 SIM_FN(void(__cdecl *)(uint32_t), 0x10012af0)
 /* The C library fabs of the DLL on a double, the result in st(0) (0x100fcb70). */
-#define W8T_FABS_1001 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W8T_FABS_1001 hg_fabs
 /* The C library fclose of the DLL (0x100fd760). */
 #define W8T_FCLOSE SIM_FN(int(__cdecl *)(void *), 0x100fd760)
 /* Not converted: (void) (0x1001d0fa) and (0) -> record pointer (0x1001b902). */

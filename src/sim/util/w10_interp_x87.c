@@ -55,4 +55,5 @@ W10X_KERNEL(W10x_Cos, "fcos")
 #define W10I_K_SIN(x) W10x_Sin(x)
 #define W10I_K_COS(x) W10x_Cos(x)
 
+#include "../libm/hg_math.h"
 #include "w10_interp_body.h"

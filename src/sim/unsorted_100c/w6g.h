@@ -8,13 +8,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library function 0x100fcb70 (double in, st(0) out), and 0x100c2ae5(obj). */
-#define W6G_CALL_100fcb70 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W6G_CALL_100fcb70 hg_fabs
 #define W6G_CALL_100c2ae5 SIM_FN(int(__cdecl *)(void *), 0x100c2ae5)
 
 /* Sim_1001403a(obj, word +0x1aa); f = Sim_100144e9(obj); Sim_100c0379(obj, f); returns Sim_1000ae00(obj, f). */

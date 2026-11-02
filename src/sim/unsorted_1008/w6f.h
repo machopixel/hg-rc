@@ -10,13 +10,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library's sqrt (a double on the stack, the result in st(0)) and _strcmpi. */
-#define W6F_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W6F_SQRT hg_sqrt
 #define W6F_STRCMPI SIM_FN(int(__cdecl *)(const char *, const char *), 0x100ff1e0)
 /* Not converted: a dword of entry `index` of a resource table (offset table at +8, 8 bytes per entry). */
 #define W6F_CALL_100ed743 SIM_FN(int32_t(__cdecl *)(void *, int32_t), 0x100ed743)

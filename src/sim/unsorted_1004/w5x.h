@@ -7,13 +7,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library's sqrt (a double on the stack, the result in st(0)). */
-#define SIM_CALL_100fca04 SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define SIM_CALL_100fca04 hg_sqrt
 
 /*
  * truncate(sqrt(Sim_1004c318(word))) + the dword at 0x10124ec8 + 0x98 * Sim_1004c30d(word). The original

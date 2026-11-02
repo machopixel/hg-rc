@@ -14,6 +14,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -25,7 +26,7 @@
  * through its address). */
 #define W7O_CALL_100a65e7 SIM_FN(void(__cdecl *)(void *, void *), 0x100a65e7)
 /* Not converted: C library function of a double, result in st(0). */
-#define W7O_CALL_100fcb70_R SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W7O_CALL_100fcb70_R hg_fabs
 
 /*
  * The square (x - s .. x + s) by (z - s .. z + s) at height y as four scene vertices, clipped and projected by

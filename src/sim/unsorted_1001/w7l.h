@@ -10,15 +10,16 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #define __stdcall
 #endif
 
-/* The C library sprintf (0x100fc780) and fabs (0x100fcb70, on a double, result in st(0)) of the DLL. */
+/* sprintf of the DLL's C library (0x100fc780); fabs from OpenLibm (hg_fabs, in place of 0x100fcb70). */
 #define W7L_SPRINTF_1001 SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
-#define W7L_FABS_1001 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W7L_FABS_1001 hg_fabs
 /* Not converted: (object). */
 #define W7L_CALL_1001457f SIM_FN(void(__cdecl *)(void *), 0x1001457f)
 /* Not converted: (dword); only the low 16 bits of the result are used. */

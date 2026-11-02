@@ -14,8 +14,17 @@ if(MSVC)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     add_compile_options(/W4)
     add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_DEPRECATE)
+    # Same floating-point results on every platform (DECISIONS.md, "C runtime replacement"): SSE2 doubles, no x87;
+    # /fp:precise without /fp:contract (no fused multiply-add); never /fp:fast.
+    add_compile_options(/arch:SSE2 /fp:precise)
 else()
     add_compile_options(-Wall -Wextra)
+    # The same as MSVC's settings above: SSE2 doubles instead of x87 (32-bit x86), no fused multiply-add, and never
+    # -ffast-math.
+    if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(x86|X86|i[3-6]86|AMD64|amd64|x86_64)$")
+        add_compile_options(-msse2 -mfpmath=sse)
+    endif()
+    add_compile_options(-ffp-contract=off)
 endif()
 
 # SDL3 is the platform layer (input now, audio and video later). It is built

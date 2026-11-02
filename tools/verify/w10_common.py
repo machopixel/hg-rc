@@ -29,13 +29,24 @@ def _sim_files():
     return sorted(out)
 
 
+_NEWEST_H = []
+
+
+def _newest_header():
+    if not _NEWEST_H:
+        hs = glob.glob(os.path.join(W10_SRC, 'sim', '**', '*.h'), recursive=True)
+        _NEWEST_H.append(max(os.path.getmtime(h) for h in hs))
+    return _NEWEST_H[0]
+
+
 def _symbols(rel):
     """(defined, undefined) symbols of one source file, cached."""
     os.makedirs(W10_CACHE, exist_ok=True)
     src = os.path.join(W10_SRC, rel)
     key = rel.replace('/', '__')
     meta = os.path.join(W10_CACHE, key + '.json')
-    mt = os.path.getmtime(src)
+    # a header change (e.g. a SIM_FN macro switched to a direct call) changes the symbols: newest header counts too
+    mt = max(os.path.getmtime(src), _newest_header())
     if os.path.exists(meta):
         d = json.load(open(meta))
         if d['mtime'] == mt:
@@ -43,7 +54,9 @@ def _symbols(rel):
     obj = os.path.join(W10_CACHE, key + '.o')
     r = subprocess.run(['i686-w64-mingw32-gcc', '-O1', '-ffreestanding', '-fno-builtin', '-w', '-c',
                         '-I', W10_SRC, '-I', os.path.join(W10_SRC, 'sim', 'mem'),
-                        '-I', os.path.join(W10_SRC, 'sim', 'core')] + CFLAGS + [src, '-o', obj],
+                        '-I', os.path.join(W10_SRC, 'sim', 'core'),
+                        '-I', os.path.join(W10_SRC, '..', 'third_party', 'openlibm', 'hg'),
+                        '-I', os.path.join(W10_SRC, '..', 'third_party', 'openlibm', 'include')] + CFLAGS + [src, '-o', obj],
                        capture_output=True, text=True)
     if r.returncode != 0:
         d = {'mtime': mt, 'def': [], 'und': [], 'err': r.stderr[:2000]}
@@ -62,11 +75,12 @@ def _symbols(rel):
 
 
 def _rt_defs():
-    obj = os.path.join(W10_CACHE, 'rt.o')
+    obj = os.path.join(W10_CACHE, 'rt_%d.o' % os.getpid())     # per process: parallel runs (run_specs.py) never share it
     os.makedirs(W10_CACHE, exist_ok=True)
     subprocess.check_call(['i686-w64-mingw32-gcc', '-O1', '-ffreestanding', '-fno-builtin', '-w', '-c', '-I', W10_SRC,
                            os.path.join('tools', 'verify', 'rt.c'), '-o', obj])
     nm = subprocess.check_output(['i686-w64-mingw32-nm', obj]).decode()
+    os.remove(obj)
     return {p[2] for p in (l.split() for l in nm.splitlines()) if len(p) == 3 and p[1] in 'TDBRC'}
 
 

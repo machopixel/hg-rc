@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -28,7 +29,7 @@
 /* C library sprintf(buffer, format, ...). */
 #define W8V_SPRINTF SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* C library pow(x, y); result in st(0). */
-#define W8V_POW SIM_FN(double(__cdecl *)(double, double), 0x100fed29)
+#define W8V_POW hg_pow
 /* Not converted: (a dword of 0x1014cf8c, an offset, a dword of 0x1014cec0, 0); returns a handle or 0. */
 #define W8V_CALL_100282d4 SIM_FN(uint32_t(__cdecl *)(uint32_t, uint32_t, uint32_t, int), 0x100282d4)
 /* Not converted: the frame count of the handle. */

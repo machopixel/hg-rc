@@ -11,6 +11,7 @@
 #include "../unsorted_100b/w6g.h"
 #include "../render/w2n.h"
 #include "../unsorted_100f/w8z.h"
+#include "../libm/hg_math.h"
 
 #define GF(addr) (*SIM_PTR(float, addr))
 
@@ -81,11 +82,11 @@ float __cdecl Sim_100c97c0(void *obj, void *wpn)
     g = (float)((double)-GF(0x1013abc0) * (double)S32(kind, 0x38) * (double)GF(0x1012bbf8));
     Sim_100a9cfb((void *)(uintptr_t)U32(obj, 0x50), (uint32_t *)&px, (uint32_t *)&py, (uint32_t *)&pz);
     h = py - *(const float *)((const uint8_t *)obj + 0x7c);
-    s53 = SIM_FN(W10cSqrtFn, 0x100fca04)((double)vy * (double)vy -
+    s53 = hg_sqrt((double)vy * (double)vy -
                                          (double)GF(0x1012bbf4) * (double)g * (double)h);
     t = (float)(((double)-vy - s53) / ((double)GF(0x1012bc30) * (double)g));
     if (W10c_Bits(t) & 0x80000000u) {
-        s53 = SIM_FN(W10cSqrtFn, 0x100fca04)((double)vy * (double)vy -
+        s53 = hg_sqrt((double)vy * (double)vy -
                                              (double)GF(0x1012bbf4) * (double)g * (double)h);
         t = (float)((s53 + (double)-vy) / ((double)GF(0x1012bc30) * (double)g));
     }

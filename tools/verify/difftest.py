@@ -10,7 +10,7 @@ spec.py defines SPECS = [dict(name, orig=0x100b9748, c='Cache_StampNewer',
 args=[...], trials=300, setup=optional)], see tools/verify/README.md.
 The C sources are compiled with i686-w64-mingw32-gcc into one flat image.
 """
-import json, os, random, struct, subprocess, sys, tempfile
+import json, math, os, random, struct, subprocess, sys, tempfile
 import pefile
 from unicorn import *
 from unicorn.x86_const import *
@@ -40,6 +40,8 @@ def build_c(sources, cflags=()):
     cmd = ['i686-w64-mingw32-gcc', '-O1', '-ffreestanding', '-fno-builtin', '-nostdlib',
            '-fno-stack-protector', '-fno-asynchronous-unwind-tables', '-w',
            '-I', SRC, '-I', os.path.join(SRC, 'sim', 'mem'), '-I', os.path.join(SRC, 'sim', 'core'),
+           # C runtime replacement: OpenLibm (src/sim/libm wrappers), our shim headers first
+           '-I', os.path.join(SRC, '..', 'third_party', 'openlibm', 'hg'), '-I', os.path.join(SRC, '..', 'third_party', 'openlibm', 'include'),
            '-Wl,--image-base=0x%x' % CBASE, '-Wl,--entry=_rt_entry', '-Wl,--section-alignment=0x1000',
            '-Wl,--file-alignment=0x1000', '-Wl,--disable-dynamicbase', '-Wl,--disable-reloc-section',
            
@@ -110,6 +112,11 @@ class Machine:
         uc.mem_map(ARGMEM, ARGSIZE)
         uc.mem_map(RET_ADDR, PAGE)
         uc.mem_write(RET_ADDR, b'\xf4')
+        self.exact_fmod()
+        if self.base == 0x10000000:
+            self.libm_redirect(self.LIBM10)
+            self.libm_watch(self.MATH10)
+        self.libm_watch([syms[n] for n in self.MATH_C if n in syms])
         uc.mem_write(syms['g_simBase'], struct.pack('<I', self.base))
         self.wr += [(STACK_TOP - STACK_SIZE, STACK_SIZE), (ARGMEM, ARGSIZE)]
         self.api_tables = {}
@@ -119,6 +126,67 @@ class Machine:
             self.load12(dll12)
         self.snap0 = self.dump()
         self.dirty.clear()
+
+    # ---- C runtime replacement (DECISIONS.md): the original C runtime's fmod (0x100fcb30) runs x87 fprem, which the
+    # emulator computes inexactly for larger quotients (real fprem is exact). The C now uses OpenLibm's exact fmod, so
+    # for finite x and finite, non-zero y the original's call is answered with Python's exact math.fmod (loaded into
+    # st(0) by a stub in the return page, not compared); NaN / infinite / zero-divisor calls still run the original.
+    # The same for 1.2's copy (0x100dacd0) when 1.2's DLL is loaded.
+    FMOD10 = 0x100fcb30
+    FMOD12 = 0x100dacd0     # 1.2's copy (the same code), relocated to BASE12 by load12
+
+    def exact_fmod(self, addr=None):
+        if addr is None:
+            if self.base != 0x10000000:
+                return
+            addr = self.FMOD10
+        stub, val = RET_ADDR + 0x100, RET_ADDR + 0x200
+        self.raw.mem_write(stub, b'\xdd\x05' + struct.pack('<I', val) + b'\xc3')     # fld qword [val]; ret
+
+        def cb(uc, address, size, ud):
+            esp = uc.reg_read(UC_X86_REG_ESP)
+            x, y = struct.unpack('<2d', bytes(uc.mem_read(esp + 4, 16)))
+            if not (math.isfinite(x) and math.isfinite(y)) or y == 0.0:
+                return
+            uc.mem_write(val, struct.pack('<d', math.fmod(x, y)))
+            uc.reg_write(UC_X86_REG_EIP, stub)
+        self.raw.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
+
+    # ---- C runtime replacement: pow / asin / sin / atan of OpenLibm differ from the original's x87 routines by up to
+    # one unit in the last place for some arguments (measured on the real CPU, DECISIONS.md), and the emulator's
+    # fyl2x / f2xm1 / fpatan / fsin are themselves inexact. So the original's calls of these routines jump to the same
+    # OpenLibm function the C calls (same arguments on the stack, result in st(0)): a spec then compares the converted
+    # code around them. A spec setting LIBM_ORIGINAL = True (spec_crt_libm.py) runs the original routines instead.
+    LIBM10 = {0x100fed29: 'hg_pow', 0x100fcc74: 'hg_asin', 0x100ff644: 'hg_sin', 0x10100044: 'hg_atan'}
+    LIBM12 = {0x100dd2e9: 'hg_pow', 0x100dae14: 'hg_asin'}     # 1.2's copies (sin / atan: not located in 1.2)
+    libm_original = False
+
+    def libm_redirect(self, table, delta=0):
+        for a, name in table.items():
+            if name not in self.syms:
+                continue
+            target = self.syms[name]
+
+            def cb(uc, address, size, ud, target=target):
+                if not self.libm_original:
+                    uc.reg_write(UC_X86_REG_EIP, target)
+            self.raw.hook_add(UC_HOOK_CODE, cb, None, a + delta, a + delta)
+
+    # ---- The original's maths routines write errno (0x1017e888: EDOM / ERANGE for NaN, infinite or out-of-range
+    # arguments) and their own scratch (0x1017e900..0x1017e97f); OpenLibm writes neither, and nothing outside the C
+    # runtime reads them (DECISIONS.md, "C runtime replacement"). In a trial where a maths routine ran (either side)
+    # these two are not compared.
+    MATH10 = (0x100fca04, 0x100fcb30, 0x100fcb70, 0x100fcc74, 0x100fed29, 0x100ff644, 0x100ff6f4, 0x10100044)
+    MATH12 = (0x100daba4, 0x100dacd0, 0x100dad10, 0x100dae14, 0x100dd2e9)
+    MATH_C = ('hg_sqrt', 'hg_fmod', 'hg_fabs', 'hg_pow', 'hg_asin', 'hg_acos', 'hg_sin', 'hg_cos', 'hg_atan')
+    MATH_IGNORE = ((0x1017e888, 4), (0x1017e900, 0x80))
+    libm_ran = False
+
+    def libm_watch(self, addrs):
+        def cb(uc, address, size, ud):
+            self.libm_ran = True
+        for a in addrs:
+            self.raw.hook_add(UC_HOOK_CODE, cb, None, a, a)
 
     # ---- Windows imports: every import slot points at a tiny stub. Calls are logged (name and
     # arguments) and compared between the original and the C run, and the stub answers with a
@@ -168,6 +236,9 @@ class Machine:
             for i in d.imports:
                 i.address += delta
         self.install_import_stubs(pe12, STUB_BASE12)
+        self.exact_fmod(BASE12 + self.FMOD12 - 0x10000000)
+        self.libm_redirect(self.LIBM12, BASE12 - 0x10000000)
+        self.libm_watch([a + BASE12 - 0x10000000 for a in self.MATH12])
 
     def _api_hook(self, uc, addr, size, ud):
         base = STUB_BASE12 if addr >= STUB_BASE12 else STUB_BASE
@@ -345,6 +416,7 @@ def run_spec(m, spec, seed=1):
     m.api_handlers = spec.get('api', {})
     for t in range(n):
         m.reset_to_snap0()
+        m.libm_ran = False
         ctx = Ctx(m, rng)
         args = spec['gen'](ctx) if 'gen' in spec else [g(ctx) if callable(g) else g for g in spec['args']]
         d0 = {pg for pg in m.dirty if pg in m.pagemap}
@@ -404,6 +476,8 @@ def run_spec(m, spec, seed=1):
         ignore = [(m.syms[sym], size) for sym, size in spec.get('ignore_syms', {}).items()]
         # spec 'ignore_addrs' {address: size}: original-side scratch only the OS reads (round 28 clip box)
         ignore += list(spec.get('ignore_addrs', {}).items())
+        if m.libm_ran and not m.libm_original:
+            ignore += list(m.MATH_IGNORE)
         for pg in sorted(d0 | d1 | d2):
             if m.range12 and m.range12[0] <= (pg << 12) < m.range12[1]:
                 continue        # 1.2's own pages: from12 copied what counts to the 1.0 / C side
@@ -436,7 +510,7 @@ def run_spec(m, spec, seed=1):
                 why = 'memory differs at 0x%x (orig %02x, c %02x)' % (m.wr[i][0] + j, xo[j], yc[j])
         if not ok:
             bad += 1
-            if bad <= 3:
+            if bad <= 3 or os.environ.get('DIFFTEST_ALL'):   # DIFFTEST_ALL=1: every mismatch to the log
                 details.append('MISMATCH %s trial %d args=%s orig=%s c=%s %s' % (name, t, [hex(a & 0xffffffff) for a in args], (ro, vo), (rc, vc), why or ''))
     return bad, both_fault, n, details
 
@@ -538,6 +612,7 @@ def main():
     if os.environ.get('DT_SYM'):    # where a C symbol landed (for W10_COV over C code)
         print('%s at 0x%x' % (os.environ['DT_SYM'], syms[os.environ['DT_SYM']]))
     m = Machine(dll, csecs, syms, V12_DLL if any('orig12' in sp for sp in specs) else None)
+    m.libm_original = bool(ns.get('LIBM_ORIGINAL'))
     for sp in specs:
         for a in sp.get('nop', []):
             m.uc.mem_write(a, b'\x90')

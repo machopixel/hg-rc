@@ -156,3 +156,39 @@ start (the checker needs the DLL to compare against).
   numbering. After: named render states of our own.
 - **Texture descriptions** keep the plugin layout {w, h, pixels, palette, key, +0x14, flag +0x18}; HGVK remembers
   alpha textures by pixel pointer. After: a texture object of the renderer's own.
+
+## Graphics library, Vulkan only (DLL removal step 1, DECISIONS.md)
+
+- **Callers of the converted graphics library still use SIM_FN.** The 41 routines of src/sim/gfx/w37_*.c are reached
+  from the C at their original addresses (SIM_FN / W..._CALL_ macros, e.g. 0x100ecea6, 0x100ecce0, 0x100e86a1,
+  0x100e91dc, 0x100e9cd1), where conv_w37.inc jumps to the C. After: call Sim_100xxxxx directly (types: the C
+  takes pointers where callers pass uint32_t DLL addresses) and drop conv_w37.inc.
+- **Software-renderer-only call sites** (every one under `G32(0x1017b940) == 0`): the calls of 0x100e4780,
+  0x100e5477, 0x100f9fd4, 0x100e96a7, 0x100eda16, and the 8-bit branches next to the 16-bit routines (e.g. the
+  0x100e86a1 / 0x100ecea6 / 0x100e91dc branches of w13_marker.c, w21_simmain.c, w9d_hud.c, w10_misc.c files that
+  choose by [0x1017b940]). Kept for now. After: delete those branches ([0x1017b940] is always set with Vulkan).
+- **D3D option 3 and the sim's DirectDraw driver** (0x1007f35c..0x10082790 and 0x1008667c) are not part of the final
+  program. After: remove their C and hooks; the reference for the look is the untouched 1.2 game (dev.cmd option H).
+- **Tables read from the DLL image by the converted routines:** the quarter-wave table inside the code at 0x100ebd27
+  (0x385 dwords, w37_math.c), the bit masks 0x10154e95 and interlace steps 0x10154e9e / 0x10154ea3 (w37_gif.c), the
+  remap table 0x10154eac, the colour table 0x10156dcc. After: C arrays with these contents.
+- **State the converted routines keep in DLL data:** the GIF row buffer 0x10153b95 and pane [0x10154ea8], the shape
+  encoder's globals 0x1015365d..0x10153691, the rotated draw's vertex table 0x10154fac and step table 0x10154ffc.
+  After: locals or file statics.
+- **0x100f9eb7 / Sim_10034cca:** report and VirtualProtect the DLL's self-modifying code block 0x100f4fd4..0x100f9e9a
+  (and read CS with inline assembly). After: drop both.
+- **Duplicates:** 0x100ed7bc = 0x100f1f86 and 0x100ed788 = 0x100f1f52 (two copies each in the DLL, two C functions).
+  After: one each.
+- **0x100e86a1's callback mode** (mode above 1, register arguments) draws nothing in the C (no caller uses it).
+  After: drop modes 1 and above.
+
+## C runtime replacement: maths (DECISIONS.md)
+
+- **Errno of the original C runtime:** round 10's interpreted wrappers (src/sim/util/w10_interp_body.h, W10i_Domain)
+  still store EDOM in the DLL's errno 0x1017e888 for out-of-domain arguments, as the original's routines did. Nothing
+  outside the C runtime reads it. After: drop the store (OpenLibm's NaN answer stays).
+- **Checker-only stand-ins** in tools/verify/difftest.py: the exact fmod answer for the original's fmod, the jump of
+  the original's pow / asin / sin / atan to OpenLibm, and the errno / scratch rule for trials that ran a maths
+  routine. They exist only to compare against the DLL. After: drop with the checker's DLL side.
+- **Specs that stub the maths at the original's address and at hg_*** (spec_w10_100225c7, spec_w29_100232d7,
+  spec_w26_10021e8c, spec_w8z): after: nothing to compare against.

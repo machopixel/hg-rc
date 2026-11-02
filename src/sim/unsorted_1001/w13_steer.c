@@ -16,9 +16,10 @@
 #include "../unsorted_100c/w12.h"
 #include "../unsorted_100c/w7p.h"
 #include "../unsorted_100c/w8z.h"
+#include "../libm/hg_math.h"
 
 /* The C library fmod of the DLL. */
-#define W13_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W13_FMOD hg_fmod
 
 /* Without a contact: block +8 = Sim_1001412d(unit, limit) and the heading Sim_100144e9 (its answer unused). */
 static void W13_SteerFree(uint8_t *unit, float limit)

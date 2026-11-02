@@ -10,6 +10,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -21,7 +22,7 @@
 /* Takes a float, returns a double in st(0); its uses in 0x100631ef and 0x10068bb2 are the two factors s and c of a rotation. */
 #define SIM_CALL_10084766 SIM_FN(double(__cdecl *)(float), 0x10084766)
 /* Takes a double on the stack, returns its absolute value in st(0). */
-#define SIM_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define SIM_FABS hg_fabs
 #define SIM_CALL_1006a12d SIM_FN(void(__cdecl *)(uint32_t, void *), 0x1006a12d)
 
 /*

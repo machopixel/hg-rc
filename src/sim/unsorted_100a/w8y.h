@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -21,7 +22,7 @@
 /* Not converted: draws one deferred polygon record. */
 #define W8Y_CALL_100a539e SIM_FN(void(__cdecl *)(uint32_t), 0x100a539e)
 /* Not converted (round 8, batch z): the C library's fabs (double in, st(0) out). */
-#define W8Y_CALL_100fcb70 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W8Y_CALL_100fcb70 hg_fabs
 /* Not converted (round 8, batch A): _read(handle, buffer, count), _close(handle), _lseek(handle, offset, origin). */
 #define W8Y_CALL_10105b50 SIM_FN(int(__cdecl *)(uint32_t, void *, uint32_t), 0x10105b50)
 #define W8Y_CALL_101049c0 SIM_FN(int(__cdecl *)(uint32_t), 0x101049c0)

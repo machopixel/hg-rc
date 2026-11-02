@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -19,7 +20,7 @@
 /* Not converted: (object, 1). */
 #define W6D_CALL_1000a6f0 SIM_FN(int(__cdecl *)(void *, int), 0x1000a6f0)
 /* The C library fabs of the DLL (0x100fcb70), on a double. */
-#define W6D_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W6D_FABS hg_fabs
 /* The C library sprintf of the DLL (0x100fc780). */
 #define W6D_SPRINTF SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* The C library sscanf of the DLL (0x100fd710): (text, format, ...). */

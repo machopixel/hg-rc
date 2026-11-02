@@ -14,33 +14,34 @@
 #include "../unsorted_100d/w8z.h"
 #include "../util/util.h"
 #include "../unsorted_1000/w24.h"
+#include "../libm/hg_math.h"
 
 // FUNCTION: HGSIM 0x100cbc6b
 void __cdecl Sim_100cbc6b(float dx, float dy, float dz, float *a, float *b, float *c, float *d)
 {
     float angle = W8Z_CALL_1008486e(dx, dz);
-    double sizeX = Crt_Fabs((double)dx);
+    double sizeX = hg_fabs((double)dx);
     float level;
     float div;
     float up;
     float vert;
 
-    if (!(Crt_Fabs((double)dz) >= sizeX)) {
+    if (!(hg_fabs((double)dz) >= sizeX)) {
         div = W8Z_CALL_10084766(angle);
-        if (!(Crt_Fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
+        if (!(hg_fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
             level = 0.0f;
         else
             level = (float)((double)dx / (double)div);
     } else {
         div = W8Z_CALL_10084766((float)((double)angle + (double)W8Z_GF(0x1012bc58)));
-        if (!(Crt_Fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
+        if (!(hg_fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
             level = 0.0f;
         else
             level = (float)((double)dz / (double)div);
     }
     up = W8Z_CALL_1008486e(dy, level);
     div = W8Z_CALL_10084766((float)((double)up + (double)W8Z_GF(0x1012bc58)));
-    if (!(Crt_Fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
+    if (!(hg_fabs((double)div) >= (double)W8Z_GF(0x1012bc54)))
         vert = 0.0f;
     else
         vert = (float)((double)level / (double)div);

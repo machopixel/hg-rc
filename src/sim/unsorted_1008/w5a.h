@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -14,9 +15,9 @@
 
 /* Not converted: a debug print (format, four doubles). */
 #define W5A_CALL_100348d8 SIM_FN(int(__cdecl *)(const char *, double, double, double, double), 0x100348d8)
-/* Not converted: the C library's sine and arc tangent (a double on the stack, the result in st(0)). */
-#define W5A_SIN SIM_FN(double(__cdecl *)(double), 0x100ff644)
-#define W5A_ATAN SIM_FN(double(__cdecl *)(double), 0x10100044)
+/* Sine and arc tangent from OpenLibm (hg_sin, hg_atan), in place of the C library's 0x100ff644 / 0x10100044. */
+#define W5A_SIN hg_sin
+#define W5A_ATAN hg_atan
 /* Not converted: stores the 16-bit value at index (the word table at 0x10156dcc). */
 #define W5A_CALL_100f01cc SIM_FN(void(__cdecl *)(int, uint32_t), 0x100f01cc)
 /* Not converted: the C library's fprintf-like print (destination, text). */

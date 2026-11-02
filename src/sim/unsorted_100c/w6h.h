@@ -8,13 +8,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library fabs (a double on the stack, the result in st(0)). */
-#define W6H_FABS_C SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W6H_FABS_C hg_fabs
 /* Not converted: (obj, a float as bits); returns an int. */
 #define SIM_CALL_100c3550 SIM_FN(int(__cdecl *)(void *, uint32_t), 0x100c3550)
 /* Not converted: (four floats as bits, a float block); returns a float in st(0). */

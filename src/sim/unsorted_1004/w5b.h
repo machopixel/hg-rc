@@ -7,13 +7,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted. fmod(x, y) with both arguments on the stack as doubles, the result in st(0). */
-#define SIM_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define SIM_FMOD hg_fmod
 #define SIM_FREE SIM_FN(void(__cdecl *)(void *), 0x100fefe0)
 #define SIM_MALLOC SIM_FN(void *(__cdecl *)(uint32_t), 0x100fef30)
 

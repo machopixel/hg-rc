@@ -8,6 +8,7 @@
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w8z.h"
 #include "../unsorted_100a/w12.h"
+#include "../libm/hg_math.h"
 
 typedef int(__stdcall *W10HeapFreeFn)(void *heap, uint32_t flags, void *block);
 #define W10_HEAPFREE(block) \
@@ -299,8 +300,8 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
             LIGHT_Y = (float)((double)*(const float *)(src + 0x24) - *(const float *)(corner + 4));
             LIGHT_Z = (float)((double)*(const float *)(src + 0x28) - *(const float *)(corner + 8));
             /* below [0x1012b4b4] on all three axes, an unordered compare counting as below */
-            near = !(Crt_Fabs((double)LIGHT_X) >= GF(0x1012b4b4)) && !(Crt_Fabs((double)LIGHT_Y) >= GF(0x1012b4b4)) &&
-                   !(Crt_Fabs((double)LIGHT_Z) >= GF(0x1012b4b4));
+            near = !(hg_fabs((double)LIGHT_X) >= GF(0x1012b4b4)) && !(hg_fabs((double)LIGHT_Y) >= GF(0x1012b4b4)) &&
+                   !(hg_fabs((double)LIGHT_Z) >= GF(0x1012b4b4));
             for (i = 0; i < GS32(0x101c9ea8); i++) {
                 v = list[i];
                 if ((U8(v, 0x29) & 2) != 0 || W10_V3C(v) >= 0x80)

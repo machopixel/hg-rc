@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -15,7 +16,7 @@
 /* Not converted (in the w7m list): (the byte block 0x1014af28), see Sim_10083530. */
 #define W7N8_CALL_100381d0 SIM_FN(int(__cdecl *)(void *), 0x100381d0)
 /* Not converted: the C library sqrt (double argument, result in st(0)). */
-#define W7N8_CALL_100fca04 SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W7N8_CALL_100fca04 hg_sqrt
 /* Not converted: the C library sprintf (destination, format, ...). */
 #define W7N8_CALL_100fc780 SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* Not converted: (5) gives non-zero while that condition holds, see Sim_10086c32. */

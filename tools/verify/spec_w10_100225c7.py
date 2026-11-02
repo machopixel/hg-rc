@@ -59,7 +59,7 @@ EFFECT.update({0x100a9cfb: e_pos, 0x1009cab0: e_seg, 0x1009cc82: e_seg, 0x1009cb
 
 # ---- float stubs: the hook keeps esp and jumps to "fld dword [value]; ret", so the answer comes back in st(0)
 FSTUB = {0x10084a94: ('Sim_10084a94', 3), 0x1008486e: ('Sim_1008486e', 2), 0x1002d961: ('Sim_1002d961', 3),
-         0x100fcb30: (None, 4)}
+         0x100fcb30: ('hg_fmod', 4)}
 FCODE = 0x00F00C00
 FVAL = 0x00AFF100
 

@@ -24,6 +24,7 @@
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w6h.h"
 #include "../unsorted_1006/w9c.h"
+#include "../libm/hg_math.h"
 
 /* The debug print of the DLL, by its address with the original's arguments (the damage log hooks it there). */
 #define W14P_PRINT SIM_FN(void(__cdecl *)(const char *, const char *, const uint8_t *), 0x10083495)
@@ -627,7 +628,7 @@ int __cdecl Sim_1005cd4a(uint8_t *obj, uint8_t *design)
             W14P_OldEngine(part, &wsum, &weight, &extra);
         } else if (kind == 0x20) {
             U32(obj, 0x5cb) = U32(part, 4);
-            wsum += Render_Ftol(SIM_FN(W14pSqrtFn, 0x100fca04)(
+            wsum += Render_Ftol(hg_sqrt(
                 (double)(S32(part, 0x64) == 0 ? S32(part, 0xc) : S32(part, 0x64))));
         }
         slot_code = W14P_OldSlot(kind, name);

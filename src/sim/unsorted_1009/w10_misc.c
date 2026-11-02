@@ -10,6 +10,7 @@
 #include "../unsorted_100a/w5y.h"
 #include "../unsorted_100b/w6g.h"
 #include "../unsorted_100f/w8z.h"
+#include "../libm/hg_math.h"
 
 #define GD(addr) (*SIM_PTR(double, addr))
 
@@ -121,8 +122,8 @@ void __cdecl Sim_1009b03d(uint8_t *obj)
         U32(obj, 0x1c) = U32(obj, 0x18);
     W10_9Text(target, U32(obj, 0x60), U32(obj, 0x64), font, (const char *)(uintptr_t)U32(obj, 0x40));
     if (G32(0x1015d1ac) == 4) {
-        h = (float)SIM_FN(W10_9FmodFn, 0x100fcb30)(
-            SIM_FN(W10_9FmodFn, 0x100fcb30)((double)*(float *)(BYTES(unit) + 0x68), 360.0) +
+        h = (float)hg_fmod(
+            hg_fmod((double)*(float *)(BYTES(unit) + 0x68), 360.0) +
                 *SIM_PTR(double, 0x1012b9c8),
             360.0);
         /* fcomp: equal or unordered leaves the text alone */

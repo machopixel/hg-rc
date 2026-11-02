@@ -17,6 +17,7 @@
 #include "w5y.h"
 #include "../render/w2n.h"
 #include "../unsorted_1003/w2e.h"
+#include "../libm/hg_math.h"
 
 typedef double(__cdecl *W10_1SqrtFn)(double x);
 
@@ -95,7 +96,7 @@ void __cdecl Sim_1001484e(uint8_t *obj, uint32_t order)
             dx = (float)((double)*(float *)BYTES(me + 0x58) - *(float *)BYTES(tgt + 0x58));
             dy = (float)((double)*(float *)BYTES(me + 0x5c) - *(float *)BYTES(tgt + 0x5c));
             dz = (float)((double)*(float *)BYTES(me + 0x60) - *(float *)BYTES(tgt + 0x60));
-            dist = (float)SIM_FN(W10_1SqrtFn, 0x100fca04)((double)dx * dx + (double)dy * dy + (double)dz * dz);
+            dist = (float)hg_sqrt((double)dx * dx + (double)dy * dy + (double)dz * dz);
             sign = Sim_1009c929(2) != 0 ? 1.0f : -1.0f;
             /* the cross product with (sign, 0, 0) as the original computes it */
             ax = (float)((double)dz * sign - (double)dy * zero);

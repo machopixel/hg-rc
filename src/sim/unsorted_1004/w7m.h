@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include "../simmem.h"
 #include "../util/access.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -23,7 +24,7 @@
 /* Not converted: finds a resource record (key, table name, a dword, kind, out dword, 0); returns its data or NULL. */
 #define W7M_CALL_100b8d6c SIM_FN(void *(__cdecl *)(const void *, uint32_t, uint32_t, int, uint32_t *, int), 0x100b8d6c)
 /* Not converted: the C library fmod (x, y) on doubles; result in st(0). */
-#define W7M_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W7M_FMOD hg_fmod
 /* Not converted: (record, a word, a byte as word, a word); the three small values are pushed as 16-bit values. */
 #define W7M_CALL_10015d30 SIM_FN(void(__cdecl *)(uint32_t, uint32_t, uint32_t, uint32_t), 0x10015d30)
 /* Not converted: (object id as a signed word, object record, index). */

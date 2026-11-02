@@ -25,6 +25,7 @@
 #include "../unsorted_100a/w5y.h"
 #include "../unsorted_100b/w2j.h"
 #include "../fx/w32.h"
+#include "../libm/hg_math.h"
 
 typedef double(__cdecl *W10_2SFmodFn)(double x, double y);
 
@@ -118,7 +119,7 @@ void __cdecl Sim_100225c7(int idx)
             /* the heading difference wrapped by fmod; the original never reads the result back */
             unit = BYTES(PTRTAB(tgt));
             ang = (float)((double)FL(unit, 0x68) - Sim_1008486e(FL(p, 0x18), FL(p, 0x20)));
-            (void)SIM_FN(W10_2SFmodFn, 0x100fcb30)((double)ang, 360.0);
+            (void)hg_fmod((double)ang, 360.0);
 
             if (G32(0x10134898) == W10_2S_SELF()) {
                 U32(BYTES(U32(PTRTAB(tgt), 0x28)), 0xc41) = U32(hr, 0x28);

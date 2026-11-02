@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -29,7 +30,7 @@
 #define W7O_CALL_100d2306 SIM_FN(void(__cdecl *)(void *), 0x100d2306)
 #define W7O_CALL_1007dd90 SIM_FN(void(__cdecl *)(void), 0x1007dd90)
 /* Not converted: C library function of a double, result in st(0). */
-#define W7O_CALL_100fcb70_A SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W7O_CALL_100fcb70_A hg_fabs
 
 /*
  * Turns the local matrix +0xc of the node by m (Sim_100a9c25 first; Mat3_Multiply for 0x100a9ec6,

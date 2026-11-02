@@ -11,14 +11,15 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-/* The C library fabs and sqrt of the DLL, on a double; the result comes back in st(0). */
-#define W8W8_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
-#define W8W8_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+/* fabs and sqrt from OpenLibm (hg_fabs, hg_sqrt), in place of the DLL's C library. */
+#define W8W8_FABS hg_fabs
+#define W8W8_SQRT hg_sqrt
 /* The C library fread (0x100fe830) and fclose (0x100fd760) of the DLL. */
 #define W8W8_FREAD SIM_FN(uint32_t(__cdecl *)(void *, uint32_t, uint32_t, void *), 0x100fe830)
 #define W8W8_FCLOSE SIM_FN(int(__cdecl *)(void *), 0x100fd760)

@@ -18,6 +18,7 @@
 #include "../unsorted_1008/w3o.h"
 #include "../render/w7o.h"
 #include "../view/view.h"
+#include "../libm/hg_math.h"
 
 // FUNCTION: HGSIM 0x100687a3
 int __cdecl Sim_100687a3(const float *box, float x, float y, float z, float radius, float *outX, float *outY,
@@ -196,7 +197,7 @@ int __cdecl Sim_10066907(uint8_t *self, float *x, float *y, float *z, uint32_t *
     return result;
 }
 
-#define W16_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W16_FABS hg_fabs
 
 /* The original's x87 test v == c, which an unordered compare (NaN) also passes. */
 static int W16_Zero(double v, double c)

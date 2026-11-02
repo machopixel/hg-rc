@@ -9,17 +9,18 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library's square root (a double on the stack, the result in st(0)). */
-#define W5A_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W5A_SQRT hg_sqrt
 /* Not converted: the C library's absolute value of a double. */
-#define W5A_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W5A_FABS hg_fabs
 /* Not converted: the C library's floating point remainder fmod(x, y). */
-#define W5A_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W5A_FMOD hg_fmod
 /* Not converted: a lookup in the sine table at 0x103719a0 (float in, result in st(0)). */
 #define W5A_SINTAB SIM_FN(double(__cdecl *)(float), 0x10084766)
 /* Not converted: the C library's assertion handler (expression, file, line). */

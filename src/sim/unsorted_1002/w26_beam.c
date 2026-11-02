@@ -13,6 +13,7 @@
 #include "../unsorted_1006/w10.h"
 #include "../unsorted_1008/w8w.h"
 #include "../unsorted_100d/w5c.h"
+#include "../libm/hg_math.h"
 
 typedef double(__cdecl *W26bFmodFn)(double x, double y);
 
@@ -96,7 +97,7 @@ void __cdecl Sim_10021e8c(int idx)
                 U32(shot, 8) |= 0x1000;
             /* a facing angle the original computes and never uses */
             angle = (float)((double)FL(PTRTAB(target), 0x68) - Sim_1008486e(FL(shot, 0x18), FL(shot, 0x20)));
-            (void)SIM_FN(W26bFmodFn, 0x100fcb30)((double)angle, 360.0);
+            (void)hg_fmod((double)angle, 360.0);
             if (G32(0x10134898) == G32(0x1017b8c8))
                 W26b_Count(Sim_10052be7((int)target), 0x101653f9, 0x101653f5, 0x101653f7);
             if (GS32(0x10134898) >= 0 && U32(PTRTAB(G32(0x10134898)), 8) == U32(PTRTAB(G32(0x1017b8c8)), 8))

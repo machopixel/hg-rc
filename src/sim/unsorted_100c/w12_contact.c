@@ -11,10 +11,11 @@
 #include "../unsorted_100c/w5c.h"
 #include "../unsorted_100c/w6h.h"
 #include "../unsorted_100c/w7p.h"
+#include "../libm/hg_math.h"
 
-/* The C library sqrt and fabs of the DLL, on doubles. */
-#define W12_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
-#define W12_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+/* sqrt and fabs from OpenLibm (hg_sqrt, hg_fabs), in place of the DLL's C library. */
+#define W12_SQRT hg_sqrt
+#define W12_FABS hg_fabs
 
 typedef union {
     float f;

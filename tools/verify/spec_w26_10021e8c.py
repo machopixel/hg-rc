@@ -20,7 +20,7 @@ DEREF[0x1002dda9] = {0: SEG}
 MASK[(0x10015630, 1)] = 0xffff
 MASK[(0x10015630, 2)] = 0xffff
 ACTIVE = tuple(HELPERS)
-FSTUB.update({0x1008486e: ('Sim_1008486e', 2), 0x100fcb30: (None, 4)})
+FSTUB.update({0x1008486e: ('Sim_1008486e', 2), 0x100fcb30: ('hg_fmod', 4)})
 
 EBP = STACK_HI - 0x100 - 4 - 4 - 4     # one argument, the return address, then push ebp
 

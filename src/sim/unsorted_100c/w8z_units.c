@@ -17,6 +17,7 @@
 #include "../unsorted_1008/w7n.h"
 #include "../unsorted_1003/fns.h"
 #include "../util/util.h"
+#include "../libm/hg_math.h"
 
 /* The record of the unit (+0x54) and its float +8. */
 static void W8z_SetRecordFloat(void *unit, float value)
@@ -73,9 +74,9 @@ void __cdecl Sim_100c07c5(void *unit, short unused)
             value = W8Z_CALL_1001412d(unit, W8z_Float(0x457a0000));
             W8z_SetRecordFloat(unit, value);
         }
-        if (!(Crt_Fabs((double)W8Z_FL(U32(unit, 0x54), 8) - (double)W8Z_GF(0x1012bb18)) >=
+        if (!(hg_fabs((double)W8Z_FL(U32(unit, 0x54), 8) - (double)W8Z_GF(0x1012bb18)) >=
               (double)W8Z_GF(0x1012bb34)) &&
-            Crt_Fabs((double)speed) > W8Z_GD(0x1012bb38))
+            hg_fabs((double)speed) > W8Z_GD(0x1012bb38))
             U32(unit, 0x21c) = 1;
     }
     if (U32(unit, 0x21c) == 1) {
@@ -434,7 +435,7 @@ int __cdecl Sim_100c4e1c(void *unit, void *entry, int32_t *slot)
     value = Sim_100144e9(unit);
     if (result != 0)
         return result;
-    if (Crt_Fabs((double)value) >= (double)W8Z_GF(0x1012bb60))
+    if (hg_fabs((double)value) >= (double)W8Z_GF(0x1012bb60))
         return result;
     if (*slot < 0) {
         dir = 0;

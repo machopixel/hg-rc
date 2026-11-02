@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include "../simmem.h"
 #include "../util/access.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -20,7 +21,7 @@
 /* Hooked by hooks_sim.c (SystemError): (code, format, ...). */
 #define W6E_CALL_100bc280 SIM_FN(void(__cdecl *)(uint32_t, uint32_t), 0x100bc280)
 /* Not converted: C library fabs (double in, st(0) out). */
-#define W6E_CALL_100fcb70 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W6E_CALL_100fcb70 hg_fabs
 /* Not converted: writes the low and the high byte of the value to the stream at [0x1015f344]; returns 2 on error. */
 #define W6E_CALL_1004dd2a SIM_FN(int(__cdecl *)(uint32_t), 0x1004dd2a)
 

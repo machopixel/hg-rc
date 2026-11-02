@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -17,7 +18,7 @@
 /* The C library sprintf of the DLL (0x100fc780). */
 #define W7L_SPRINTF_1000 SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* The C library sqrt of the DLL (0x100fca04), on a double; the result comes back in st(0). */
-#define W7L_SQRT_1000 SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W7L_SQRT_1000 hg_sqrt
 /* Not converted: table lookup of one float, returns a float value in st(0) (0x10084766). */
 #define W7L_CALL_10084766_1000 SIM_FN(double(__cdecl *)(float), 0x10084766)
 /* Not converted: table lookup of two floats, returns a float value in st(0) (0x1008486e). */

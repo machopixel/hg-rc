@@ -9,13 +9,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: the C library square root of the DLL (double in, st(0) out). */
-#define W6G_SQRT SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define W6G_SQRT hg_sqrt
 
 /*
  * Unless the state at +0x34 is already 2: length = sqrt of the squared end - start (computed from the points,

@@ -2470,3 +2470,154 @@ An independent audit of all of 1.2's HGSIM (tools/v12/audit.md) found two 1.2 ch
   3000 / 0 against 1.2 (W9GW_NEG12, 1.0's `>=` test: 228). Superseded for this function: spec_w9g.py's Sim_100cd70f
   entry and spec_w21_wrap_cd70f.py (both describe 1.0's wrap). The F12 list (Sim_100ccc60) keeps 1.0's wrap, as 1.2
   does, with its round-21 deviation.
+
+## DLL removal step 1: graphics library, Vulkan only (Diego, 2026-11-01: "I only want to use vulkan for the final version, convert the functions required for this. I don't care for direct3d only or software only code.")
+
+- **Scope.** The final program keeps only the Vulkan renderer. D3D option 3 and the sim's DirectDraw driver
+  (0x1007f35c..0x10082790 and 0x1008667c) are dropped from the final program; the comparison reference for the look
+  of the game is the untouched 1.2 game (dev.cmd option H). The 41 graphics-library functions the Vulkan build still
+  runs are converted (below). The software-only C call sites are not deleted yet (AFTER_DLL.md).
+- **Not converted, software renderer only** (every call site under `G32(0x1017b940) == 0`): 0x100e4780, 0x100e5477,
+  0x100f9fd4, 0x100e96a7, 0x100eda16.
+- **Not converted, dead** (no caller and no pointer in the DLL): 0x100e4c2c 0x100e5d25 0x100e6279 0x100e6b49
+  0x100e84a8 0x100e84d1 0x100ea87d 0x100eac78 0x100eb14f 0x100eb4eb 0x100ecbf3 0x100ecfec 0x100ed02e 0x100ed1f5
+  0x100ed226 0x100ed253 0x100ed2d5 0x100ed300 0x100ed765 0x100ed831 0x100ed879 0x100ed8d6 0x100ed938 0x100edc8d
+  0x100ede11 0x100ef51c 0x100ef545 0x100ef564 0x100ef649 0x100f094e 0x100f1abb 0x100f1b73 0x100f1b99 0x100f1c60
+  0x100f1c73 0x100f1e47 0x100f1fb0 0x100f2134 0x100f9e9a 0x100f9edf.
+  (Both lists are the coordinator's survey, recorded as given; the conversion does not depend on them. Some call
+  sites of the converted 0x100e86a1 / 0x100ecea6 are themselves under `[0x1017b940] == 0`.)
+- **Already in C:** 0x100e440b / 0x100e4463 are W9d_Expand4 / W9d_Expand2, static functions of
+  src/sim/unsorted_100e/w9d_decode.c (round 9, register arguments, proven through 0x100e41cc by spec_w9d.py).
+- **Converted** (`src/sim/gfx/w37.h`, `w37_info.c`, `w37_text.c`, `w37_gif.c`, `w37_math.c`, `w37_draw.c`,
+  `w37_encode.c`, `w37_line.c`, `w37_rotate.c`; hooked by `src/hooks/conv_w37.inc`, 36 entries; specs
+  `tools/verify/spec_w37_*.py` with `w37_common.py`, logs in buildlogs/round37). Each from its hand-written assembly,
+  all exact (no float); trials / mismatches:
+  - records and colours (spec_w37_info): font height 0x100ecce0 300/0; shape count 0x100ed8c3 300/0; glyph width
+    0x100eccf3 500/0; shape first dword 0x100ed743 500/0; shape origin 0x100f1f86 and its duplicate 0x100ed7bc
+    500/0 each; shape size 0x100f1f52 and its duplicate 0x100ed788 500/0 each; shape palette 0x100ed7e6 1000/0;
+    colour table get / set / load 0x100f01ea 500/0, 0x100f01cc 500/0, 0x100f01ad 200/0; code block 0x100f9eb7 50/0;
+    GIF image size 0x100ed70b 1000/0; GIF palette 0x100ed6aa 1000/0.
+  - text (spec_w37_text): 8-bit character 0x100ecd13 10000/0 (coverage 171/171); string 0x100ecea6 3000/0.
+  - GIF (spec_w37_gif): row copy 0x100ecedd 5000/0 (114/114); decoder 0x100ed491 1500/0 with its five
+    register-argument helpers 0x100ed327 (table reset), 0x100ed36f (data byte), 0x100ed388 (bits), 0x100ed3ce (new
+    code), 0x100ed414 (pixel out) as static functions of w37_gif.c (only it calls them; their thunks are
+    unreferenced): helpers 108/108, decoder 185/199 (the 14 not run: the 1-bit branch below). Real LZW streams,
+    interlaced or not, 10% with corrupted bytes (the 31 both-fault trials are corrupted streams that run off the data
+    in both).
+  - rotation (spec_w37_math): wave lookup 0x100ecb3b 5000/0; point rotation 0x100ecc19 5000/0.
+  - drawing (spec_w37_draw): pixel set 0x100e84f0 5000/0; pixel read 0x100e85cb 5000/0; pane fill 0x100eb070
+    3000/0; unclipped shape 0x100e95e0 5000/0; clipped shape 0x100e91dc 20000/0 (433/439: the 6 not run are a
+    dispatch head after an unconditional jump); their remapping twins (colours through 0x10154eac) 0x100e9b9e 5000/0
+    and 0x100e96c6 20000/0 (478/484, the same dead head); checkerboard fill 0x100e90a3 5000/0 (138/145: the dead -3
+    exit).
+  - shape encoder (spec_w37_encode): packet writer 0x100eae93 5000/0 (164/164); row 0x100ead0a 5000/0 (138/138);
+    pane encoder 0x100ea9f5 3000/0 (220/220).
+  - lines (spec_w37_line): line 0x100e86a1 30000/0 (916/1016: the not-run are the callback mode's five loops and the
+    two unreachable jumps round 30 found in the 16-bit twin); ellipse 0x100eb6e8 5000/0; filled ellipse 0x100eba29
+    5000/0.
+  - rotated / scaled shape (spec_w37_rotate): 0x100e9cd1 5000/0 (886/886).
+  - A planted bug (0xfe for the transparent 0xff in 0x100ecd13) is caught (343 of 10000).
+- **1.2:** every one of the 41 has a 1.2 twin identical apart from addresses (listings aligned instruction by
+  instruction; the five helpers at 1.2 0x100cf517..). The tables they read hold the same bytes in 1.2: the bit masks
+  0x10154e95, the interlace steps 0x10154e9e and the quarter-wave table 0x100ebd27 (1.2 0x10126d4d, 0x10126d56,
+  0x100cdf17). The 1.0 proofs are therefore 1.2 proofs; no 1.2 spec needed.
+- **Callers keep SIM_FN.** As round 30 did for the same library's 16-bit routines (and round 22's note: "one place
+  to redirect"), the C callers still call these at their original addresses, where the CONV hooks jump to the C.
+  Only calls between the converted routines are direct C calls. The switch-over is in AFTER_DLL.md.
+- **Deviation (unreachable): the line's callback mode.** 0x100e86a1 with a mode above 1 calls the colour argument as
+  a function for every cell, under a pushad, with the cell in EDI / ESI and the steps in EAX / EBX (register
+  arguments). Every call site (about 75 in the DLL, all the C ones) passes mode 0, so no such callback exists; the
+  C clips as the original and draws nothing for those modes (no assembly adapter). Mode 1 (cells through a table) is
+  also unused and converted as it is.
+- **Unset read kept as round 30:** for horizontal and vertical lines 0x100e86a1 returns ([ebp-0x34] >= 1), a flag
+  only the clipping path writes (the 16-bit routine has the same). The C returns 0 there; the checker seeds the slot
+  with 0. The ellipses return the line's result when a radius is 0. No caller found that reads these results.
+- **Original quirks kept:** the checkerboard fill 0x100e90a3 sets the cell right of the rectangle on a shifted row of
+  width 1 (one cell past the pane's right edge when the rectangle touches it); the packet writer 0x100eae93 writes a
+  {0, cell} or {1} packet when a span is empty and did not widen the box; 0x100ecedd / 0x100eb6e8 / 0x100eba29 /
+  0x100e9cd1 / 0x100ecc19 return the original's last EAX where it is not a status (callers ignore it); the shape
+  palette 0x100ed7e6 runs 2^32 times for a count of 0; 0x100ed6aa lets a local GIF palette overwrite the global one
+  from the start.
+- **Not reproduced (no effect):** 0x100e95e0 / 0x100e9b9e keep the window's pitch in their fifth argument's stack
+  slot (callers never read it; as round 30's 0x100f0727). 0x100eae93 keeps EAX / ECX for its only caller 0x100ead0a,
+  which is C now (both hooked from the same .inc, so "convoff" cannot split them). The GIF decoder's 1-bit output
+  branch (taken for a pixel width of 1 in EDX; EDX is always 8 there) is left out. 0x100e9cd1's per-row steps
+  ([ebp-0xc8] / [ebp-0xcc]) are read stale (unset on the first row) for a row of one cell, where they only move the
+  source past its last texel: the C starts them at 0. Division overflows (#DE) of 0x100e9cd1 for spans of 32768
+  cells or more, and the GIF decoder on corrupted data running past the file, are not modelled (the specs keep sizes
+  below that).
+- **0x100f9eb7** reads the code segment register (one `mov` from CS; inline assembly for MSVC and GCC) and reports
+  the DLL's own self-modifying code block 0x100f4fd4..0x100f9e9a, which Sim_10034cca makes writable with
+  VirtualProtect. Meaningless without the DLL (AFTER_DLL.md).
+- **Build:** the Release build (vcvars x86, `cmake --build build --config Release`, as dev.cmd option 4 without the
+  copy into the game folder) compiles; the game was not run.
+
+## C runtime replacement: maths (OpenLibm) (Diego, 2026-11-01: "Finish the math, ONLY"; compiler settings 2026-11-01: "ok, add those compiler settings")
+
+- **What runs now.** OpenLibm v0.8.8 (third_party/openlibm, HG_VENDOR.md), compiled into the program through
+  src/sim/libm (hg_sqrt, hg_fmod, hg_fabs, hg_pow, hg_sin, hg_cos, hg_atan, hg_asin, hg_acos, hg_floor;
+  hg_math.h). Every C call of the original C runtime's x87 routines sqrt 0x100fca04, fmod 0x100fcb30, fabs
+  0x100fcb70, pow 0x100fed29, asin 0x100fcc74, sin 0x100ff644, atan 0x10100044 calls OpenLibm instead, and round 10's
+  interpreted functions use OpenLibm's sin / cos / asin / acos in place of the platform library (W10I_K_*). The exact
+  C copy of fabs and its hook are gone. Plain C: the same results on Windows and Linux (with the settings below).
+- **Where OpenLibm differs from the original, measured on the real CPU.** The original routines were run natively
+  (HGSIM.DLL mapped without DllMain or imports, as round 26's trigcap.c; x87 control word 0x27f, the game's), next
+  to OpenLibm and a 60-digit Decimal reference (the emulator's fprem / fyl2x / f2xm1 / fpatan / fsin are themselves
+  inexact, so it cannot be the reference). Game-like inputs:
+  | routine | inputs | bit-identical | differ | max error orig / OpenLibm (ulp) | where they differ, closer to exact |
+  |---|---|---|---|---|---|
+  | sqrt | 15000 | 15000 | 0 | 0 / 0 | - |
+  | fmod | 15000 | 15000 | 0 | 0 / 0 (both exact) | - |
+  | pow | 60000 | 55157 | 4843 (8.1%) | 0.634 / 0.794 | original 3099, OpenLibm 1744 |
+  | asin | 60000 | 47026 | 12974 (21.6%) | 1.565 / 0.860 | OpenLibm 10643, original 2331 |
+  | sin | 15000 | 14499 | 501 (3.3%) | 0.541 / 0.733 | original 492, OpenLibm 9 |
+  | atan | 15000 | 14742 | 258 (1.7%) | 0.500 / 0.700 | original 256, OpenLibm 2 |
+  Every difference is one unit in the last place of the double (the callers mostly round to float after). fabs is
+  bit-identical by construction. So sqrt / fmod / fabs give the original's values exactly; pow / asin / sin / atan
+  may differ in the last bit (asin: the original's is the less accurate one). With control word 0x37f (64-bit
+  precision) the original is nearer exact (pow 3903, asin 3139 differences) and its sqrt double-rounds twice in
+  15000; the game uses 0x27f.
+- **Also different (not observable):** the original's routines store EDOM / ERANGE in the C runtime's errno
+  (0x1017e888) for NaN, infinite or out-of-range arguments, keep scratch at 0x1017e900..0x1017e97f, and fabs reports
+  a NaN / infinity to the runtime's maths error routine 0x10102e30 (called only from fabs 0x100fcbe3 and the shared
+  x87 error path 0x1010a59d). OpenLibm does none of this; the values returned are the same. No code outside the C
+  runtime refers to 0x1017e888 (all 46 references in the DLL are at 0x100fa000 and above). Round 10's interpreted
+  wrappers still store the original's EDOM themselves (w10_interp_body.h).
+- **1.2:** sqrt, fmod, fabs, asin and pow are the same code in 1.2 at 0x100daba4, 0x100dacd0, 0x100dad10, 0x100dae14
+  and 0x100dd2e9 (byte match with call targets masked). 1.2's sin / atan were not located; the checker answers them only in 1.0.
+- **Checker (tools/verify/difftest.py):**
+  - fmod: the original's call (1.0 0x100fcb30, 1.2 0x100dacd0) with finite x and finite non-zero y is answered with
+    Python's exact math.fmod, as real fprem (exact) and OpenLibm; NaN / infinite / zero-divisor calls run the
+    original.
+  - pow / asin / sin / atan: the original's calls (1.0 all four, 1.2 pow and asin) jump to the same OpenLibm function
+    the C calls, so a spec compares the converted code around them; the differences are the table above.
+    spec_crt_libm.py sets LIBM_ORIGINAL and runs the original routines.
+  - In a trial in which a maths routine ran (either side), errno 0x1017e888 and the scratch 0x1017e900..0x1017e97f
+    are not compared (not in spec_crt_libm.py).
+  - The object cache (build/w10cache) is now also invalidated by any header change (most call sites were switched
+    by header macros, which the .c timestamps missed), and rt.o is built per process.
+  - tools/verify/run_specs.py runs a list of spec files on all cores, one process per file
+    (tools/verify/crt_math_specs.txt: the 109 spec files / 150 entries whose C reaches an OpenLibm function, by a
+    static call graph of the compiled sources).
+- **Specs adapted (recorded exceptions):** spec_w10_100225c7, spec_w29_100232d7 (and _v12) and spec_w26_10021e8c
+  stubbed fmod at 0x100fcb30 only, which the C no longer calls: the stub now also answers hg_fmod (same answers both
+  sides, as before). spec_w8z: the fmod / sqrt stubs also answer hg_fmod / hg_sqrt; its Crt_Fabs entry (the deleted
+  exact copy) is dropped; calls of 0x10102e30 (fabs's error report, above) are left out of both call logs.
+- **spec_crt_libm.py** (the original routines under emulation against OpenLibm, 20000 each): sqrt 226, fabs 90,
+  fmod 485 mismatches, every one only errno (values bit-identical); pow 8506, asin 3127, sin 615, atan 400, of which
+  185 / 227 / 223 / 86 errno only and the rest last-bit differences in the emulated x87 (the native table above is
+  the real comparison).
+- **Re-run** (buildlogs/crt_math, merged in buildlogs/crt_math/index_final.txt): the 150 entries plus the rest of
+  spec_w8z, 168 entries: 157 pass. The 11 that fail are not maths: 10 fail with the same mismatch counts on the last
+  commit fa18a35 without the maths change (Sim_100246b3 2886, Sim_10058c5e 3669, Sim_100d4590 3138, Sim_100a0063
+  1952, Sim_1005bb7a 7426, Sim_10070eb5 869, Sim_100dcc12 154, Sim_1006e22c 939, Sim_10040af8 5576, Sim_100a0def
+  248; checked in a clean worktree), and spec_w14_1009d200.py describes 1.0's respawn (round 33 ported it to 1.2's,
+  which drops Sim_1007caab; spec_w14_spawn_v12.py passes 6000 / 0).
+  First full run: 109 spec files on 16 processes in 2939 s (the longest single file 743 s).
+- **Compiler settings** (CMakeLists.txt, every target: the game, HGVK, OpenLibm, SDL): SSE2 doubles, never x87
+  (MSVC `/arch:SSE2`; GCC / Clang on x86 `-msse2 -mfpmath=sse`), no fused multiply-add (MSVC `/fp:precise` without
+  `/fp:contract`; GCC / Clang `-ffp-contract=off`), never fast-math. These are MSVC's own defaults for x86
+  (SSE2 and /fp:precise unless told otherwise), so today's Release build compiles the same floating-point code; the
+  settings pin it for other compilers and platforms.
+- **Build:** the Release build (vcvars x86, `cmake --build build --config Release`) compiles and links HG.exe and
+  HGVK.dll; the game was not run.

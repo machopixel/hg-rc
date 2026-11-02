@@ -13,6 +13,7 @@
 #include "w7m.h"
 #include "../unsorted_100c/w8z.h"
 #include "../unsorted_100f/w8z.h"
+#include "../libm/hg_math.h"
 
 typedef void(__cdecl *W10_4Fn10087d83)(void *camera);
 
@@ -105,7 +106,7 @@ void __cdecl Sim_10044d0b(float speed, float lift, float yaw, float turn)
         G32(0x109b9ac8) = U32(G32(0x1014cae0), 0xc);
         G32(0x109b9aa8) = U32(G32(0x1014cae0), 0x10);
         U32(G32(0x1014cae0), 0x14) = 0;
-        if (W10_4BELOW(Crt_Fabs((double)W10_4CAM(0) - (double)tx), (double)W10_4F(0x10111570)))
+        if (W10_4BELOW(hg_fabs((double)W10_4CAM(0) - (double)tx), (double)W10_4F(0x10111570)))
             W10_4CAM(0) = (float)((double)W10_4CAM(0) + (double)W10_4F(0x10111580));
         G32(0x1013aed0) = 0x3f800000;
         Sim_10044909(0);
@@ -118,14 +119,14 @@ void __cdecl Sim_10044d0b(float speed, float lift, float yaw, float turn)
         G32(0x1015eeec) = G32(0x1015eef0);
     h = (float)((double)W10_4F(0x1015eef8) + (double)lift);
     W10_4F(0x1013aec8) = (float)((double)W10_4F(0x1013aec8) + (double)turn);
-    W10_4F(0x1013aec8) = (float)SIM_FN(W10_4FmodFn, 0x100fcb30)((double)W10_4F(0x1013aec8), 360.0);
+    W10_4F(0x1013aec8) = (float)hg_fmod((double)W10_4F(0x1013aec8), 360.0);
     Sim_100cbc6b((float)((double)tx - (double)W10_4CAM(0)), (float)((double)ty - (double)W10_4CAM(1)),
                  (float)((double)tz - (double)W10_4CAM(2)), &a1, &a2, &a3, &a4);
     Sim_10047e1a(SIM_PTR(void, 0x109b9aa0), (float)(-(double)a4 - (double)yaw / (double)W10_4F(0x1011156c)));
     W10_4CAM(4) = Sim_10047cf2(SIM_PTR(uint32_t, 0x109b9aa0));
     Sim_10047e1a(SIM_PTR(void, 0x109b9ac0), a1);
     W10_4CAM(3) = Sim_10047cf2(SIM_PTR(uint32_t, 0x109b9ac0));
-    t = SIM_FN(W10_4FmodFn, 0x100fcb30)((double)(float)((double)tb - (double)W10_4F(0x1013aec8)), 360.0);
+    t = hg_fmod((double)(float)((double)tb - (double)W10_4F(0x1013aec8)), 360.0);
     head = (float)t;
     if (W10_4BELOW(t, (double)W10_4F(0x1011159c)))
         head = (float)((double)head + (double)W10_4F(0x101115a0));

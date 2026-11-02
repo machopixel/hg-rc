@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -16,7 +17,7 @@
 #define SIM_CALL_100ed70b SIM_FN(int32_t(__cdecl *)(uint32_t), 0x100ed70b)
 
 /* Not converted: x87 square root of a double (the C library sqrt). */
-#define SIM_SQRT_C SIM_FN(double(__cdecl *)(double), 0x100fca04)
+#define SIM_SQRT_C hg_sqrt
 
 /*
  * Fills two tables of 0x320 floats: with t = i / 16.0 (the qword at 0x1012b898), inv = 1.0 / sqrt(t * t + 1.0) (the qword at 0x1012b8a0)

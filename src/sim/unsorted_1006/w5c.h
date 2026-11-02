@@ -9,13 +9,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: takes a double on the stack, returns its absolute value in st(0). */
-#define SIM_FABS_C SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define SIM_FABS_C hg_fabs
 /* Not converted: takes a float, returns a double in st(0) (the sine of an angle in the units used here, see Sim_10068ce0). */
 #define SIM_CALL_10084766_C SIM_FN(double(__cdecl *)(float), 0x10084766)
 

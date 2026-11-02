@@ -89,13 +89,6 @@ typedef double(__cdecl *W8zExceptFn)(int flags, int operation, double x, double 
  */
 int __cdecl Crt_SPrintf(char *buf, const char *format, ...);
 /*
- * fabs: masks the x87 exceptions (0x10103ad0(0x133f, 0xffff)) and clears the sign bit. Infinities come back
- * as +x / -x, a quiet NaN goes to 0x10102e30(0x15, x, cw), any other NaN to 0x10102f00(8, 0x15, x, x - [0x1012bdd8],
- * cw), whose x87 results are returned. The control word is put back except on those two error paths (the callees
- * do it). The result is in st(0).
- */
-double __cdecl Crt_Fabs(double x);
-/*
  * fclose without locking: for a stream with flag 0x40 (a string stream) only clears the flags and returns -1.
  * Streams in use (0x83) are flushed (Crt_FlushStream), their buffer freed (Sim_10104aa0) and their handle closed
  * (0x101049c0); a close error gives -1, otherwise a temporary-name block (+0x1c) is freed. The flags are cleared.

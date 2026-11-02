@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -23,7 +24,7 @@
 /* Not converted: draws a text with a background (font name, ..., text, x, y) (0x1007e29a). */
 #define W8T_CALL_1007e29a SIM_FN(void(__cdecl *)(const char *, uint32_t, const char *, uint32_t, uint32_t), 0x1007e29a)
 /* The C library fmod (x, y) of the DLL on doubles; the result comes back in st(0) (0x100fcb30). */
-#define W8T_FMOD_1000 SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W8T_FMOD_1000 hg_fmod
 /* Not converted: from a float vector (x, y, z) four floats through the pointers (0x100cbc6b). */
 #define W8T_CALL_100cbc6b_1000 SIM_FN(void(__cdecl *)(float, float, float, float *, float *, float *, float *), 0x100cbc6b)
 /* Not converted: table lookup of one float, returns a float value in st(0) (0x10084766). */

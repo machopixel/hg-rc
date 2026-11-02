@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -25,7 +26,7 @@
 #define W8U_CLOSE_1004 SIM_FN(int(__cdecl *)(uint32_t), 0x101049c0)
 #define W8U_WRITE_1004 SIM_FN(int(__cdecl *)(uint32_t, const void *, uint32_t), 0x10105750)
 #define W8U_READ_1004 SIM_FN(int(__cdecl *)(uint32_t, void *, uint32_t), 0x10105b50)
-#define W8U_FABS_1004 SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W8U_FABS_1004 hg_fabs
 /* Not converted: table lookup (an angle as float bits); the result is in st(0). */
 #define W8U_CALL_10084766 SIM_FN(double(__cdecl *)(uint32_t), 0x10084766)
 /* Not converted: (unit a +0x28, unit b +0x28). */

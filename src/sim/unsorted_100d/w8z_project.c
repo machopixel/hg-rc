@@ -1,6 +1,7 @@
 #include "w8z.h"
 #include "../fx/w32.h"
 #include "../util/util.h"
+#include "../libm/hg_math.h"
 
 // FUNCTION: HGSIM 0x100d2669
 int __cdecl Sim_100d2669(float *x, float *y, float *z)
@@ -24,7 +25,7 @@ int __cdecl Sim_100d2669(float *x, float *y, float *z)
         behind = 1;
         if ((W8z_Bits(depth) & 0x80000000u) != 0)
             depth = -depth;
-        else if (!(Crt_Fabs((double)depth) >= (double)W8Z_GF(0x1012bcc4)))
+        else if (!(hg_fabs((double)depth) >= (double)W8Z_GF(0x1012bcc4)))
             depth = 1.0f;
     } else {
         behind = 0;
@@ -111,7 +112,7 @@ int __cdecl Sim_100d943f(void *obj)
     y0 = (float)((double)W8Z_FL(obj, 0x16) + (double)W8z_Float(oy));
     z0 = (float)((double)W8Z_FL(obj, 0x1a) + (double)W8z_Float(oz));
     if (Sim_100d2669(&x0, &y0, &z0) != 0) {
-        colour = W8z_Ftol(Crt_Fabs((double)z0) * (double)W8Z_GF(0x1012bd7c) / (double)W8Z_FL(G32(0x1014cae0), 0x40));
+        colour = W8z_Ftol(hg_fabs((double)z0) * (double)W8Z_GF(0x1012bd7c) / (double)W8Z_FL(G32(0x1014cae0), 0x40));
         if (colour < 0)
             colour = 0;
         else if (colour >= 0x20)

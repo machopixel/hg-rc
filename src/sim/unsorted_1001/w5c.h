@@ -7,6 +7,7 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -17,7 +18,7 @@
 /* Not converted: (object, 1, 1). */
 #define SIM_CALL_100cbdb8 SIM_FN(void(__cdecl *)(void *, int, int), 0x100cbdb8)
 /* Not converted: x87 fmod(x, y) of the C library (the name "fmod" is in its error structure at 0x101593f0). */
-#define SIM_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define SIM_FMOD hg_fmod
 /* Not converted: returns the record of an id (used by Sim_1001bb1f; record +4 is a state, +0 the loaded data). */
 #define SIM_CALL_1001b902 SIM_FN(uint8_t *(__cdecl *)(int), 0x1001b902)
 #define SIM_CALL_1001cedf SIM_FN(void(__cdecl *)(int), 0x1001cedf)

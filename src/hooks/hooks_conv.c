@@ -490,6 +490,7 @@
 #include "../sim/platform/w28.h"
 #include "../sim/unsorted_1002/w29.h"
 #include "../sim/render/w30.h"
+#include "../sim/gfx/w37.h"
 #include "../sim/unsorted_1007/w10.h"
 #include "../sim/unsorted_1007/w10d.h"
 #include "../sim/unsorted_100c/w10d.h"
@@ -625,6 +626,7 @@
 #include "conv_w29.inc"
 #include "conv_w30.inc"
 #include "conv_w32.inc"
+#include "conv_w37.inc"
 #undef CONV
 
 #define CONV(rva_, name_, ...) \
@@ -720,6 +722,7 @@ static const HookDesc g_convHooks[] = {
 #include "conv_w29.inc"
 #include "conv_w30.inc"
 #include "conv_w32.inc"
+#include "conv_w37.inc"
 };
 #undef CONV
 
@@ -815,6 +818,7 @@ static const char *const g_convFiles[] = {
 #include "conv_w29.inc"
 #include "conv_w30.inc"
 #include "conv_w32.inc"
+#include "conv_w37.inc"
 };
 #undef CONV
 

@@ -15,6 +15,7 @@
 #include "../unsorted_1001/w6d.h"
 #include "../util/util.h"
 #include "../unsorted_100c/w8z.h"
+#include "../libm/hg_math.h"
 
 #define GF(addr) (*SIM_PTR(float, addr))
 
@@ -104,7 +105,7 @@ int __cdecl Sim_1000d34d(void *obj, float a)
         U32(o, 0x1be) = G32(0x1015dc78) + (uint32_t)r * 0x16u;
         d = a - *(float *)(o + 0x74);
         /* the three addends stay in the 53-bit register until the fmod */
-        w = (float)SIM_FN(W10FmodFn, 0x100fcb30)((double)*(float *)(o + 0x64) +
+        w = (float)hg_fmod((double)*(float *)(o + 0x64) +
                                                      (double)*(float *)(BYTES(U32(o, 0x28)) + 0x1c) +
                                                      (double)*(float *)(o + 0xec), 360.0);
         if (d < GF(0x1011104c) && d > GF(0x101110b4) && w < GF(0x1011104c) && w > GF(0x101110b4) &&
@@ -138,7 +139,7 @@ int __cdecl Sim_1000d34d(void *obj, float a)
 
 typedef double(__cdecl *W10SqrtFn)(double);
 typedef double(__cdecl *W10FabsFn)(double);
-#define W10_FABS(x) SIM_FN(W10FabsFn, 0x100fcb70)((double)(x))
+#define W10_FABS(x) hg_fabs((double)(x))
 
 /* One coordinate of the prediction, as the original's x87 sequence: n = trunc(t); s = n * [0x10111060] (kept in
  * the register, stored as float for the velocity update); p += ((s * [0x10111078] + v) * n); v += (float)s. */
@@ -179,7 +180,7 @@ void __cdecl Sim_1000c1ea(void *unit, float *heading, float *d, float *out)
     if (!(W10_FABS(vx) >= (double)GF(0x10111074)) && !(W10_FABS(vy) >= (double)GF(0x10111074)) &&
         !(W10_FABS(vz) >= (double)GF(0x10111074)))
         return;
-    spd = (float)SIM_FN(W10SqrtFn, 0x100fca04)((double)vx * (double)vx + (double)vy * (double)vy +
+    spd = (float)hg_sqrt((double)vx * (double)vx + (double)vy * (double)vy +
                                                 (double)vz * (double)vz);
     if (W10_Bits(dot) & 0x80000000u)
         spd = -spd;
@@ -259,10 +260,10 @@ int __cdecl Sim_1000b587(void *obj, float a)
         else
             d = a - *(float *)(o + 0x74);
         if (k == 0)
-            w = (float)SIM_FN(W10FmodFn, 0x100fcb30)((double)*(float *)(o + 0x64) + (double)*(float *)(rec + 0x1c) +
+            w = (float)hg_fmod((double)*(float *)(o + 0x64) + (double)*(float *)(rec + 0x1c) +
                                                          (double)*(float *)(o + 0xec) - (double)base, 360.0);
         else
-            w = (float)SIM_FN(W10FmodFn, 0x100fcb30)((double)*(float *)(o + 0x64) + (double)*(float *)(rec + 0x1c) +
+            w = (float)hg_fmod((double)*(float *)(o + 0x64) + (double)*(float *)(rec + 0x1c) +
                                                          (double)*(float *)(o + 0xec) + (double)*(float *)(o + 0x1c6),
                                                      360.0);
         Sim_1000ae6e(rec, &f1, &f2);
@@ -356,9 +357,9 @@ int __cdecl Sim_1000b070(uint8_t *obj, float heading)
             v30 = (float)((double)heading - *(float *)(obj + 0x74));
         base = (double)*(float *)(obj + 0x64) + *(float *)(BYTES(U32(obj, 0x28)) + 0x1c) + *(float *)(obj + 0xec);
         if (kind == 0)
-            v8 = (float)SIM_FN(W10FmodFn, 0x100fcb30)(base - v28, 360.0);
+            v8 = (float)hg_fmod(base - v28, 360.0);
         else
-            v8 = (float)SIM_FN(W10FmodFn, 0x100fcb30)(base + *(float *)(obj + 0x1c6), 360.0);
+            v8 = (float)hg_fmod(base + *(float *)(obj + 0x1c6), 360.0);
         v40 = U32(rec, 0x4fc) == U32(rec, 0x5fb) ? 5.0f : 10.0f;
         if (shoot != 0 && Sim_1000b01f(v30, 1.0f, v8, v40) != 0) {
             Sim_1001403a(obj, (short)U16(obj, 0x1aa));

@@ -1,6 +1,7 @@
 #include "w5y.h"
 #include "../unsorted_1001/w5y.h"
 #include "../util/access.h"
+#include "../libm/hg_math.h"
 
 // FUNCTION: HGSIM 0x1008b8de
 void __cdecl Sim_1008b8de(void)
@@ -15,7 +16,7 @@ void __cdecl Sim_1008b8de(void)
 int __cdecl Sim_1008e211(float a, float b, float *out)
 {
     /* compared at full precision; the original compares st(0) as the callee left it, before any rounding to float */
-    double root = SIM_FN(double(__cdecl *)(double), 0x100fcb70)((double)a);
+    double root = hg_fabs((double)a);
     int small = !(root >= (double)1.0e-7f);
 
     if (!small)

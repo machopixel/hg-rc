@@ -12,6 +12,7 @@
 #include "../unsorted_100d/fns.h"
 #include "../unsorted_100f/w2k.h"
 #include "../unsorted_100f/w6h.h"
+#include "../libm/hg_math.h"
 
 typedef void *(__stdcall *W12HeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t bytes);
 
@@ -146,7 +147,7 @@ int __cdecl Sim_10019fe1(int mode, char *text, int32_t time)
 }
 
 /* The C library fmod of the DLL on doubles (0x100fcb30). */
-#define W12_FMOD SIM_FN(double(__cdecl *)(double, double), 0x100fcb30)
+#define W12_FMOD hg_fmod
 
 // FUNCTION: HGSIM 0x1001a23e
 int __cdecl Sim_1001a23e(int mode, char *text, int32_t time)

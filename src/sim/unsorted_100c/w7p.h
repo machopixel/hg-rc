@@ -9,13 +9,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* Not converted: fabs(double) of the DLL's C library (result in st(0)). */
-#define W7P_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W7P_FABS hg_fabs
 /* Not converted: sprintf(buffer, format, ...) of the DLL's C library. */
 #define W7P_SPRINTF SIM_FN(int(__cdecl *)(char *, const char *, ...), 0x100fc780)
 /* Not converted: (unit, entry from Sim_10033c42, unit + 0x224); 1 when done. */

@@ -11,13 +11,14 @@
 
 #include <stdint.h>
 #include "../simmem.h"
+#include "../libm/hg_math.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
 /* The C library fabs of the DLL (0x100fcb70), on a double; the result comes back in st(0). */
-#define W8W6_FABS SIM_FN(double(__cdecl *)(double), 0x100fcb70)
+#define W8W6_FABS hg_fabs
 /* Resource loader: upper-cases name and kind in place and returns the loaded data or 0 (0x100ba7d5). */
 #define W8W6_CALL_100ba7d5 SIM_FN(uint32_t(__cdecl *)(char *, uint32_t, uint32_t), 0x100ba7d5)
 /* Not converted (0x100f0205 is patched by hooks_*.c): the two blitters of a loaded image to a surface. */
