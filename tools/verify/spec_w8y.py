@@ -121,7 +121,11 @@ STUBS = {
     0x10029b1f: 1, 0x100089c6: 1, 0x100aa64a: 1,
     0x100b43ce: 1, 0x100b48de: 2, 0x100897c7: 1, 0x10028d9f: 3,   # entries
     0x100fe970: 1,                                  # round 25: ftell
+    0x100fd7e0: 2,                                  # fprintf (stream, format): the formatted text is logged
 }
+# C runtime replacement (DECISIONS.md): the C calls these converted functions by name, no longer through the original's
+# address, so their stubs answer the C symbol too
+C_ALIASES = {'Crt_SOpen': 0x101099a0, 'Crt_FPrintf': 0x100fd7e0}
 TEXT_ARGS = {0x101099a0: (0,), 0x100bc280: (1, 2), 0x100fd820: (0, 1), 0x100fdb30: (0,), 0x10048613: (0, 1),
              0x100b6f6a: (0,), 0x100ff860: (0, 1), 0x100b9203: (1,), 0x100bcd61: (0,), 0x100fc780: (1,)}
 ST = {'active': set()}
@@ -392,6 +396,10 @@ def begin(ctx, *stubs):
         cb = _stub_cb(m)
         for addr in STUBS:
             m.raw.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
+        for cname, addr in C_ALIASES.items():
+            if cname in m.syms:
+                m.raw.hook_add(UC_HOOK_CODE, (lambda a: lambda uc, address, size, ud: cb(uc, a, size, ud))(addr),
+                               None, m.syms[cname], m.syms[cname])
         m.raw.hook_add(UC_HOOK_CODE, _code_cb(m), None, CODE, CODE + 16 * NCODE - 1)
     ST['active'] = set(stubs)
     ST['seed'] = r.getrandbits(32)
@@ -1008,6 +1016,13 @@ def e_output(uc, n, raw, esp):
     return [text], len(text)
 
 
+def e_fprintf(uc, n, raw, esp):
+    """fprintf(stream, format, ...): the formatted text is logged (the arguments follow the format)."""
+    words = list(struct.unpack('<8I', bytes(uc.mem_read(esp + 12, 32))))
+    text = _fmt(uc, ustr(uc, raw[1]), words)
+    return [text], len(text)
+
+
 def e_sprintf(uc, n, raw, esp):
     words = list(struct.unpack('<8I', bytes(uc.mem_read(esp + 12, 32))))
     text = _fmt(uc, ustr(uc, raw[1]), words)
@@ -1111,12 +1126,13 @@ def e_fclose(uc, n, raw, esp):
 
 
 CACHE_STUBS = (0x100fef50, 0x100fd820, 0x100fd760, 0x10100fd0, 0x100ff860, 0x100b9203, 0x100fc780, 0x100b9dde,
-               0x100b8f30, 0x100bcd61, 0x10105a60)
+               0x100b8f30, 0x100bcd61, 0x10105a60, 0x100fd7e0)
 
 
 def cache_begin(ctx):
     r = begin(ctx, *CACHE_STUBS)
     ST['effects'][0x10100fd0] = e_output
+    ST['effects'][0x100fd7e0] = e_fprintf
     ST['effects'][0x100fc780] = e_sprintf
     ST['effects'][0x100fd760] = e_fclose
     rets(0x10105a60, 0xffffffff)

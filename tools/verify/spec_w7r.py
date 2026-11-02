@@ -443,8 +443,11 @@ SPECS = [
     dict(name='Crt_ToLower', orig=0x100ff280, c='Crt_ToLower', gen=g_tolower, trials=2000),
     dict(name='Crt_GetEnv', orig=0x10100130, c='Crt_GetEnv', gen=g_getenv, trials=1500),
     dict(name='Sim_101009b0', orig=0x101009b0, c='Sim_101009b0', gen=g_amsg, trials=400),
-    dict(name='Heap_Realloc', orig=0x101003e0, c='Heap_Realloc', gen=g_realloc, trials=3000, api=HEAP_API),
-    dict(name='Heap_Calloc', orig=0x10100580, c='Heap_Calloc', gen=g_calloc, trials=1500, api=HEAP_API),
+    # C runtime replacement (DECISIONS.md, memory): calloc is standard C now (no original to compare with). realloc of a
+    # block of the DLL's own heap still runs the original's code: checked against the original heap.
+    # Recorded exceptions: a NULL block is standard C's malloc now; only real blocks (inside the arena), as free above.
+    dict(name='Heap_Realloc', orig=0x101003e0, c='Heap_Realloc', gen=g_realloc, trials=3000, api=HEAP_API,
+         heap_original=True, skip=lambda a: not ARENA <= a[0] < ARENA + 0x6000),
     dict(name='Fmt_DoubleE', orig=0x10100be0, c='Fmt_DoubleE', gen=g_fmt_e, trials=2500),
     dict(name='Fmt_DoubleF', orig=0x10100d20, c='Fmt_DoubleF', gen=g_fmt_f, trials=2500),
     dict(name='Fmt_DoubleG', orig=0x10100e20, c='Fmt_DoubleG', gen=g_fmt_g, trials=2500),

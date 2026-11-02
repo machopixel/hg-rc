@@ -2,8 +2,11 @@
 #include "../simmem.h"
 #include "../util/access.h"
 #include <stdarg.h>
+#include "../../platform/plat.h"
+#include "w8A.h"
+#include "../unsorted_1010/w7r.h"
+#include "../crt/hg_format.h"
 
-typedef int(__stdcall *W6iFindCloseFn)(uint32_t handle);
 typedef int(__stdcall *W6iFileTimeFn)(const void *in, void *out);
 
 // FUNCTION: HGSIM 0x100fe310
@@ -37,18 +40,38 @@ int __cdecl Sim_100fe310(int mode)
 int __cdecl Sim_100fe450(uint32_t a, uint32_t b, ...)
 {
     va_list rest;
+    char *text;
+    uint32_t size = 0, cap = 0x1000, got;
     int result;
 
+    /* C runtime replacement, formatting: the rest of the stream (read with fread, in the stream's mode) scanned by
+     * SDL_vsscanf. The stream is read to its end, not only as far as the format needs (DECISIONS.md). */
+    text = (char *)Heap_Malloc(cap + 1);
+    if (text == NULL)
+        return -1;
+    while ((got = Crt_FRead(text + size, 1, cap - size, (uint8_t *)(uintptr_t)a)) != 0) {
+        size += got;
+        if (size == cap) {
+            char *more = (char *)Heap_Realloc(text, cap * 2 + 1);
+
+            if (more == NULL)
+                break;
+            text = more;
+            cap *= 2;
+        }
+    }
+    text[size] = 0;
     va_start(rest, b);
-    result = W6I_FN_10103BA0(a, b, (void *)rest);
+    result = size == 0 ? -1 : hg_vscan(text, (const char *)(uintptr_t)b, rest);
     va_end(rest);
+    Heap_FreeBlock((uint32_t)(uintptr_t)text);
     return result;
 }
 
 // FUNCTION: HGSIM 0x100fe6c0
 int __cdecl File_FindClose(uint32_t handle)
 {
-    if (SIM_API(W6iFindCloseFn, 0x10ac55f0)(handle) != 0)
+    if (Plat_FileFindClose(handle) != 0)     /* C runtime replacement, files */
         return 0;
     G32(0x1017e888) = 0x16;
     return -1;

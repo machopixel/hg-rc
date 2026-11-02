@@ -10,7 +10,7 @@ spec.py defines SPECS = [dict(name, orig=0x100b9748, c='Cache_StampNewer',
 args=[...], trials=300, setup=optional)], see tools/verify/README.md.
 The C sources are compiled with i686-w64-mingw32-gcc into one flat image.
 """
-import json, math, os, random, struct, subprocess, sys, tempfile
+import glob, json, math, os, random, re, struct, subprocess, sys, tempfile
 import pefile
 from unicorn import *
 from unicorn.x86_const import *
@@ -33,12 +33,34 @@ V12_DLL = os.environ.get('DT_V12', os.path.join(HERE, '..', '..', '..', 'GameRip
 PAGE = 0x1000
 
 
+def _defining_files(names):
+    """Source files (absolute) whose cached objects define the given symbols (build/w10cache, w10_common.py)."""
+    want, out = {'_' + n for n in names}, []
+    for meta in glob.glob(os.path.join(SRC, '..', 'build', 'w10cache', '*.json')):
+        try:
+            d = json.load(open(meta))
+        except ValueError:
+            continue
+        if want & set(d.get('def', [])):
+            rel = os.path.basename(meta)[:-len('.json')].replace('__', '/')
+            if not rel.endswith('_test.c') and '/w9e_shim' not in rel:
+                out.append(os.path.join(SRC, rel))
+    return sorted(set(out))
+
+
 def build_c(sources, cflags=()):
     """Compiles the sources into one flat PE; returns (sections, symbols)."""
+    # C runtime replacement (src/sim/crt, src/sim/libm): always linked, so specs with a fixed source list find it too
+    # A file with a checker stand-in (tools/verify/stand_in, same name: code that needs SDL3) is replaced by it.
+    have = {os.path.normcase(os.path.abspath(f)) for f in sources}
+    sources = list(sources) + [f for d in ('crt', 'libm') for f in sorted(glob.glob(os.path.join(SRC, 'sim', d, '*.c')))
+                               if os.path.normcase(os.path.abspath(f)) not in have]
+    sources = [os.path.join(HERE, 'stand_in', os.path.basename(f))
+               if os.path.exists(os.path.join(HERE, 'stand_in', os.path.basename(f))) else f for f in sources]
     tmp = tempfile.mkdtemp()
     exe = os.path.join(tmp, 't.exe')
     cmd = ['i686-w64-mingw32-gcc', '-O1', '-ffreestanding', '-fno-builtin', '-nostdlib',
-           '-fno-stack-protector', '-fno-asynchronous-unwind-tables', '-w',
+           '-fno-stack-protector', '-fno-asynchronous-unwind-tables', '-w', '-mno-stack-arg-probe',
            '-I', SRC, '-I', os.path.join(SRC, 'sim', 'mem'), '-I', os.path.join(SRC, 'sim', 'core'),
            # C runtime replacement: OpenLibm (src/sim/libm wrappers), our shim headers first
            '-I', os.path.join(SRC, '..', 'third_party', 'openlibm', 'hg'), '-I', os.path.join(SRC, '..', 'third_party', 'openlibm', 'include'),
@@ -48,7 +70,23 @@ def build_c(sources, cflags=()):
            '-o', exe, os.path.join(HERE, 'rt.c')] + list(cflags) + sources
     open(os.path.join(tmp, 'e.c'), 'w').write('void rt_entry(void){}\n')
     cmd.append(os.path.join(tmp, 'e.c'))
-    subprocess.check_call(cmd)
+    # A spec's fixed source list that later rounds outgrew (a callee moved to a new file): the files defining the
+    # missing symbols are added from the object cache (build/w10cache, w10_common.py) and the link retried.
+    for _ in range(40):
+        r = subprocess.run(cmd, capture_output=True, text=True)
+        missing = sorted(set(re.findall(r"undefined reference to `_?([A-Za-z0-9_]+)'", r.stderr)))
+        if r.returncode == 0 or not missing:
+            break
+        add = _defining_files(missing)
+        if any(n.startswith('Plat_') for n in missing):    # the platform layer's checker stand-in (round 32)
+            add.append(os.path.join(HERE, 'plat_stub.c'))
+        add = [f for f in add if f not in cmd]
+        if not add:
+            break
+        cmd[-1:-1] = add
+    if r.returncode != 0:
+        sys.stderr.write(r.stderr)
+        raise subprocess.CalledProcessError(r.returncode, cmd)
     nm = subprocess.check_output(['i686-w64-mingw32-nm', exe]).decode()
     syms = {}
     for line in nm.splitlines():
@@ -115,6 +153,7 @@ class Machine:
         self.exact_fmod()
         if self.base == 0x10000000:
             self.libm_redirect(self.LIBM10)
+            self.libm_redirect(self.HEAP10, flag='heap_original')
             self.libm_watch(self.MATH10)
         self.libm_watch([syms[n] for n in self.MATH_C if n in syms])
         uc.mem_write(syms['g_simBase'], struct.pack('<I', self.base))
@@ -161,16 +200,26 @@ class Machine:
     LIBM12 = {0x100dd2e9: 'hg_pow', 0x100dae14: 'hg_asin'}     # 1.2's copies (sin / atan: not located in 1.2)
     libm_original = False
 
-    def libm_redirect(self, table, delta=0):
+    def libm_redirect(self, table, delta=0, flag='libm_original'):
         for a, name in table.items():
             if name not in self.syms:
                 continue
             target = self.syms[name]
 
             def cb(uc, address, size, ud, target=target):
-                if not self.libm_original:
+                if not getattr(self, flag):
                     uc.reg_write(UC_X86_REG_EIP, target)
             self.raw.hook_add(UC_HOOK_CODE, cb, None, a + delta, a + delta)
+
+    # ---- C runtime replacement, memory: the C's malloc / free / realloc / calloc are standard C now (crt/hg_heap.c;
+    # rt.c's arena here), the original's run its own heap. The original's entry points jump to the same C functions,
+    # so both runs get the same blocks and a spec compares the code around them. A spec setting HEAP_ORIGINAL = True
+    # runs the original heap instead.
+    HEAP10 = {0x100fef30: 'Heap_Malloc', 0x100fef50: 'Heap_MallocRetry', 0x100fefa0: 'Heap_AllocBlock',
+              0x100fefe0: 'Heap_FreeBlock', 0x101003e0: 'Heap_Realloc', 0x10100580: 'Heap_Calloc'}
+    HEAP12 = {0x100dd4f0: 'Heap_Malloc', 0x100dd510: 'Heap_MallocRetry', 0x100dd560: 'Heap_AllocBlock',
+              0x100dd5a0: 'Heap_FreeBlock', 0x100de8a0: 'Heap_Realloc', 0x100dea40: 'Heap_Calloc'}   # 1.2's copies
+    heap_original = False
 
     # ---- The original's maths routines write errno (0x1017e888: EDOM / ERANGE for NaN, infinite or out-of-range
     # arguments) and their own scratch (0x1017e900..0x1017e97f); OpenLibm writes neither, and nothing outside the C
@@ -238,6 +287,7 @@ class Machine:
         self.install_import_stubs(pe12, STUB_BASE12)
         self.exact_fmod(BASE12 + self.FMOD12 - 0x10000000)
         self.libm_redirect(self.LIBM12, BASE12 - 0x10000000)
+        self.libm_redirect(self.HEAP12, BASE12 - 0x10000000, flag='heap_original')
         self.libm_watch([a + BASE12 - 0x10000000 for a in self.MATH12])
 
     def _api_hook(self, uc, addr, size, ud):
@@ -417,8 +467,11 @@ def run_spec(m, spec, seed=1):
     for t in range(n):
         m.reset_to_snap0()
         m.libm_ran = False
+        m.heap_original = spec.get('heap_original', m.heap_spec_original)
         ctx = Ctx(m, rng)
         args = spec['gen'](ctx) if 'gen' in spec else [g(ctx) if callable(g) else g for g in spec['args']]
+        if 'skip' in spec and spec['skip'](args):     # spec 'skip'(args): inputs a recorded exception leaves out
+            continue
         d0 = {pg for pg in m.dirty if pg in m.pagemap}
         pre_pages = {pg: m.page_now(pg) for pg in d0}
         pre_full = m.full_now()
@@ -613,6 +666,7 @@ def main():
         print('%s at 0x%x' % (os.environ['DT_SYM'], syms[os.environ['DT_SYM']]))
     m = Machine(dll, csecs, syms, V12_DLL if any('orig12' in sp for sp in specs) else None)
     m.libm_original = bool(ns.get('LIBM_ORIGINAL'))
+    m.heap_spec_original = m.heap_original = bool(ns.get('HEAP_ORIGINAL'))   # a spec entry may set 'heap_original'
     for sp in specs:
         for a in sp.get('nop', []):
             m.uc.mem_write(a, b'\x90')

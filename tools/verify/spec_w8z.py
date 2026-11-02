@@ -1112,7 +1112,8 @@ STUBS_2DDA_DEFAULT = STUBS[0x1002dda9].pol
 STUBS[0x1002dda9].pol = p_2dda_dispatch
 
 SPECS = [
-    spec('Crt_SPrintf', 0x100fc780, g_sprintf, 400),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # spec('Crt_SPrintf', 0x100fc780, g_sprintf, 400),
     spec('Crt_FClose', 0x100fd760, g_fclose, 400),
     spec('Crt_FSOpen', 0x100fd820, g_fsopen, 300),
     spec('Sim_100c0670', 0x100c0670, g_unit_key, 1000, void=True),

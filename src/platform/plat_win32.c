@@ -56,15 +56,13 @@ uint32_t Plat_CurrentDir(char *out, uint32_t size)
     return (uint32_t)GetCurrentDirectoryA(size, out);
 }
 
-uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def)
-{
-    return (uint32_t)GetPrivateProfileIntA(section, key, (INT)def, path);
-}
+/* Plat_IniInt / Plat_IniString: plat_ini.c (our own reader, every system). Files: plat_file.c. */
 
-uint32_t Plat_IniString(const char *path, const char *section, const char *key, const char *def, char *out,
-                        uint32_t size)
+uint32_t Plat_ProgramPath(char *out, uint32_t size)
 {
-    return (uint32_t)GetPrivateProfileStringA(section, key, def, out, size, path);
+    DWORD n = GetModuleFileNameA(NULL, out, size);
+
+    return n < size ? (uint32_t)n : 0;
 }
 
 void *Plat_LoadLibrary(const char *name)

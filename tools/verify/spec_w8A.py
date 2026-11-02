@@ -782,8 +782,10 @@ SPECS = [
     dict(name='Crt_FWrite', orig=0x100febc0, c='Crt_FWrite', gen=g_fwrite, trials=1200, api=API),
     dict(name='Crt_FSeek', orig=0x100feb20, c='Crt_FSeek', gen=g_fseek, trials=600, api=API),
     dict(name='Crt_FlushBuf', orig=0x100ff030, c='Crt_FlushBuf', gen=g_flsbuf, trials=1500, api=API),
-    dict(name='Crt_VSNPrintf', orig=0x100fe3e0, c='Crt_VSNPrintf', gen=g_vsnprintf, trials=500, api=API),
-    dict(name='Crt_VSPrintf', orig=0x101006c0, c='Crt_VSPrintf', gen=g_vsprintf, trials=400, api=API),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # dict(name='Crt_VSNPrintf', orig=0x100fe3e0, c='Crt_VSNPrintf', gen=g_vsnprintf, trials=500, api=API),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # dict(name='Crt_VSPrintf', orig=0x101006c0, c='Crt_VSPrintf', gen=g_vsprintf, trials=400, api=API),
     dict(name='Crt_StrNLen', orig=0x101055e0, c='Crt_StrNLen', gen=g_strnlen, trials=400, api=API),
     dict(name='Crt_WcsNCount', orig=0x1010c6a0, c='Crt_WcsNCount', gen=g_wcsncnt, trials=400, api=API),
     dict(name='Crt_ForceDecPoint', orig=0x10100a90, c='Crt_ForceDecPoint', gen=g_forcdecpt, trials=600, api=API,

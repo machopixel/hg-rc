@@ -1,3 +1,4 @@
+#include <string.h>
 #include "w2e.h"
 
 // FUNCTION: HGSIM 0x100fc690
@@ -39,13 +40,7 @@ uint32_t __cdecl Str_Length(const char *s)
 // FUNCTION: HGSIM 0x100fcab0
 void *__cdecl Mem_Fill(void *dst, int c, uint32_t n)
 {
-    uint8_t *p = (uint8_t *)dst;
-
-    while (n != 0) {
-        *p++ = (uint8_t)c;
-        n--;
-    }
-    return dst;
+    return memset(dst, c, n);   /* C runtime replacement: standard C */
 }
 
 // FUNCTION: HGSIM 0x100fcd30
@@ -66,23 +61,7 @@ int __cdecl Str_Compare(const char *a, const char *b)
 // FUNCTION: HGSIM 0x100fcdc0
 void *__cdecl Mem_Move(void *dst, const void *src, uint32_t n)
 {
-    uint8_t *d = (uint8_t *)dst;
-    const uint8_t *s = (const uint8_t *)src;
-
-    if (d > s && d < s + n) {
-        d += n;
-        s += n;
-        while (n != 0) {
-            *--d = *--s;
-            n--;
-        }
-    } else {
-        while (n != 0) {
-            *d++ = *s++;
-            n--;
-        }
-    }
-    return dst;
+    return memmove(dst, src, n);    /* C runtime replacement: standard C */
 }
 
 // FUNCTION: HGSIM 0x100fe7f0

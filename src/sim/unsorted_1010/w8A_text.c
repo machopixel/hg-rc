@@ -5,6 +5,7 @@
 #include "../unsorted_100f/w7r.h"
 #include "../unsorted_100f/w6h.h"
 #include "../util/access.h"
+#include "../crt/hg_format.h"
 
 #define ADDR(p) ((uint32_t)(uintptr_t)(p))
 
@@ -42,20 +43,8 @@ uint32_t __cdecl Crt_WcsNCount(const uint16_t *s, uint32_t max)
 // FUNCTION: HGSIM 0x101006c0
 int32_t __cdecl Crt_VSPrintf(char *buf, const char *fmt, void *args)
 {
-    uint32_t file[8] = {0}; /* string stream: next byte, room, buffer, flags (0x42) */
-    int32_t n;
-
-    file[2] = ADDR(buf);
-    file[0] = ADDR(buf);
-    file[3] = 0x42;
-    file[1] = 0x7fffffff;
-    n = W8A_FN_10100fd0(file, fmt, args);
-    file[1]--;
-    if ((int32_t)file[1] >= 0)
-        *(char *)(uintptr_t)file[0] = 0;
-    else
-        Crt_FlushBuf(0, file);
-    return n;
+    /* C runtime replacement, formatting: SDL3's formatter (crt/hg_format.h), unbounded as the original */
+    return hg_vformat(buf, 0x7fffffff, fmt, (va_list)args);
 }
 
 // FUNCTION: HGSIM 0x10100a90

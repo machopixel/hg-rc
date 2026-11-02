@@ -932,7 +932,8 @@ SPECS = [
     dict(name='Sim_10053a4f', orig=0x10053a4f, c='Sim_10053a4f', gen=g_channel(0x6c, 0x5c), trials=600),
     dict(name='Input_ReadLine', orig=0x10053b64, c='Input_ReadLine', gen=g_3b64, trials=600),
     dict(name='Input_AddAnalogSink', orig=0x10053c40, c='Input_AddAnalogSink', gen=g_3c40, trials=500),
-    dict(name='Joy_GetOemName', orig=0x10057186, c='Joy_GetOemName', gen=g_57186, trials=500, api=API_REG),
+    # superseded (C runtime replacement, the rest, DECISIONS.md): no joystick name, the registry is not read
+    # dict(name='Joy_GetOemName', orig=0x10057186, c='Joy_GetOemName', gen=g_57186, trials=500, api=API_REG),
     dict(name='Input_QueueKey', orig=0x10057c1a, c='Input_QueueKey', gen=g_57c1a_k, trials=600, void=True,
          api=API_KEY),
     dict(name='Sim_1005a91a', orig=0x1005a91a, c='Sim_1005a91a', gen=g_5a91a, trials=500, void=True),

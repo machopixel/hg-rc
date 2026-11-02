@@ -116,6 +116,10 @@ def install(m):
 
     for a in STUBS:
         m.raw.hook_add(UC_HOOK_CODE, stub_cb, None, a, a)
+    # C runtime replacement: the C calls _sopen by name now; its stub answers that symbol too
+    if 0x101099a0 in STUBS and 'Crt_SOpen' in m.syms:
+        m.raw.hook_add(UC_HOOK_CODE, lambda uc, address, size, ud: stub_cb(uc, 0x101099a0, size, ud), None,
+                       m.syms['Crt_SOpen'], m.syms['Crt_SOpen'])
 
     def cb_cb(uc, address, size, ud):
         name, k, _ = CB[address]

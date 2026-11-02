@@ -1,12 +1,9 @@
 #include "w6j.h"
 #include "w2k.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
 
-typedef int(__stdcall *W6jFlushFileBuffersFn)(uint32_t handle);
-typedef uint32_t(__stdcall *W6jGetLastErrorFn)(void);
 
-#define IAT_FLUSHFILEBUFFERS 0x10ac5688u
-#define IAT_GETLASTERROR 0x10ac5600u
 
 // FUNCTION: HGSIM 0x101048e0
 int __cdecl Sim_101048e0(int ch)
@@ -116,10 +113,10 @@ int __cdecl Sim_101056f0(uint32_t fd)
     if (fd < G32(0x10ac385c)) {
         block = G32(0x10ac3720u + (uint32_t)((int32_t)fd >> 5) * 4u);
         if ((U8(block, (fd & 0x1fu) * 8u + 4u) & 1) != 0) {
-            if (SIM_API(W6jFlushFileBuffersFn, IAT_FLUSHFILEBUFFERS)(W6J_OSHANDLE(fd)) != 0)
+            if (Plat_FileFlush(W6J_OSHANDLE(fd)) != 0)
                 err = 0;
             else
-                err = SIM_API(W6jGetLastErrorFn, IAT_GETLASTERROR)();
+                err = Plat_FileLastError();     /* C runtime replacement, files */
             if (err == 0)
                 return 0;
             G32(0x1017e88c) = err;

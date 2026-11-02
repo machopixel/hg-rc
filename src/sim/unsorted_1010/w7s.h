@@ -20,8 +20,6 @@
 #endif
 
 /* ---- unconverted helpers, called through their original address ---- */
-/* 0x101099a0: (file name, open flags, share flag, 0x1a4) -> handle number, negative on failure. */
-#define W7S_FN_101099a0 SIM_FN(int32_t (__cdecl *)(const char *, uint32_t, uint32_t, uint32_t), 0x101099a0)
 /* 0x10100580: (2, count) -> block or 0. */
 #define W7S_FN_10100580 SIM_FN(void *(__cdecl *)(uint32_t, uint32_t), 0x10100580)
 /* 0x101055e0: (text, max) -> length of the text, at most max. */

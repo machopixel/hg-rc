@@ -6,6 +6,7 @@
 #include "w6k.h"
 #include "../unsorted_100f/w6i.h"
 #include "../util/access.h"
+#include "../crt/hg_heap.h"
 
 typedef uint32_t(__stdcall *W7rHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
 typedef uint32_t(__stdcall *W7rHeapReAllocFn)(uint32_t heap, uint32_t flags, uint32_t block, uint32_t size);
@@ -32,6 +33,9 @@ void *__cdecl Heap_Realloc(void *block, uint32_t size)
 
     if (p == 0)
         return Heap_Malloc(size);
+    if (hg_heap_owns(block))
+        return hg_realloc(block, size);     /* C runtime replacement: standard C (crt/hg_heap.h) */
+    /* a block the DLL's own C runtime made in its heap (start-up) is resized there, as the original */
     if (size == 0) {
         Heap_FreeBlock(p);
         return 0;
@@ -71,25 +75,5 @@ void *__cdecl Heap_Realloc(void *block, uint32_t size)
 // FUNCTION: HGSIM 0x10100580
 void *__cdecl Heap_Calloc(uint32_t count, uint32_t size)
 {
-    uint32_t n = count * size;
-    uint32_t q;
-
-    if (n <= 0xffffffe0u)
-        n = n != 0 ? (n + 0xf) & ~0xfu : 0x10;
-    for (;;) {
-        q = 0;
-        if (n <= 0xffffffe0u) {
-            if (n <= W7R_SMALL_LIMIT) {
-                q = W7R_FN_101069C0(n >> 4);
-                if (q != 0)
-                    memset((void *)(uintptr_t)q, 0, n);
-            }
-            if (q == 0)
-                q = SIM_API(W7rHeapAllocFn, 0x10ac5658)(W7R_HEAP, 8, n);
-        }
-        if (q != 0 || G32(0x1017e968) == 0)
-            return (void *)(uintptr_t)q;
-        if (Sim_10106590(n) == 0)
-            return 0;
-    }
+    return hg_calloc(count, size);  /* C runtime replacement: standard C (crt/hg_heap.h) */
 }

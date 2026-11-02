@@ -13,10 +13,8 @@
 #include "../unsorted_100f/w6i.h"
 #include "../util/access.h"
 #include "../view/view.h"
+#include "../../platform/plat.h"
 
-typedef uint32_t(__stdcall *W8w7FindFirstFileAFn)(const char *name, void *data);
-typedef int(__stdcall *W8w7FindNextFileAFn)(uint32_t handle, void *data);
-typedef int(__stdcall *W8w7FindCloseFn)(uint32_t handle);
 
 /*
  * (value << 16) / divisor with the original's 64-bit signed division (cdq, shld, shl, idiv), truncated toward
@@ -287,20 +285,21 @@ void __cdecl Sim_1007e29a(char *name1, char *name2, const char *text, int32_t dx
 // FUNCTION: HGSIM 0x1007e66c
 void __cdecl Sim_1007e66c(void)
 {
-    /* a WIN32_FIND_DATAA (0x140 bytes, as the original's frame): FindFirstFileA / FindNextFileA write all of it */
+    /* a WIN32_FIND_DATAA (0x140 bytes, as the original's frame), from the platform's folder listing (C runtime
+     * replacement, files: no short name, so the long one is used) */
     uint8_t found[0x140];
     char *path = (char *)GBYTES(0x1017aeb0);
     signed char drive = 0;
     uint32_t handle;
 
     W8W7_SPRINTF(path, (const char *)GBYTES(0x10149df8), GBYTES(0x10149df0));
-    handle = SIM_API(W8w7FindFirstFileAFn, 0x10ac55f8)(path, found);
+    handle = Plat_FileFindFirst(path, found);
     if (handle == 0xffffffffu) {
         drive = (signed char)W8W7_CALL_10099510();
         if (drive == 0)
             return;
         W8W7_SPRINTF(path, (const char *)GBYTES(0x10149e0c), (int)drive, GBYTES(0x10149e04));
-        handle = SIM_API(W8w7FindFirstFileAFn, 0x10ac55f8)(path, found);
+        handle = Plat_FileFindFirst(path, found);
         if (handle == 0xffffffffu)
             return;
     }
@@ -309,8 +308,8 @@ void __cdecl Sim_1007e66c(void)
             ProjFile_FindEntry((const char *)found + 0x2c, 1);
         else
             ProjFile_FindEntry((const char *)found + 0x130, 1);
-    } while (SIM_API(W8w7FindNextFileAFn, 0x10ac55f4)(handle, found) != 0);
-    SIM_API(W8w7FindCloseFn, 0x10ac55f0)(handle);
+    } while (Plat_FileFindNext(handle, found) != 0);
+    Plat_FileFindClose(handle);
     if (drive != 0)
         W8W7_SPRINTF(path, (const char *)GBYTES(0x10149e24), (int)drive, GBYTES(0x10149e1c));
     else

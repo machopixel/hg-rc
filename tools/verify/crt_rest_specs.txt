@@ -1,0 +1,7 @@
+# C runtime replacement, the rest: the spec entries whose C reaches crt/hg_rest.c (static call graph), 2026-11-02.
+# Run: python -I tools/verify/run_specs.py tools/verify/crt_rest_specs.txt buildlogs/crt_rest
+tools/verify/spec_w6i.py	Proc_Exit Proc_ExitQuick Sim_100ff3f0 Sim_100ff400 Proc_DoExit Sim_100ff4e0
+tools/verify/spec_w7o.py	Cd_PollDisc
+tools/verify/spec_w7r.py	Crt_GetEnv
+tools/verify/spec_w8A.py	Crt_TzSet Crt_Time Crt_Abort
+tools/verify/spec_w8v.py	Log_Open Log_Close

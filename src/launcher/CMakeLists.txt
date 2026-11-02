@@ -748,6 +748,9 @@ add_executable(HG WIN32
     ../sim/gfx/w37_encode.c
     ../sim/gfx/w37_line.c
     ../sim/gfx/w37_rotate.c
+    ../sim/crt/hg_heap.c
+    ../sim/crt/hg_format.c
+    ../sim/crt/hg_rest.c
     ../sim/libm/olm_e_sqrt.c
     ../sim/libm/olm_e_fmod.c
     ../sim/libm/olm_s_fabs.c
@@ -785,6 +788,9 @@ add_executable(HG WIN32
     ../platform/input_sdl3.c
     ../platform/audio_sdl3.c
     ../platform/music.c
+    ../platform/plat_file.c
+    ../platform/plat_ini.c
+    ../platform/plat_dialog.c
     ../platform/plat_win32.c
     ../platform/display_sdl3.c
 )

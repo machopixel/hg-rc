@@ -5,6 +5,7 @@
 #include "w7q.h"
 #include "../unsorted_1010/w6j.h"
 #include "../unsorted_1010/w7s.h"
+#include "../crt/hg_format.h"
 
 /* The string stream record of sprintf; only the first four fields are set, like the original. */
 struct W8zStrStream {
@@ -21,22 +22,13 @@ struct W8zStrStream {
 // FUNCTION: HGSIM 0x100fc780
 int __cdecl Crt_SPrintf(char *buf, const char *format, ...)
 {
-    struct W8zStrStream str;
     va_list args;
     int written;
 
-    str.base = buf;
-    str.ptr = buf;
-    str.flag = 0x42;
-    str.cnt = 0x7fffffff;
+    /* C runtime replacement, formatting: SDL3's formatter (crt/hg_format.h), unbounded as the original */
     va_start(args, format);
-    written = W8Z_CALL_10100fd0(&str, format, (void *)args);
+    written = hg_vformat(buf, 0x7fffffff, format, args);
     va_end(args);
-    str.cnt--;
-    if (str.cnt < 0)
-        W8Z_CALL_100ff030(0, &str);
-    else
-        *str.ptr = 0;
     return written;
 }
 

@@ -1,0 +1,137 @@
+# C runtime replacement, memory: the spec entries whose C reaches the standard-C heap (crt/hg_heap.c) or Mem_Fill /
+# Mem_Move (static call graph), 2026-11-02. Run: python -I tools/verify/run_specs.py tools/verify/crt_mem_specs.txt buildlogs/crt_mem
+tools/verify/spec_net_da_v12.py	Sim_1003f3f8_v12
+tools/verify/spec_net_handover_v12.py	Sim_1004084a_v12
+tools/verify/spec_net_loop_v12.py	Net_ProcessMessages_v12
+tools/verify/spec_net_nr_v12.py	Sim_10040eb3_v12
+tools/verify/spec_net_rg_v12.py	Sim_10040af8_v12
+tools/verify/spec_net_start_v12.py	Sim_1003dc19_v12
+tools/verify/spec_net_update_v12.py	Net_UpdatePlayers_v12
+tools/verify/spec_r8b_h1.py	Mat3x4_Multiply
+tools/verify/spec_r8b_h3.py	Sim_100d867b Sim_100d8936
+tools/verify/spec_r8b_h6.py	Sim_10031ed3 Sim_10031ed3_edge
+tools/verify/spec_r8b_h7.py	Sim_10061ecd Sim_10061f8e
+tools/verify/spec_w10_1000b070.py	Sim_1000b070
+tools/verify/spec_w10_1000b587.py	Sim_1000b587
+tools/verify/spec_w10_1000d34d.py	Sim_1000d34d
+tools/verify/spec_w10_10011c28.py	Sim_10011c28
+tools/verify/spec_w10_1001484e.py	Sim_1001484e
+tools/verify/spec_w10_100225c7.py	Sim_100225c7
+tools/verify/spec_w10_100255de.py	Sim_100255de
+tools/verify/spec_w10_10026057.py	Sim_10026057
+tools/verify/spec_w10_1002bca0.py	Sim_1002bca0
+tools/verify/spec_w10_10030c87.py	Sim_10030c87
+tools/verify/spec_w10_10031447.py	Sim_10031447
+tools/verify/spec_w10_100357db.py	Sim_100357db
+tools/verify/spec_w10_1003aecb.py	Sim_1003aecb
+tools/verify/spec_w10_1003dc19.py	Sim_1003dc19
+tools/verify/spec_w10_1004f257.py	Sim_1004f257
+tools/verify/spec_w10_1004f257_v12.py	Sim_1004f257_v12
+tools/verify/spec_w10_10059a34.py	Sim_10059a34
+tools/verify/spec_w10_1006ad98.py	Sim_1006ad98
+tools/verify/spec_w10_1006ad98_v12.py	Sim_1006ad98_v12
+tools/verify/spec_w10_1006b52f.py	Sim_1006b52f
+tools/verify/spec_w10_1006b52f_v12.py	Sim_1006b52f_v12
+tools/verify/spec_w10_1006c161.py	Sim_1006c161
+tools/verify/spec_w10_1006da46.py	Sim_1006da46
+tools/verify/spec_w10_1007a955.py	Sim_1007a955
+tools/verify/spec_w10_10096ac3.py	Sim_10096ac3
+tools/verify/spec_w10_100d4590.py	Sim_100d4590
+tools/verify/spec_w10_100d4f71.py	Sim_100d4f71
+tools/verify/spec_w10_100d4f71_v12.py	Sim_100d4f71_v12
+tools/verify/spec_w10_100d5446.py	Sim_100d5446
+tools/verify/spec_w10_100d5446_v12.py	Sim_100d5446_v12
+tools/verify/spec_w10_fireloop_v12.py	Sim_100d4590_v12
+tools/verify/spec_w11_1005573d.py	Sim_1005573d
+tools/verify/spec_w11_1005f6c6.py	Sim_1005f6c6
+tools/verify/spec_w11_100b3b16.py	Sim_100b3b16
+tools/verify/spec_w12_10064364.py	Sim_10064364
+tools/verify/spec_w12_100c2ae5.py	Sim_100c2ae5
+tools/verify/spec_w12_100e2aa3.py	Sim_100e2aa3
+tools/verify/spec_w13_100139ff.py	Sim_100139ff
+tools/verify/spec_w13_100782a9.py	Sim_100782a9
+tools/verify/spec_w13_100be0f0.py	Sim_100be0f0
+tools/verify/spec_w14_1004954e.py	Sim_1004954e
+tools/verify/spec_w14_1004954e_v12.py	Sim_1004954e_v12
+tools/verify/spec_w14_10070eb5.py	Sim_10070eb5
+tools/verify/spec_w14_1009d200.py	Sim_1009d200
+tools/verify/spec_w14_100b48de.py	Sim_100b48de
+tools/verify/spec_w14_100db78b.py	Sim_100db78b
+tools/verify/spec_w14_spawn_v12.py	Sim_1009d200_v12
+tools/verify/spec_w14_unit_v12.py	Sim_10070eb5_v12
+tools/verify/spec_w15_100dcc12.py	Sim_100dcc12
+tools/verify/spec_w15_world_v12.py	Sim_100dcc12_v12
+tools/verify/spec_w16_100663c0.py	Sim_100663c0
+tools/verify/spec_w16_1006e22c.py	Sim_1006e22c
+tools/verify/spec_w16_move_v12.py	Sim_1006e22c_v12
+tools/verify/spec_w17_1006788c.py	Sim_1006788c
+tools/verify/spec_w17_100680dd.py	Sim_100680dd
+tools/verify/spec_w18_1005ab44.py	Sim_1005ab44
+tools/verify/spec_w18_100a65e7.py	Sim_100a65e7
+tools/verify/spec_w20_10040af8.py	Sim_10040af8
+tools/verify/spec_w21_wrap_ccc60.py	Sim_100ccc60
+tools/verify/spec_w23_100cde94.py	Sim_100cde94
+tools/verify/spec_w23_100cde94_v12.py	Sim_100cde94_v12
+tools/verify/spec_w24_1000aa9e.py	Sim_1000aa9e
+tools/verify/spec_w24_1007581a.py	Sim_1007581a
+tools/verify/spec_w26_10021e8c.py	Sim_10021e8c
+tools/verify/spec_w28_anim.py	Sim_100b82a0
+tools/verify/spec_w28_error.py	Sim_100bc280
+tools/verify/spec_w29_100232d7.py	Sim_100232d7
+tools/verify/spec_w29_100232d7_v12.py	Sim_100232d7_v12
+tools/verify/spec_w2e.py	Mono_Clear Mono_Enable Sim_1001570f Sim_10017852 Sim_1001f6c0 Sim_100c4699 Sim_100ca417 Sim_10021ac0 Sim_10025d93 Sim_10028571 Sim_1002858a Sim_10028810 Sim_10033c24 Sim_10038ad5 Sim_10039725 Sim_10041d01 Sim_10043f10 Sim_10044255 Sim_10060209 Sim_100787f4 Sim_10078857 Sim_1009cfbd Sim_100bea42 Sim_100d7fc0 Sim_100e2837
+tools/verify/spec_w2e_hgcar_v12.py	Sim_10025d93_v12 Sim_10021ac0_v12
+tools/verify/spec_w2e_mount_v12.py	Sim_10038ad5_v12
+tools/verify/spec_w32_debris.py	Sim_10029421_v12
+tools/verify/spec_w32_explode.py	Sim12_10084362 Sim12_10082556 Sim12_100805dc Sim12_1008514d Sim12_1007f8a9 Sim12_1007f19f Sim12_1007e25c Sim12_10086007 Sim12_1007c1a1 Sim12_1007d342
+tools/verify/spec_w32_footstep.py	Sim12_1007e25c Sim12_10086007
+tools/verify/spec_w32_setup.py	Sim_100908b3_v12
+tools/verify/spec_w34_rating.py	Score_RecordKill
+tools/verify/spec_w35_menu_v12.py	Sim_10048f02_v12
+tools/verify/spec_w3p.py	Sim_1003fcdc Sim_1003ffe9 Sim_10040376 Sim_10040564 Sim_1004084a Sim_100408bd Sim_100409be Sim_10040ab8 Sim_10040eb3 Sim_10040f5f Sim_10041203 Sim_100412cb Sim_100413c7 Sim_100415eb Sim_1004185b Sim_10041888 Sim_100418e3 Sim_10041997 Sim_100419e9 Sim_10041a47 Sim_10041c00 Sim_100420a0
+tools/verify/spec_w3r.py	Mat3x4_Multiply Sim_100d867b Sim_100d8936
+tools/verify/spec_w3s.py	Sim_10044420
+tools/verify/spec_w4u.py	Sim_1003913b Sim_1005b026 Sim_1005b14e
+tools/verify/spec_w4v.py	Sim_1000e520 Sim_10038fac Sim_10048112 Sim_10056dfa Sim_100da45c
+tools/verify/spec_w4w.py	Sim_10008cbc Sim_10008f1c Sim_1003184b Sim_1003edda Sim_10074b80
+tools/verify/spec_w5a.py	Sim_10015a63
+tools/verify/spec_w5b.py	Sim_10016d83 Sim_100a9dc3
+tools/verify/spec_w5c.py	Sim_1002fad6 Sim_1002fb3d
+tools/verify/spec_w5y.py	Sim_1001f415
+tools/verify/spec_w5z.py	Sim_10010f70
+tools/verify/spec_w6d.py	Sim_1002a1f2 Sim_10031ed3
+tools/verify/spec_w6e.py	Sound_Init Sim_10061ecd Sim_10061f8e
+tools/verify/spec_w6f.py	Sim_100941c3 Sim_100949e8 Sim_10094fcb Sim_10095e0a
+tools/verify/spec_w6g.py	Sim_100a9830 Sim_100a9a1a Sim_100aa8cb Sim_100aaf32
+tools/verify/spec_w6h.py	Sim_100d36f5 Sim_100da098 Sim_100dac0a
+tools/verify/spec_w6i.py	Heap_Malloc Heap_AllocBlock Heap_FreeBlock
+tools/verify/spec_w7l.py	Sim_1001150d Sim_10028d9f Sim_1002dda9 Sim_1002e362 Sim_1003129f
+tools/verify/spec_w7m.py	Gif_Begin Sim_10033aeb Sim_10033eb3 Sim_100410ff Sim_100386d5
+tools/verify/spec_w7n.py	Sim_10083530
+tools/verify/spec_w7o.py	Sim_100a9f6e Sim_100aa64a Sim_100aaa08 Sim_100aafe4 Sim_100a4c45 File_OpenRead
+tools/verify/spec_w7p.py	FileRec_OpenWrite FileRec_OpenAppend FileRec_OpenUpdate FileRec_WriteScrambled FileRec_Close Sim_100b39c3 Sim_100b9675 Sim_100bc451 Sim_100bd134 Sim_100bd1f3 PtrArray_Create PtrArray_CreateSized PtrArray_Remove Sim_100c292c Sim_100c4498 Sim_100c6e27
+tools/verify/spec_w7q.py	Heap_MallocRetry Sim_100da14c
+tools/verify/spec_w7r.py	Heap_Realloc Heap_Calloc
+tools/verify/spec_w7s.py	Sim_10104db0 Sim_10104fd0 Sim_101053c0 Sim_10105db0 Sim_10107910 Sim_10107990 Sim_10107a80 Sim_10108220 Sim_1010afa0 Sim_1010b530 Crt_StrUpper
+tools/verify/spec_w8A.py	Crt_TzSet Crt_SetEnv
+tools/verify/spec_w8t.py	Sim_1000a6f0 Sim_1000d0e2 Sim_10011093 Sim_10011681 Sim_100117f8 Sim_100123bf Sim_1001457f Sim_10015630 Sim_1001db6f Sim_1001f790 Sim_10020256 Sim_1002528f Sim_100272cb Sim_100273a1
+tools/verify/spec_w8t_actions_v12.py	Sim_10011681_v12
+tools/verify/spec_w8u.py	Sim_10029067 Sim_100291e3 Sim_10029421 Sim_1002dfbb Sim_10031ce0 Display_SetMode Sim_10038913 Sim_100445d6 Sim_100451a2 Sim_10046fe5
+tools/verify/spec_w8v.py	Screenshot_WriteTga FileRec_CopyFromFile FileRec_CopyToFile Chat_HandleKey
+tools/verify/spec_w8w.py	Sim_1006419e Sim_1006abf6 Sim_1006d911 Sim_1007c89b
+tools/verify/spec_w8x.py	Sim_100908b3 Sim_10092f9d
+tools/verify/spec_w8x_voodoo_v12.py	Sim_100a4c45
+tools/verify/spec_w8y.py	Sim_100aa016 Sim_100b5502 Sim_100b69d0 Sim_100b6ba0 Sim_100b6e5e Sim_100b979f Sim_100b9b3f Sim_100b9eab Sim_100b9fa5 Sim_100ba304 Sim_100baff4 Sim_100ba7d5 Sim_100ba7d5_patch Sim_100bc610 Sim_100bca49 Sim_100bcd61 Sim_100ab054 Sim_100abcb3
+tools/verify/spec_w8y_reader_v12.py	Sim_100ba304_v12 Sim_100ba304_v12_zero
+tools/verify/spec_w8z.py	Crt_FClose Crt_FSOpen Sim_100c1049 Sim_100c1169 Sim_100c12d7 Sim_100c18c8 Sim_100c2279 Sim_100c45dc Sim_100c398d Sim_100c7deb Sim_100d6d6a Sim_100da805 Sim_100daa08
+tools/verify/spec_w9b.py	Net_ProcessMessages Net_SendStateMessage Net_UpdatePlayers Score_RecordKill
+tools/verify/spec_w9c.py	Sim_1002a2f6 Sim_1009d90e Sim_100ccc60 Sim_10035aec Plugin_ProbeList Cache_LoadItem
+tools/verify/spec_w9d.py	Sim_10016632 CmdLine_Parse Sim_100bfa33
+tools/verify/spec_w9d_select_v12.py	Sim_10016632_v12
+tools/verify/spec_w9e.py	Sim_100b43ce Sim_100b9203 Sim_10034ec9
+tools/verify/spec_w9f.py	Sim_10016117 Plugin_LoadList Screenshot_Save GameKey_LoadMap Sim_1007b1d0 Sim_1007b5db Sim_1007c42f Text_FormatNumbered
+tools/verify/spec_w9f_won_v12.py	Sim_1007c42f_v12
+tools/verify/spec_w9g.py	Sim_10016de7 Gif_Finish Lang_ReadIni Sim_10086ebf
+tools/verify/spec_w9h.py	Sim_10017263 Sim_100352d5 Sim_10042a11 Sim_100527fa Sim_100b7430
+tools/verify/spec_w9h_group_v12.py	Sim_10017263_v12
+tools/verify/spec_w9h_view_clear_v12.py	Sim_100352d5_v12

@@ -4,6 +4,7 @@
 #include "w6k.h"
 #include "w2f.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
 
 #define ADDR(p) ((uint32_t)(uintptr_t)(p))
 #define ERRNO G32(0x1017e888)
@@ -14,17 +15,10 @@
 #define SLOTOFF(fh) (((fh) & 0x1fu) * 8u)
 #define SLOT(fh) (G32(BLOCKP(fh)) + SLOTOFF(fh))
 
-typedef uint32_t(__stdcall *W8aSetFilePointerFn)(uint32_t handle, int32_t dist, int32_t *high, uint32_t method);
-typedef uint32_t(__stdcall *W8aGetLastErrorFn)(void);
-typedef int32_t(__stdcall *W8aWriteFileFn)(uint32_t handle, const void *data, uint32_t size, uint32_t *done,
-                                           void *overlapped);
-typedef int32_t(__stdcall *W8aReadFileFn)(uint32_t handle, void *data, uint32_t size, uint32_t *done,
-                                          void *overlapped);
-typedef int32_t(__stdcall *W8aHandleFn)(uint32_t handle);
-
-#define GET_LAST_ERROR SIM_API(W8aGetLastErrorFn, 0x10ac5600)
-#define WRITE_FILE SIM_API(W8aWriteFileFn, 0x10ac568c)
-#define READ_FILE SIM_API(W8aReadFileFn, 0x10ac5690)
+/* C runtime replacement, files (DECISIONS.md): the platform's file functions in place of Windows' (same shapes) */
+#define GET_LAST_ERROR Plat_FileLastError
+#define WRITE_FILE Plat_FileWrite
+#define READ_FILE Plat_FileRead
 
 // FUNCTION: HGSIM 0x10105fe0
 int32_t __cdecl Crt_LSeek(uint32_t fh, int32_t offset, uint32_t origin)
@@ -41,7 +35,7 @@ int32_t __cdecl Crt_LSeek(uint32_t fh, int32_t offset, uint32_t origin)
         ERRNO = 9;
         return -1;
     }
-    pos = SIM_API(W8aSetFilePointerFn, 0x10ac56f4)(h, offset, 0, origin);
+    pos = Plat_FileSeek(h, offset, 0, origin);
     err = pos == 0xffffffffu ? GET_LAST_ERROR() : 0;
     if (err != 0) {
         Sim_10105100(err);
@@ -235,7 +229,7 @@ int32_t __cdecl Crt_Close(uint32_t fh)
         err = 0;
     } else if ((fh == 1 || fh == 2) && Sim_10109890(2) == Sim_10109890(1)) {
         err = 0;
-    } else if (!SIM_API(W8aHandleFn, 0x10ac566c)(Sim_10109890(fh))) {
+    } else if (!Plat_FileClose(Sim_10109890(fh))) {
         err = GET_LAST_ERROR();
     } else {
         err = 0;
@@ -286,7 +280,7 @@ int32_t __cdecl Crt_ChSize(uint32_t fh, int32_t size)
         Sim_1010cd90(fh, mode);
     } else if (left < 0) {
         Crt_LSeek(fh, size, 0);
-        ret = SIM_API(W8aHandleFn, 0x10ac56e8)(Sim_10109890(fh)) ? 0 : -1;
+        ret = Plat_FileTruncate(Sim_10109890(fh)) ? 0 : -1;
         if (ret == -1) {
             ERRNO = 0xd;
             DOSERRNO = GET_LAST_ERROR();

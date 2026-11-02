@@ -1,0 +1,57 @@
+# C runtime replacement, formatting: the spec entries whose C reaches crt/hg_format.c (static call graph), plus the
+# files entries re-run with it, 2026-11-02. Run: python -I tools/verify/run_specs.py tools/verify/crt_format_specs.txt buildlogs/crt_format
+tools/verify/spec_net_da_v12.py	Sim_1003f3f8_v12
+tools/verify/spec_net_loop_v12.py	Net_ProcessMessages_v12
+tools/verify/spec_net_rg_v12.py	Sim_10040af8_v12
+tools/verify/spec_net_update_v12.py	Net_UpdatePlayers_v12
+tools/verify/spec_w10_10011c28.py	Sim_10011c28
+tools/verify/spec_w10_1001484e.py	Sim_1001484e
+tools/verify/spec_w10_100357db.py	Sim_100357db
+tools/verify/spec_w10_1006ad98.py	Sim_1006ad98
+tools/verify/spec_w10_1006ad98_v12.py	Sim_1006ad98_v12
+tools/verify/spec_w10_1007a955.py	Sim_1007a955
+tools/verify/spec_w10_1009b03d.py	Sim_1009b03d
+tools/verify/spec_w10_100c8ba7.py	Sim_100c8ba7
+tools/verify/spec_w10_100cf96c.py	Sim_100cf96c
+tools/verify/spec_w10_100d02bf.py	Sim_100d02bf
+tools/verify/spec_w12_10019fe1.py	Sim_10019fe1
+tools/verify/spec_w12_1001a23e.py	Sim_1001a23e
+tools/verify/spec_w12_1001a4fa.py	Sim_1001a4fa
+tools/verify/spec_w12_100a0063.py	Sim_100a0063
+tools/verify/spec_w12_100e2aa3.py	Sim_100e2aa3
+tools/verify/spec_w12_sky_v12.py	Sim_100a0063_v12
+tools/verify/spec_w13_100782a9.py	Sim_100782a9
+tools/verify/spec_w14_1001a706.py	Sim_1001a706
+tools/verify/spec_w14_1001a706_x87.py	Sim_1001a706_x87
+tools/verify/spec_w14_1004954e.py	Sim_1004954e
+tools/verify/spec_w14_1004954e_v12.py	Sim_1004954e_v12
+tools/verify/spec_w14_10062b7c.py	Sim_10062b7c
+tools/verify/spec_w15_100dcc12.py	Sim_100dcc12
+tools/verify/spec_w15_world_v12.py	Sim_100dcc12_v12
+tools/verify/spec_w20_10040af8.py	Sim_10040af8
+tools/verify/spec_w21_wrap_ccc60.py	Sim_100ccc60
+tools/verify/spec_w23_100cde94.py	Sim_100cde94
+tools/verify/spec_w23_100cde94_v12.py	Sim_100cde94_v12
+tools/verify/spec_w28_anim.py	Sim_100b82a0
+tools/verify/spec_w28_error.py	Sim_100bc280
+tools/verify/spec_w34_rating.py	Score_RecordKill
+tools/verify/spec_w35_menu_v12.py	Sim_10048f02_v12
+tools/verify/spec_w6h.py	Sim_100fd710
+tools/verify/spec_w6i.py	Sim_100fe450
+tools/verify/spec_w6k.py	Sim_10109980
+tools/verify/spec_w7q.py	Crt_FPrintf Crt_Printf
+tools/verify/spec_w7s.py	Sim_10104be0
+tools/verify/spec_w8A.py	Crt_VSNPrintf Crt_VSPrintf
+tools/verify/spec_w8t.py	Anim_WriteText
+tools/verify/spec_w8u.py	Cache_DumpLog Debug_AppendLog Debug_LogCodeText Debug_LogText Debug_Printf File_ReadAll Plugin_LoadAll Plugin_ProbeAll Sim_100278c0 Sim_10036108 Sim_100469f2 Sim_10046ba1 Sim_10046f7f Sim_10046fe5 Stats_WriteKills
+tools/verify/spec_w8v.py	Input_ReadChord
+tools/verify/spec_w8y.py	Sim_100a76a0 Sim_100a79db Sim_100b8ff9
+tools/verify/spec_w8z.py	Crt_SPrintf
+tools/verify/spec_w9b.py	Hud_DrawScore Net_ProcessMessages Net_UpdatePlayers Score_RecordKill
+tools/verify/spec_w9c.py	Cache_LoadItem Sim_100ccc60 Sim_100d3d10
+tools/verify/spec_w9d.py	CmdLine_Parse Sim_10047569
+tools/verify/spec_w9e.py	Input_ReadMap Sim_100ce983
+tools/verify/spec_w9f.py	GameKey_LoadMap Plugin_LoadList Screenshot_Save Sim_1007adfc Sim_1007b1d0 Sim_1007b5db Sim_1007c42f Text_FormatNumbered
+tools/verify/spec_w9f_won_v12.py	Sim_1007c42f_v12
+tools/verify/spec_w9g.py	Mono_ShowMissions
+tools/verify/spec_w9h.py	Sim_1008b922 Sim_100b7430 Text_Unescape

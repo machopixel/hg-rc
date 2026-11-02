@@ -25,8 +25,6 @@
 #define W6K_FN_10108430 SIM_FN(void (__cdecl *)(uint32_t), 0x10108430)
 /* 0x101009b0: one number; does not come back in the game (calls the exit routine). */
 #define W6K_FN_101009b0 SIM_FN(void (__cdecl *)(uint32_t), 0x101009b0)
-/* 0x101099a0: four dwords (Sim_10109980 passes 0x40 as the third). */
-#define W6K_FN_101099a0 SIM_FN(uint32_t (__cdecl *)(uint32_t, uint32_t, uint32_t, uint32_t), 0x101099a0)
 /* 0x10109df0: no arguments. */
 #define W6K_FN_10109df0 SIM_FN(uint32_t (__cdecl *)(void), 0x10109df0)
 /* 0x10103940: the double given as two dwords -> 1..4 for the special values, else 0. */
@@ -87,6 +85,9 @@ int32_t __cdecl Sim_10109740(uint32_t fh, uint32_t value);
 int32_t __cdecl Sim_101097f0(uint32_t fh);
 /* 0x101099a0(a, b, 0x40, c). */
 uint32_t __cdecl Sim_10109980(uint32_t a, uint32_t b, uint32_t c);
+/* _sopen (file name, open flags, share flag 0x10..0x40, permission) -> handle number, or -1 (C runtime replacement,
+ * files: opens through Plat_FileCreate). */
+int32_t __cdecl Crt_SOpen(const char *path, uint32_t oflag, uint32_t shflag, uint32_t pmode);
 
 /* ---- w6k_text.c: strings ---- */
 /* Compares n characters with 0x1010afa0 (flag 1); 0 for n == 0, 0x7fffffff when it fails, else its result - 2. */

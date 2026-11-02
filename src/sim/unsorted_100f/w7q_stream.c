@@ -4,35 +4,60 @@
 #include "w6i.h"
 #include "../unsorted_1010/w6j.h"
 #include "../util/access.h"
+#include "w8A.h"
+#include "../crt/hg_format.h"
+
+/* C runtime replacement, formatting: the text formatted by SDL3's formatter (crt/hg_format.h), then written to the
+ * stream (fwrite, with the stream's text mode) inside the original's temporary-buffer bracket. The character count, or
+ * -1 when the stream refused some of it. */
+static int w7q_vprint(void *stream, const char *format, va_list args)
+{
+    char small[512];
+    char *text = small;
+    int n, temp;
+    va_list again;
+
+    va_copy(again, args);
+    n = hg_vformat(small, sizeof small, format, args);
+    if (n >= (int)sizeof small) {
+        text = (char *)Heap_Malloc((uint32_t)n + 1);
+        if (text == NULL) {
+            va_end(again);
+            return -1;
+        }
+        hg_vformat(text, (size_t)n + 1, format, again);
+    }
+    va_end(again);
+    temp = Sim_10104ae0(stream);
+    if (n > 0 && Crt_FWrite(text, 1, (uint32_t)n, (uint8_t *)stream) != (uint32_t)n)
+        n = -1;
+    Sim_10104b80(temp, stream);
+    if (text != small)
+        Heap_FreeBlock((uint32_t)(uintptr_t)text);
+    return n;
+}
 
 // FUNCTION: HGSIM 0x100fd7e0
 int __cdecl Crt_FPrintf(void *stream, const char *format, ...)
 {
     va_list args;
-    int temp;
     int written;
 
-    temp = Sim_10104ae0(stream);
     va_start(args, format);
-    written = W7Q_OUTPUT(stream, format, (void *)args);
+    written = w7q_vprint(stream, format, args);
     va_end(args);
-    Sim_10104b80(temp, stream);
     return written;
 }
 
 // FUNCTION: HGSIM 0x100fdc80
 int __cdecl Crt_Printf(const char *format, ...)
 {
-    void *out = SIM_PTR(uint8_t, 0x10159b68);
     va_list args;
-    int temp;
     int written;
 
-    temp = Sim_10104ae0(out);
     va_start(args, format);
-    written = W7Q_OUTPUT(out, format, (void *)args);
+    written = w7q_vprint(SIM_PTR(uint8_t, 0x10159b68), format, args);     /* stdout */
     va_end(args);
-    Sim_10104b80(temp, out);
     return written;
 }
 

@@ -51,16 +51,70 @@ uint32_t Plat_CurrentDir(char *out, uint32_t size);
 /* ---- settings files (.ini: [section] key=value) --------------------------------------------------------- */
 
 /*
- * The whole number of key in section of the settings file path, or def when there is none (Windows:
- * GetPrivateProfileIntA, which reads a leading decimal number with an optional sign). Linux: a reader of its own.
+ * The whole number of key in section of the settings file path, or def when there is none: a leading decimal
+ * number with an optional sign. Our own reader with Windows' GetPrivateProfileIntA rules (plat_ini.c), every system.
  */
 uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def);
 /*
  * The text of key in section of path into out (size bytes, with the end zero), or def when there is none;
- * returns the length copied (Windows: GetPrivateProfileStringA).
+ * returns the length copied (GetPrivateProfileStringA's rules, plat_ini.c).
  */
 uint32_t Plat_IniString(const char *path, const char *section, const char *key, const char *def, char *out,
                         uint32_t size);
+
+/* ---- files (C runtime replacement, files: DECISIONS.md) ------------------------------------------------------ */
+
+/*
+ * The file services the game's C runtime (the converted copies of the original's, src/sim/unsorted_100f and
+ * unsorted_1010) used to take from Windows, in the same shape as the Windows calls they replace, so those copies
+ * keep every rule of their own (text mode, Ctrl-Z, append, the error numbers). One implementation for every system
+ * (plat_file.c): standard C files, always in binary (exact bytes), and SDL3 for listing folders. Names are the
+ * game's: "\" or "/", a drive letter ("C:") left out except on Windows, and on other systems a name that does not
+ * exist as written is looked up ignoring upper / lower case, folder by folder.
+ * A handle is never 0 or PLAT_FILE_INVALID. Errors are Windows error numbers (2 not found, 3 no folder, 5 denied,
+ * 80 exists, 131 negative seek), read with Plat_FileLastError.
+ */
+#define PLAT_FILE_INVALID 0xffffffffu
+
+/* CreateFileA: access 0x80000000 read / 0x40000000 write; disposition 1 create new, 2 create always, 3 open
+ * existing, 4 open always, 5 truncate existing. share, security and flags are accepted and not used. */
+uint32_t Plat_FileCreate(const char *name, uint32_t access, uint32_t share, void *security, uint32_t disposition,
+                         uint32_t flags, uint32_t tmpl);
+/* ReadFile / WriteFile: nonzero on success, *done the bytes moved (overlapped must be 0). */
+int32_t Plat_FileRead(uint32_t handle, void *data, uint32_t size, uint32_t *done, void *overlapped);
+int32_t Plat_FileWrite(uint32_t handle, const void *data, uint32_t size, uint32_t *done, void *overlapped);
+/* SetFilePointer: method 0 start, 1 current, 2 end; the new position, or PLAT_FILE_INVALID (high must be 0). */
+uint32_t Plat_FileSeek(uint32_t handle, int32_t distance, int32_t *high, uint32_t method);
+/* SetEndOfFile at the current position, FlushFileBuffers, CloseHandle: nonzero on success. */
+int32_t Plat_FileTruncate(uint32_t handle);
+int32_t Plat_FileFlush(uint32_t handle);
+int32_t Plat_FileClose(uint32_t handle);
+/* GetFileType: 1 a disk file (every handle of ours), 0 unknown. */
+uint32_t Plat_FileType(uint32_t handle);
+/* DeleteFileA: nonzero on success. */
+int32_t Plat_FileDelete(const char *name);
+/* GetLastError after one of these. */
+uint32_t Plat_FileLastError(void);
+/*
+ * FindFirstFileA / FindNextFileA / FindClose over a pattern ("folder\*.ext", "?" and "*"): data is filled as
+ * Windows' WIN32_FIND_DATAA (attributes +0, creation / access / write times +4 / +0xc / +0x14 as FILETIME, size high
+ * / low +0x1c / +0x20, name +0x2c, 260 bytes, short name +0x130 left empty). Letter case of the pattern does not
+ * matter. Attributes: 0x10 a folder, 0x20 a file (0x21 when it cannot be written).
+ */
+uint32_t Plat_FileFindFirst(const char *pattern, void *data);
+int32_t Plat_FileFindNext(uint32_t find, void *data);
+int32_t Plat_FileFindClose(uint32_t find);
+
+/* ---- program ---------------------------------------------------------------------------------------------- */
+
+/* The program's own file name (full path) into out (size bytes, with the end zero); its length, 0 when unknown.
+ * Windows: GetModuleFileNameA. Linux / Mac: their own way (still to do; 0 until then). */
+uint32_t Plat_ProgramPath(char *out, uint32_t size);
+/* The C runtime's assert box (C runtime replacement, the rest): text and caption, Abort / Retry / Ignore (SDL3). */
+enum { PLAT_ASSERT_ABORT = 3, PLAT_ASSERT_RETRY = 4, PLAT_ASSERT_IGNORE = 5 };
+int Plat_AssertBox(const char *text, const char *caption);
+/* Stops in the debugger (the original's DebugBreak after "Retry"); without one the program ends there. */
+void Plat_DebugBreak(void);
 
 /* ---- libraries (the renderer plugins) ---------------------------------------------------------------------- */
 

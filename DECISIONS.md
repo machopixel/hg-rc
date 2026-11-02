@@ -2621,3 +2621,123 @@ An independent audit of all of 1.2's HGSIM (tools/v12/audit.md) found two 1.2 ch
   settings pin it for other compilers and platforms.
 - **Build:** the Release build (vcvars x86, `cmake --build build --config Release`) compiles and links HG.exe and
   HGVK.dll; the game was not run.
+
+## C runtime replacement: memory, files, formatting (Diego, 2026-11-02: targets Windows, Linux and Mac, results identical on all three; "go with option 1": own copies + SDL3 formatting)
+
+- **Rule.** The converted copies of the original C runtime keep their own logic; only what they took from Windows or
+  from the DLL's unconverted code is replaced, at the bottom. Text, sorting and the rest of the copies stay as they
+  are (plain C).
+- **Maths round gap closed.** 27 spec files with a fixed source list (no `closure`) were never re-run in the maths
+  round, and 38 old spec files could not be built at all (later rounds had moved callees). The checker now always
+  links src/sim/crt and src/sim/libm, adds the files defining missing symbols from its object cache and retries,
+  never emits stack probes, and builds rt.o per process. All of them were run in the memory round below.
+
+### Memory
+
+- **Now.** malloc / calloc / realloc / free (Heap_Malloc 0x100fef30, Heap_MallocRetry 0x100fef50, Heap_AllocBlock
+  0x100fefa0, Heap_Calloc 0x10100580, Heap_Realloc 0x101003e0, Heap_FreeBlock 0x100fefe0) are standard C
+  (src/sim/crt/hg_heap.c); memset / memmove (Mem_Fill 0x100fcab0, Mem_Move 0x100fcdc0) too.
+- **The DLL's start-up blocks.** The DLL's own C runtime ran its start-up (environment, stdio tables, atexit) in its
+  private heap before our hooks were in place, and its shut-down frees those blocks through the hooked free. Our
+  blocks carry a 16-byte head (a mark and its own address); free / realloc of a block without it go to the
+  original's heap code (still converted C), realloc of such a block stays in that heap.
+- **Differences (recorded):** no new handler (the original retried through _callnewh when [0x1017e968] was set; out
+  of memory now just answers NULL); blocks are no longer rounded to 16 bytes (the game never reads past its size);
+  malloc(0) / calloc with 0 give a 1-byte block (the original: one 16-byte paragraph).
+- **Checker.** The original's heap entry points (1.0 above; 1.2 0x100dd4f0, 0x100dd510, 0x100dd560, 0x100dd5a0,
+  0x100de8a0, 0x100dea40) jump to the C ones, so both runs get the same blocks (rt.c: a bump allocator); a spec
+  entry may set `heap_original`. spec_w6i Heap_FreeBlock and spec_w7r Heap_Realloc run the original's heap for
+  blocks of the DLL's heap (recorded exception, `skip`: only real blocks, and no NULL realloc); their malloc /
+  calloc entries are superseded.
+- **Specs** (tools/verify/crt_mem_specs.txt, buildlogs/crt_mem*): 406 entries pass. 25 fail, all with the same
+  failures on the last commit 0050ec5 (checked in a clean worktree): the old 1.0 specs of functions later ported to
+  1.2 (network w3p / w9b, the cache reader w8y, objectives w9f, the respawn w14_1009d200) and the long-known ones
+  (Sim_100d4590, Sim_10070eb5, Sim_100dcc12, Sim_1006e22c, Sim_10040af8, Sim_100a0063, Sim_1005bb7a,
+  Sim_1003dc19, Sim_1006b52f, Sim_1004954e). Their 1.2 specs pass (e.g. spec_w8y_reader_v12 4000 + 3000 / 0).
+  spec_w28_anim and spec_w9e still do not link (duplicate platform definitions; not maths or memory).
+
+### Files
+
+- **Now.** The converted low-level I/O keeps all of its own rules (text mode with CR LF and Ctrl-Z, append, the
+  error numbers); the Windows calls under it are the platform's file functions (src/platform/plat.h "files",
+  plat_file.c: standard C files, always binary, and SDL3 to list folders), in the same shape: Plat_FileCreate /
+  Read / Write / Seek / Truncate / Flush / Close / Type / Delete / LastError / FindFirst / FindNext / FindClose. Used
+  by _read, _write, _lseek, _close, _chsize (w8A_lowio.c), remove (w8A_stream.c), _commit (w6j_stream.c),
+  _findfirst / _findnext / _findclose (w7q_find.c, w6i_stream.c) and the movie folder search Sim_1007e66c.
+- **_sopen converted** (0x101099a0, was original code; Crt_SOpen in w6k_handles.c, called by _open and fopen):
+  spec_crt_sopen.py 4000 / 0 against the original (handle tables, CreateFile failing, device / pipe types, the
+  Ctrl-Z trim of a read/write text file).
+- **Names.** "\" and "/" both work; on Linux and Mac the drive ("C:") is dropped, and a name that does not exist as
+  written is looked up folder by folder ignoring case (the first match in an order sorted ignoring case). Files stay
+  where the game puts them (the game folder); no settings overlay.
+- **Settings files.** Plat_IniString / Plat_IniInt are our own reader (plat_ini.c) with Windows' rules, on every
+  system (Windows' GetPrivateProfile* no longer used).
+- **Measured against Windows itself** (native harnesses, scratchpad): 200,000 random create / read / write / seek /
+  truncate / close / delete steps on three files through CreateFileA... and through plat_file.c: same results, error
+  numbers, bytes and final files (after four fixes the test found: access rights, "truncate existing" needs write
+  access, a failed seek keeps the position). 20,000 random settings files read through GetPrivateProfileStringA /
+  IntA and plat_ini.c: same (after two fixes: names asked for lose their spaces; numbers take "0x" / "0o" / "0b").
+- **Differences (recorded):** the folder listing gives no short (8.3) names (the movie search then uses the long
+  one, the same for 8.3 names), attributes 0x10 / 0x20 only (no read-only / hidden / system bits), and its order is
+  sorted ignoring case (Windows: the file system's order, also sorted on NTFS). Share modes are not enforced.
+  Truncating a file rewrites it (standard C has no truncate).
+- **Specs** (crt_files_specs.txt, buildlogs/crt_files*): every entry reaching the new functions passes (the stubs of
+  spec_w6k / spec_w7s / spec_w8y now also answer the C names Crt_SOpen / Crt_FPrintf), except Sim_10046f7f of the
+  1.0 spec_w8u: the HGCAR save writes 1.2's 0x21c-byte record (its 1.2 spec spec_w8u_hgcar_v12 passes).
+
+### Formatting
+
+- **Now.** The DLL's printf engine (0x10100fd0) is no longer used: sprintf, vsprintf, _vsnprintf, fprintf and
+  printf (Crt_SPrintf, Crt_VSPrintf, Crt_VSNPrintf, Crt_FPrintf, Crt_Printf) format with src/sim/crt/hg_format.c,
+  which walks the format and hands each conversion to SDL3's own SDL_snprintf (the same code on every system), with
+  three parts of its own: the space flag (unknown to SDL; the game's string at 0x1013105c uses it), %f (SDL rounds
+  halves differently: the original's digits are made exactly, rounded to 17 significant digits and then half up)
+  and a negative zero printed without its sign. sprintf / vsprintf stay unbounded as the original (no buffer sizes
+  at the call sites); _vsnprintf keeps its rules (-1 when cut, no closing 0 when full); fprintf / printf write the
+  text with fwrite inside the original's temporary-buffer bracket.
+- **Scanning.** sscanf (Sim_100fd710) is SDL_vsscanf. SDL3 hands that, and strtod, to the system's C library on
+  Windows, Linux and Mac alike (SDL_string.c, HAVE_VSSCANF / HAVE_STRTOD): Microsoft's, glibc's or Apple's code.
+  Ordinary numbers read the same; spellings like "inf" / "nan" or hexadecimal floats may differ between systems.
+  fscanf (one use: object.dat, "%s") reads the rest of the stream and scans it (the stream is read to its end; the
+  caller closes it right after). The scanning engine 0x10103ba0 and text-to-number 0x1010b7c0 are no longer used by
+  our C (only the original scanning engine called 0x10108e20 / 0x10108da0).
+- **Measured against the original** (native: the DLL's own sprintf 0x100fc780 run on this CPU, DLL mapped without
+  DllMain, its float table set up by 0x100fc640, x87 control word 0x27f): 2,244,421 integer / character / text
+  conversions (d i u x X o c s, h / l, every flag, width, precision): identical. 755,579 %f conversions (game-like
+  values and any finite double): identical but 3, all numbers above 2^49 (about 5.6 * 10^14) whose 17th digit is an
+  exact half, where the original's x87 conversion rounds either way. The game's space-flag string: identical.
+- **Checker.** tools/verify/stand_in/hg_format.c stands in for hg_format.c (which needs SDL3) and calls the original
+  engines, so the specs compare the code around them. The specs of the wrappers themselves (spec_w8z Crt_SPrintf,
+  spec_w8A Crt_VSNPrintf / Crt_VSPrintf, spec_w7q Crt_FPrintf / Crt_Printf, spec_w6i Sim_100fe450) tested how they
+  drove the engine and are superseded by the native comparison.
+- **Specs** (crt_format_specs.txt, buildlogs/crt_format*): every affected entry passes apart from the superseded
+  wrapper entries and the old failures listed under memory.
+- **Build:** the Release build compiles and links HG.exe and HGVK.dll with all three groups; the game was not run.
+
+### The rest
+
+- **Now** (src/sim/crt/hg_rest.c, standard C; checker stand-in tools/verify/stand_in/hg_rest.c calls what the copies
+  called before): time (Crt_Time 0x100ff500) is standard time(); ctime's local time (Sim_100ff4e0) is standard
+  localtime (the original's 0x101071e0 no longer used), filled into the original's nine-int record; getenv
+  (Crt_GetEnv 0x10100130) is standard getenv; exit's last step (Proc_DoExit 0x100ff410) is standard exit (was
+  ExitProcess) or _Exit (was TerminateProcess), after the original's own exit routines as before.
+- **assert** (the original 0x100ff860, 42 call sites, reached through their old addresses): hooked to Crt_Assert
+  (conv_w6i.inc). The same text as the original's box ("Assertion failed!", Program / File / Line / Expression, the
+  Visual C++ lines; names over 60 characters as "..." and their end, the text capped at 0x21c bytes) under the same
+  title, in an SDL3 message box (Plat_AssertBox, plat_dialog.c) with Abort / Retry / Ignore: Abort leaves with code 3
+  (Proc_ExitQuick, as the original's raise(SIGABRT) without a handler), Retry stops in the debugger (SDL's
+  breakpoint, the original's DebugBreak), Ignore returns. The program name comes from Plat_ProgramPath
+  (GetModuleFileNameA on Windows; Linux / Mac still to do: "<program name unknown>" until then).
+- **Joystick maker name** (Joy_GetOemName 0x10057186): no registry read, no name (joysticks are not supported,
+  Diego 2026-11-02); spec_w7n's entry is superseded.
+- **Differences (recorded):** time and local time follow the system's own clock and time-zone rules (the original
+  used Windows' GetLocalTime / GetTimeZoneInformation and its own daylight flag cache; the original's TZ variable
+  handling is no longer used by these); no local time before 1970 (as the original).
+- **Not replaced, with the DLL:** signal / raise (Crt_Abort), the maths error path (Math_ReportError,
+  Math_RaiseFpError, Math_DomainError, Math_FrExp and the x87 control-word helpers they call), the Pentium FDIV
+  check, the runtime-error message box (Sim_10107840: LoadLibraryA user32), the locale copies (CompareString /
+  LCMapString / GetStringType: only with a non-"C" locale, which the game never sets), the start-up stdio and heap
+  set-up. None is reachable from the game's C (static call graph: no caller outside src/sim/unsorted_100f /
+  unsorted_1010); they serve the DLL's own code through their hooks.
+- **Specs** (crt_rest_specs.txt, buildlogs/crt_rest): the 13 entries reaching hg_rest.c pass.
+- **Build:** the Release build compiles and links HG.exe and HGVK.dll; the game was not run.

@@ -825,8 +825,10 @@ SPECS = [
     spec('Crt_ToUpper', 0x100fdb80, g_toupper, 1000),
     spec('Crt_QSort', 0x100fdcc0, g_qsort, 600, void=True),
     spec('Heap_MallocRetry', 0x100fef50, g_malloc, 600, api=HEAP_API),
-    spec('Crt_FPrintf', 0x100fd7e0, g_fprintf, 400, api=FLUSH_API),
-    spec('Crt_Printf', 0x100fdc80, g_printf, 300, api=FLUSH_API),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # spec('Crt_FPrintf', 0x100fd7e0, g_fprintf, 400, api=FLUSH_API),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # spec('Crt_Printf', 0x100fdc80, g_printf, 300, api=FLUSH_API),
     spec('Crt_FPuts', 0x100fe390, g_fputs, 400, api=FLUSH_API),
     spec('Crt_FFlush', 0x100fe240, g_fflush, 800, api=FLUSH_API),
     spec('Crt_FlushStream', 0x100fe290, g_flush, 600),

@@ -1,0 +1,18 @@
+# C runtime replacement, files: the spec entries whose C reaches the platform's file functions or _sopen (static
+# call graph), 2026-11-02. Run: python -I tools/verify/run_specs.py tools/verify/crt_files_specs.txt buildlogs/crt_files
+tools/verify/spec_w28_error.py	Sim_100bc280
+tools/verify/spec_w6i.py	File_FindClose
+tools/verify/spec_w6j.py	Sim_101056f0
+tools/verify/spec_w6k.py	Sim_10109980
+tools/verify/spec_w7q.py	Crt_FFlush Crt_FindFirst Crt_FindNext
+tools/verify/spec_w7s.py	Sim_10104be0
+tools/verify/spec_w8A.py	Crt_LSeek Crt_Write Crt_Read Crt_Close Crt_ChSize Crt_Remove Crt_FRead Crt_FWrite Crt_FSeek Crt_FlushBuf Crt_VSNPrintf Crt_VSPrintf
+tools/verify/spec_w8u.py	Debug_AppendLog Debug_Printf Plugin_ProbeAll Sim_10036108 Plugin_LoadAll Sim_100469f2 File_ReadAll Sim_10046ba1 Sim_10046f7f Sim_10046fe5
+tools/verify/spec_w8u_hgcar_v12.py	Sim_10046f7f_v12
+tools/verify/spec_w8v.py	Sim_100470c7 Sim_1004724c
+tools/verify/spec_w8w.py	Sim_1007e66c
+tools/verify/spec_w8y.py	Sim_100a76a0 Sim_100a79db
+tools/verify/spec_w8z.py	Crt_FSOpen
+tools/verify/spec_w9c.py	Plugin_ProbeList Cache_LoadItem
+tools/verify/spec_w9d.py	CmdLine_Parse
+tools/verify/spec_w9f.py	Plugin_LoadList Text_FormatNumbered

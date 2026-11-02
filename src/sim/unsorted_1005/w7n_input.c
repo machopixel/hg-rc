@@ -11,11 +11,6 @@ typedef int(__cdecl *W7nCountFn)(void);
 typedef int(__cdecl *W7nNameFn)(int index, uint8_t *record);
 typedef int(__cdecl *W7nRecordFn)(uint8_t *record);
 
-typedef int32_t(__stdcall *W7nRegOpenKeyExAFn)(uint32_t key, const char *sub, uint32_t options, uint32_t access,
-                                                 uint32_t *result);
-typedef int32_t(__stdcall *W7nRegQueryValueExAFn)(uint32_t key, const char *name, uint32_t *reserved, uint32_t *type,
-                                                    uint8_t *data, uint32_t *size);
-typedef int32_t(__stdcall *W7nRegCloseKeyFn)(uint32_t key);
 typedef uint32_t(__stdcall *W7nMapVirtualKeyAFn)(uint32_t code, uint32_t type);
 typedef int16_t(__stdcall *W7nGetKeyStateFn)(int key);
 
@@ -226,35 +221,13 @@ uint8_t *__cdecl Input_AddAnalogSink(const uint32_t *src)
 // FUNCTION: HGSIM 0x10057186
 int __cdecl Joy_GetOemName(int index, const char *driver, char *out, uint32_t n)
 {
-    uint32_t key;
-    uint32_t size, type;
-    int32_t err;
-
-    W7N_CALL_100fc780(SIM_PTR(char, 0x10166720), SIM_PTR(char, 0x10142730), driver);
-    err = SIM_API(W7nRegOpenKeyExAFn, 0x10ac54c8)(0x80000002u, SIM_PTR(char, 0x10166720), 0, 1, &key);
-    if (err != 0) {
-        Sim_10083495(); /* (message 0x10142784, err): the debug print is empty */
-        return 0;
-    }
-    W7N_CALL_100fc780(SIM_PTR(char, 0x10166720), SIM_PTR(char, 0x101427bc), index + 1);
-    size = 0x40;
-    type = 1;
-    err = SIM_API(W7nRegQueryValueExAFn, 0x10ac54cc)(key, SIM_PTR(char, 0x10166720), 0, &type,
-                                                     GBYTES(0x101666e0), &size);
-    if (err == 0) {
-        SIM_API(W7nRegCloseKeyFn, 0x10ac54d0)(key);
-        W7N_CALL_100fc780(SIM_PTR(char, 0x10166720), SIM_PTR(char, 0x101427d0), GBYTES(0x101666e0));
-        err = SIM_API(W7nRegOpenKeyExAFn, 0x10ac54c8)(0x80000002u, SIM_PTR(char, 0x10166720), 0, 1, &key);
-        if (err == 0) {
-            size = 0x40;
-            err = SIM_API(W7nRegQueryValueExAFn, 0x10ac54cc)(key, SIM_PTR(char, 0x10142824), 0, &type,
-                                                             GBYTES(0x101666e0), &size);
-            if (err == 0)
-                Str_CopyN(out, (const char *)GBYTES(0x101666e0), n);
-        }
-    }
-    SIM_API(W7nRegCloseKeyFn, 0x10ac54d0)(key);
-    return err == 0;
+    /* C runtime replacement, the rest (DECISIONS.md): the original read the joystick's maker name from the Windows
+     * registry: "Joystick<n>OEMName" under HKEY_LOCAL_MACHINE System\CurrentControlSet\Control\MediaResources
+     * \Joystick\<driver>\CurrentJoystickSettings, then "OEMName" under ...\Control\MediaProperties
+     * \PrivateProperties\Joystick\OEM\<that name>. Joysticks are not supported (Diego, 2026-11-02): no name, as the
+     * original answers when a key is missing (it also printed an empty debug line then). */
+    (void)index, (void)driver, (void)out, (void)n;
+    return 0;
 }
 
 // FUNCTION: HGSIM 0x10057c1a

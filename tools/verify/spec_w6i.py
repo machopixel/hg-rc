@@ -463,13 +463,18 @@ SPECS = [
     spec('Sort_SelectionSort', 0x100fde70, g_sort, 800, void=True),
     spec('Mem_Copy', 0x100fdf00, g_copy, 2000),
     spec('Sim_100fe310', 0x100fe310, g_streams, 600),
-    spec('Sim_100fe450', 0x100fe450, g_va, 300),
+    # superseded (C runtime replacement, formatting, DECISIONS.md): SDL3 formatter, checked natively against the original
+    # spec('Sim_100fe450', 0x100fe450, g_va, 300),
     spec('File_FindClose', 0x100fe6c0, g_findclose, 300, api={'FindClose': api_pick([0, 1, 0x80000000])}),
     spec('Time_FromFileTime', 0x100fe6e0, g_filetime, 600, api=FT_API),
     spec('Stream_ReadLine', 0x100fe770, g_readline, 1000),
-    spec('Heap_Malloc', 0x100fef30, g_malloc, 300),
-    spec('Heap_AllocBlock', 0x100fefa0, g_alloc, 600, api=HEAP_API),
-    spec('Heap_FreeBlock', 0x100fefe0, g_free, 800, void=True, api=HEAP_API),
+    # C runtime replacement (DECISIONS.md, memory): malloc and the block allocation are standard C now (no original
+    # to compare with; difftest answers the original's calls with them). free of a block of the DLL's own heap still
+    # runs the original's code: checked against the original heap.
+    # Recorded exception: only real blocks (0 or inside the arena): the C reads the 16 bytes in front of a block to
+    # tell its own blocks from the DLL's, which faults for the generator's arbitrary addresses.
+    spec('Heap_FreeBlock', 0x100fefe0, g_free, 800, void=True, api=HEAP_API, heap_original=True,
+         skip=lambda a: a[0] != 0 and not ARENA <= a[0] < ARENA + 0x6000),
     spec('Str_CompareNoCase', 0x100ff1e0, g_stricmp, 2000),
     spec('Sim_100ff380', 0x100ff380, g_init, 300, void=True),
     spec('Proc_Exit', 0x100ff3b0, g_exit1, 300, void=True),

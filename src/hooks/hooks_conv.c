@@ -361,6 +361,7 @@
 #include "../sim/unsorted_100f/w6h.h"
 #include "../sim/unsorted_100f/w6i.h"
 #include "../sim/unsorted_1010/w6i.h"
+#include "../sim/crt/hg_rest.h"
 #include "../sim/unsorted_1010/w6j.h"
 #include "../sim/unsorted_1010/w6k.h"
 #include "../sim/render/w7o.h"

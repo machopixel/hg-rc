@@ -3,6 +3,7 @@
 #include "w2h.h"
 #include "../unsorted_1010/w6j.h"
 #include "../util/access.h"
+#include "../crt/hg_heap.h"
 
 // FUNCTION: HGSIM 0x100fdcc0
 void __cdecl Crt_QSort(uint8_t *base, uint32_t count, uint32_t width, W7qCompareFn compare)
@@ -73,17 +74,8 @@ void __cdecl Crt_QSort(uint8_t *base, uint32_t count, uint32_t width, W7qCompare
 // FUNCTION: HGSIM 0x100fef50
 void *__cdecl Heap_MallocRetry(uint32_t size, int retry)
 {
-    void *block;
-
+    (void)retry;                /* no new handler: standard C's malloc answers NULL when out of memory */
     if (size > 0xffffffe0u)
         return 0;
-    if (size == 0)
-        size = 1;
-    for (;;) {
-        block = size <= 0xffffffe0u ? Heap_AllocBlock(size) : 0;
-        if (block != 0 || retry == 0)
-            return block;
-        if (Sim_10106590(size) == 0)
-            return 0;
-    }
+    return hg_malloc(size);     /* C runtime replacement: standard C (crt/hg_heap.h) */
 }

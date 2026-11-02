@@ -129,3 +129,43 @@ int _stricmp(const char *a, const char *b)
             return x - y;
     }
 }
+
+/* The C library heap for crt/hg_heap.c (C runtime replacement): a bump allocator in the image, the same addresses in
+   every run (the checker puts the image back between the original's and the C's run). free keeps the space. */
+static unsigned char rt_arena[0x40000] __attribute__((aligned(16)));
+static size_t rt_top;
+
+void *malloc(size_t n)
+{
+    void *p;
+
+    n = (n + 15) & ~(size_t)15;
+    if (n > sizeof rt_arena - rt_top)
+        return 0;
+    p = rt_arena + rt_top;
+    rt_top += n;
+    return p;
+}
+
+void *calloc(size_t c, size_t n)
+{
+    unsigned char *p = malloc(c * n);
+
+    if (p)
+        memset(p, 0, c * n);
+    return p;
+}
+
+void *realloc(void *old, size_t n)
+{
+    unsigned char *p = malloc(n);
+
+    if (p && old)
+        memmove(p, old, n);     /* may read past the old block: still inside the arena */
+    return p;
+}
+
+void free(void *p)
+{
+    (void)p;
+}

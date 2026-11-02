@@ -34,7 +34,8 @@ MALLOC, FREE = 0x100fef30, 0x100fefe0
 # helper address -> number of dword arguments
 STUBS = {MALLOC: 1, FREE: 1, 0x101099a0: 4, 0x10100580: 2, 0x10105b50: 3, 0x101009b0: 1, 0x1010b2a0: 2,
          0x10106660: 0, 0x10107840: 3, 0x10105a60: 1}
-SYM_STUBS = {'Heap_Malloc': MALLOC, 'Heap_FreeBlock': FREE, 'Sim_10106660': 0x10106660, 'Sim_10107840': 0x10107840}
+SYM_STUBS = {'Heap_Malloc': MALLOC, 'Heap_FreeBlock': FREE, 'Sim_10106660': 0x10106660, 'Sim_10107840': 0x10107840,
+             'Crt_SOpen': 0x101099a0}   # C runtime replacement: the C calls _sopen by name now
 TEXT_ARGS = {0x10107840: (0, 1), 0x1010b2a0: (0,)}
 ST = {'active': set(), 'fn': {}, 'api': {}, 'seed': 0}
 

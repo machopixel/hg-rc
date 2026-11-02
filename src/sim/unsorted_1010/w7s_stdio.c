@@ -129,7 +129,7 @@ uint8_t *__cdecl Sim_10104be0(const char *name, const char *mode, uint32_t share
             break;
         }
     }
-    fh = W7S_FN_101099a0(name, oflag, share, 0x1a4);
+    fh = Crt_SOpen(name, oflag, share, 0x1a4);
     if (fh < 0)
         return 0;
     G32(0x1017e964)++;

@@ -2,6 +2,7 @@
 #include "../simmem.h"
 #include "../util/access.h"
 #include "../unsorted_1010/w2i.h"
+#include "../crt/hg_rest.h"
 
 static uint8_t W6i_FoldAscii(uint8_t c)
 {
@@ -51,7 +52,7 @@ int __cdecl Str_CompareNoCase(const char *a, const char *b)
 // FUNCTION: HGSIM 0x100ff4e0
 char *__cdecl Sim_100ff4e0(void *value)
 {
-    int32_t *tm = W6I_FN_101071E0(value);
+    int32_t *tm = hg_localtime((const int32_t *)value);     /* C runtime replacement, the rest */
 
     if (tm == 0)
         return 0;

@@ -192,3 +192,23 @@ start (the checker needs the DLL to compare against).
   routine. They exist only to compare against the DLL. After: drop with the checker's DLL side.
 - **Specs that stub the maths at the original's address and at hg_*** (spec_w10_100225c7, spec_w29_100232d7,
   spec_w26_10021e8c, spec_w8z): after: nothing to compare against.
+
+## C runtime replacement: memory, files, formatting (DECISIONS.md)
+
+- **The DLL's heap path in free / realloc** (Heap_FreeBlock, Heap_Realloc; the 16-byte head of crt/hg_heap.c that
+  tells our blocks from the DLL's): only for blocks the DLL's own start-up made. After: free / realloc / malloc are
+  plain standard C, no head; the small-block heap copies (w6k_sbh.c, w7r_heap.c's DLL path, w6j_heap.c) go.
+- **The game's own Windows heap calls:** about 30 places call HeapAlloc / HeapFree on the game heap [0x1017b8f8]
+  directly (not the C runtime). After (or in the platform layer before): malloc / free.
+- **The converted C runtime itself** (stdio streams, handle tables, text mode in _read / _write) keeps the DLL's
+  data layout (FILE records, handle blocks at 0x10ac3720). After: the game's file code can call the platform's
+  file functions or standard C directly.
+- **Unused engine copies:** Sim_10108e20 / Sim_10108da0 (text to number, reached only from the original scanning
+  engine, no longer called) and the engines 0x10100fd0 / 0x10103ba0 / 0x1010b7c0 themselves. After: gone.
+- **Checker only:** the heap redirect, the per-entry `heap_original`, tools/verify/stand_in/hg_format.c, the
+  Plat_File* stand-ins in plat_stub.c, the C_ALIASES / SYM_STUBS for Crt_SOpen / Crt_FPrintf. After: with the
+  checker's DLL side.
+- **The rest:** assert keeps its call sites at the old address 0x100ff860 (hooked to Crt_Assert); after: call
+  Crt_Assert (or a plain assert of ours) directly. The unreachable runtime pieces listed in DECISIONS.md ("The
+  rest": signal, maths error path, FDIV check, runtime-error box, locale copies, start-up set-up) go with the DLL.
+  Plat_ProgramPath needs its Linux / Mac backend.

@@ -3,6 +3,7 @@
 #include "w6h.h"
 #include "w2k.h"
 #include "../util/access.h"
+#include "../crt/hg_format.h"
 
 /* The address an original code location has where the DLL is loaded (what the relocated original stores). */
 #define W6H_CODE(addr) ((uint32_t)(uintptr_t)SIM_PTR(uint8_t, addr))
@@ -112,20 +113,12 @@ int32_t __cdecl Sim_100fd540(const char *s, char **end, int base)
 // FUNCTION: HGSIM 0x100fd710
 int __cdecl Sim_100fd710(const char *s, const char *format, ...)
 {
-    /* The stream structure as the original builds it; its last four dwords stay unset there too. */
-    struct {
-        uint32_t ptr, count, base, flags;
-        uint32_t rest[4];
-    } stream;
     va_list ap;
     int result;
 
-    stream.ptr = (uint32_t)(uintptr_t)s;
-    stream.count = (uint32_t)strlen(s);
-    stream.base = (uint32_t)(uintptr_t)s;
-    stream.flags = 0x49;
+    /* C runtime replacement, formatting: SDL_vsscanf (crt/hg_format.h) in place of the DLL's engine */
     va_start(ap, format);
-    result = SIM_CALL_10103ba0(&stream, format, (void *)ap);
+    result = hg_vscan(s, format, ap);
     va_end(ap);
     return result;
 }

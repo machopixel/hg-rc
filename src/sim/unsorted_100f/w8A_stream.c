@@ -6,6 +6,9 @@
 #include "../unsorted_1010/w6k.h"
 #include "../unsorted_1010/w2k.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
+#include "w6i.h"
+#include "../crt/hg_format.h"
 
 #define ADDR(p) ((uint32_t)(uintptr_t)(p))
 #define S_PTR(s) U32(s, 0)
@@ -15,8 +18,6 @@
 #define S_FILE(s) U32(s, 0x10)
 #define S_BUFSIZ(s) U32(s, 0x18)
 
-typedef int32_t(__stdcall *W8aDeleteFileAFn)(const char *path);
-typedef uint32_t(__stdcall *W8aGetLastErrorFn)(void);
 
 // FUNCTION: HGSIM 0x100fe830
 uint32_t __cdecl Crt_FRead(void *buf, uint32_t size, uint32_t count, uint8_t *stream)
@@ -208,26 +209,28 @@ int32_t __cdecl Crt_FlushBuf(int32_t ch, void *stream)
 // FUNCTION: HGSIM 0x100fe3e0
 int32_t __cdecl Crt_VSNPrintf(char *buf, uint32_t count, const char *fmt, void *args)
 {
-    uint32_t file[8] = {0}; /* string stream: next byte, room, buffer, flags (0x42) */
-    int32_t n;
+    /* C runtime replacement, formatting: SDL3's formatter (crt/hg_format.h) with the original's _vsnprintf rules: at
+     * most count characters, the closing 0 only when there is room for it, -1 when the text was cut */
+    int32_t n = hg_vformat(NULL, 0, fmt, (va_list)args);
+    char *full;
 
-    file[2] = ADDR(buf);
-    file[0] = ADDR(buf);
-    file[1] = count;
-    file[3] = 0x42;
-    n = W8A_FN_10100fd0(file, fmt, args);
-    file[1]--;
-    if ((int32_t)file[1] >= 0)
-        *(char *)(uintptr_t)file[0] = 0;
-    else
-        Crt_FlushBuf(0, file);
-    return n;
+    if (n < 0)
+        return -1;
+    if ((uint32_t)n < count)
+        return hg_vformat(buf, count, fmt, (va_list)args);
+    full = (char *)Heap_Malloc((uint32_t)n + 1);
+    if (full == NULL)
+        return -1;
+    hg_vformat(full, (size_t)n + 1, fmt, (va_list)args);
+    memcpy(buf, full, count);
+    Heap_FreeBlock((uint32_t)(uintptr_t)full);
+    return (uint32_t)n == count ? n : -1;
 }
 
 // FUNCTION: HGSIM 0x100fdb30
 int32_t __cdecl Crt_Remove(const char *path)
 {
-    uint32_t err = SIM_API(W8aDeleteFileAFn, 0x10ac56f0)(path) ? 0 : SIM_API(W8aGetLastErrorFn, 0x10ac5600)();
+    uint32_t err = Plat_FileDelete(path) ? 0 : Plat_FileLastError();     /* C runtime replacement, files */
 
     if (err != 0) {
         Sim_10105100(err);

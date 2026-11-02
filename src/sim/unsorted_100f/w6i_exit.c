@@ -1,10 +1,8 @@
 #include "w6i.h"
 #include "../simmem.h"
 #include "../util/access.h"
+#include "../crt/hg_rest.h"
 
-typedef uint32_t(__stdcall *W6iGetCurrentProcessFn)(void);
-typedef int(__stdcall *W6iTerminateProcessFn)(uint32_t process, uint32_t code);
-typedef void(__stdcall *W6iExitProcessFn)(uint32_t code);
 
 // FUNCTION: HGSIM 0x100ff4c0
 void __cdecl Crt_CallTable(W6iVoidFn *begin, W6iVoidFn *end)
@@ -34,7 +32,7 @@ void __cdecl Sim_100ff380(void)
 void __cdecl Proc_DoExit(uint32_t code, int quick, int returnToCaller)
 {
     if (G32(0x1017e8d0) == 1)
-        SIM_API(W6iTerminateProcessFn, 0x10ac5644)(SIM_API(W6iGetCurrentProcessFn, 0x10ac5648)(), code);
+        hg_terminate_process(code);     /* C runtime replacement, the rest (crt/hg_rest.h) */
     G32(0x1017e8cc) = 1;
     *GBYTES(0x1017e8c8) = (uint8_t)returnToCaller;
     if (quick == 0) {
@@ -57,7 +55,7 @@ void __cdecl Proc_DoExit(uint32_t code, int quick, int returnToCaller)
     Crt_CallTable(SIM_PTR(W6iVoidFn, 0x1012d828), SIM_PTR(W6iVoidFn, 0x1012d92c));
     if (returnToCaller == 0) {
         G32(0x1017e8d0) = 1;
-        SIM_API(W6iExitProcessFn, 0x10ac5640)(code);
+        hg_exit_process(code);          /* C runtime replacement, the rest (crt/hg_rest.h) */
     }
 }
 
