@@ -6,13 +6,12 @@
 #include "../unsorted_100f/w6i.h"
 #include "../unsorted_1008/w2i.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
 
 typedef int(__cdecl *W7nCountFn)(void);
 typedef int(__cdecl *W7nNameFn)(int index, uint8_t *record);
 typedef int(__cdecl *W7nRecordFn)(uint8_t *record);
 
-typedef uint32_t(__stdcall *W7nMapVirtualKeyAFn)(uint32_t code, uint32_t type);
-typedef int16_t(__stdcall *W7nGetKeyStateFn)(int key);
 
 #define DRIVER(i) G32(0x1013f150u + 4u * (uint32_t)(i))
 #define DEVICE(i) (GBYTES(0x1015f880) + (i) * 0x74)
@@ -224,16 +223,16 @@ void __cdecl Input_QueueKey(int key)
     uint16_t c = U16(GBYTES(0x10143a00), key * 2);
 
     if ((int16_t)c == 0) {
-        c = (uint16_t)(int16_t)(int8_t)SIM_API(W7nMapVirtualKeyAFn, 0x10ac578c)((uint32_t)key, 2);
+        c = (uint16_t)(int16_t)(int8_t)Plat_KeyChar((uint32_t)key);
         c = (uint16_t)W7N_CALL_100ff280((int16_t)c);
     }
     if ((int16_t)c == 0)
         return;
-    if ((SIM_API(W7nGetKeyStateFn, 0x10ac5788)(0x11) & 0x1000) != 0)
+    if ((Plat_KeyState(0x11) & 0x1000) != 0)
         c |= 0x100;
-    if ((SIM_API(W7nGetKeyStateFn, 0x10ac5788)(0x12) & 0x1000) != 0)
+    if ((Plat_KeyState(0x12) & 0x1000) != 0)
         c |= 0x400;
-    if ((SIM_API(W7nGetKeyStateFn, 0x10ac5788)(0x10) & 0x1000) != 0)
+    if ((Plat_KeyState(0x10) & 0x1000) != 0)
         c |= 0x200;
     U16(GBYTES(0x10165ee0), GS32(0x1016686c) * 2) = c;
     G32(0x1016686c) = G32(0x1016686c) + 1;

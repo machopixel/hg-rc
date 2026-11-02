@@ -726,10 +726,16 @@ SPECS = [
     # sp('DisplayDibWindowEnd', 0x1007eda5, g_dibend, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     # sp('DisplayDibWindowDraw', 0x1007ee9a, g_dibdraw, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     # sp('DisplayDibWindowSetFmt', 0x1007f224, g_dibsetfmt, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
-    sp('Sim_1008375a', 0x1008375a, g_1008375a, 500),
-    sp('Gdi_BitBltRect', 0x10083cd5, g_bltrect, 500),
-    sp('Gdi_SetPalette', 0x10083ebb, g_setpal, 600),
-    sp('Sim_1008400d', 0x1008400d, g_pal4, 500),
-    sp('Sim_10037cab', 0x10037cab, g_10037cab, 1000, True),
-    sp('ToggleFullScreen', 0x10037f71, g_togglefs, 1000, True),
+    # deleted: no caller and no pointer in the DLL (DECISIONS.md, "Windows calls: the screen")
+    # sp('Sim_1008375a', 0x1008375a, g_1008375a, 500),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # sp('Gdi_BitBltRect', 0x10083cd5, g_bltrect, 500),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # sp('Gdi_SetPalette', 0x10083ebb, g_setpal, 600),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # sp('Sim_1008400d', 0x1008400d, g_pal4, 500),
+    # superseded: the video-mode timing clock is SDL3's and cannot fail (DECISIONS.md, "Windows calls: the screen")
+    # sp('Sim_10037cab', 0x10037cab, g_10037cab, 1000, True),
+    # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+    # sp('ToggleFullScreen', 0x10037f71, g_togglefs, 1000, True),
 ]

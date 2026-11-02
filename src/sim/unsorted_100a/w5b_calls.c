@@ -6,6 +6,7 @@
 #include "../unsorted_1002/w2h.h"
 #include "../unsorted_1008/w3s.h"
 #include "../unsorted_100c/w2i.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x100a78fd
 int __cdecl Sim_100a78fd(uint32_t handle, const void *buffer, uint32_t size)
@@ -95,7 +96,7 @@ void __cdecl Sim_100aab03(void *node, void(__cdecl *callback)(void *))
     if (U32(node, 0x8c) != 0 && callback != 0)
         callback(BYTES(U32(node, 0x8c)));
     if ((U32(node, 0x94) & 4) != 0)
-        SIM_API(W4uHeapFreeFn, W4U_IAT_HEAPFREE)(W4U_HEAP, 1, node);
+        Hg_HeapFree(G32(0x1017b8f8), 1, node);
 }
 
 // FUNCTION: HGSIM 0x100aab8e

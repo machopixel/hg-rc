@@ -39,9 +39,7 @@
 #define W7L_CALL_1002e91e SIM_FN(int(__cdecl *)(void *, void *, uint32_t, uint32_t, uint32_t), 0x1002e91e)
 /* Not converted: (pointer). */
 #define W7L_CALL_1003218b SIM_FN(uint32_t(__cdecl *)(uint32_t), 0x1003218b)
-/* HeapFree through the DLL's import slot 0x10ac5634. */
-typedef int(__stdcall *W7lHeapFreeFn)(uint32_t heap, uint32_t flags, void *block);
-
+/* HeapFree on the game's heap (Hg_HeapFree, src/sim/crt/hg_winheap.c). */
 /*
  * a in 0..2 or 4, b in 0..9: picks the 0x18-byte entries b of the tables PTR[0x101336b0 + 4 * n] for the
  * numbers n at 0x10133700 and 0x10133708 (a == 0) or at 0x101336f8 + 8 * a (second one 0); for b == 0 the entry

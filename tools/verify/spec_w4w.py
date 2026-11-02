@@ -209,7 +209,7 @@ def g_3edda(ctx):
 
 
 
-# ---- network library loader (0x10045d70 .. 0x10045ec2) ---------------------------------------------------
+# ---- force-feedback library (FFORCE.DLL) loader (0x10045d70 .. 0x10045ec2) ---------------------------------------------------
 def h_getmodule(n, a, uc):
     name = cstr(uc, raw(uc, 0))
     return ST['gmh'] if name else 0xdead
@@ -253,6 +253,24 @@ API_LIB = {'GetModuleHandleA': h_getmodule, 'LoadLibraryA': h_loadlib, 'GetProcA
            'OutputDebugStringA': h_dbg,
            'SetCursorPos': lambda n, a: hsh(n, a[0] if a[0] != 'stack' else 1, a[1]) & 0x7fffffff,
            'ClipCursor': lambda n, a: ST['clip'][n % len(ST['clip'])]}
+
+
+def g_5d70_noff(ctx):
+    """Force feedback without a device (platform/force.h): the original runs its path for a missing FFORCE.DLL."""
+    out = g_5d70(ctx)
+    ST['gmh'] = ST['ll'] = 0
+    return out
+
+
+def g_5db9_noff(ctx):
+    out = g_5db9(ctx)
+    w32(ctx, 0x1015ef48, 0)
+    return out
+
+
+def no_ffload(log_o, log_c):
+    """The C code no longer looks for FFORCE.DLL: the original's (failing) lookups leave the comparison."""
+    return [c for c in log_o if c[0] not in ('GetModuleHandleA', 'LoadLibraryA')], log_c
 
 
 def g_5db9(ctx):
@@ -643,29 +661,43 @@ SPECS = [
     dict(name='Sim_1003924b', orig=0x1003924b, c='Sim_1003924b', gen=g_39202, trials=400, void=True),
     dict(name='Sim_1003c313', orig=0x1003c313, c='Sim_1003c313', gen=g_3c313, trials=300, void=True, api=API_FL),
     dict(name='Sim_1003edda', orig=0x1003edda, c='Sim_1003edda', gen=g_3edda, trials=500, void=True),
-    dict(name='Sim_10045d70', orig=0x10045d70, c='Sim_10045d70', gen=g_5d70, trials=600, api=API_LIB),
-    dict(name='Sim_10045db9', orig=0x10045db9, c='Sim_10045db9', gen=g_5db9, trials=300, api=API_LIB),
-    dict(name='Sim_10045e5d', orig=0x10045e5d, c='Sim_10045e5d', gen=g_5e5d, trials=400, api=API_LIB),
-    dict(name='Sim_10045ec2', orig=0x10045ec2, c='Sim_10045ec2', gen=g_5ec2, trials=600, api=API_LIB),
+    # superseded: FFORCE.DLL is platform/force.h now (DECISIONS.md "Force feedback kept for rumble")
+    # dict(name='Sim_10045d70', orig=0x10045d70, c='Sim_10045d70', gen=g_5d70, trials=600, api=API_LIB),
+    dict(name='Sim_10045d70_noff', orig=0x10045d70, c='Sim_10045d70', gen=g_5d70_noff, trials=600, api=API_LIB,
+         log_map=no_ffload),
+    # superseded: FFORCE.DLL is platform/force.h now
+    # dict(name='Sim_10045db9', orig=0x10045db9, c='Sim_10045db9', gen=g_5db9, trials=300, api=API_LIB),
+    dict(name='Sim_10045db9_noff', orig=0x10045db9, c='Sim_10045db9', gen=g_5db9_noff, trials=300, api=API_LIB),
+    # deleted: FFORCE.DLL's loader (DECISIONS.md "Force feedback kept for rumble")
+    # dict(name='Sim_10045e5d', orig=0x10045e5d, c='Sim_10045e5d', gen=g_5e5d, trials=400, api=API_LIB),
+    # deleted: FFORCE.DLL's loader (DECISIONS.md "Force feedback kept for rumble")
+    # dict(name='Sim_10045ec2', orig=0x10045ec2, c='Sim_10045ec2', gen=g_5ec2, trials=600, api=API_LIB),
     dict(name='Sim_100481dd', orig=0x100481dd, c='Sim_100481dd', gen=g_481dd, trials=400, void=True),
     dict(name='Sim_1004821c', orig=0x1004821c, c='Sim_1004821c', gen=g_4821c, trials=400, void=True),
     dict(name='Sim_10074b80', orig=0x10074b80, c='Sim_10074b80', gen=g_74b80, trials=400, api={'HeapAlloc': h_alloc}),
     # Win_JoyGetNumDevs (0x10056210): round 27 made it return 0; proven in spec_w27_joystick.py
-    dict(name='Win_CenterCursorAxis', orig=0x1007d961, c='Win_CenterCursorAxis', gen=g_7d961, trials=600, api=API_MOUSE),
-    dict(name='Win_PollMouse', orig=0x1007d9d8, c='Win_PollMouse', gen=g_7d9d8, trials=1000, api=API_MOUSE),
-    dict(name='Win_ClientRectToScreen', orig=0x1007dbb1, c='Win_ClientRectToScreen', gen=g_7dbb1, trials=300, void=True, api=API_MOUSE),
+    # deleted: dead (SDL3 platform/w28 version or unused; DECISIONS.md "Windows calls")
+    # dict(name='Win_CenterCursorAxis', orig=0x1007d961, c='Win_CenterCursorAxis', gen=g_7d961, trials=600, api=API_MOUSE),
+    # deleted: dead (SDL3 platform/w28 version or unused; DECISIONS.md "Windows calls")
+    # dict(name='Win_PollMouse', orig=0x1007d9d8, c='Win_PollMouse', gen=g_7d9d8, trials=1000, api=API_MOUSE),
+    # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+    # dict(name='Win_ClientRectToScreen', orig=0x1007dbb1, c='Win_ClientRectToScreen', gen=g_7dbb1, trials=300, void=True, api=API_MOUSE),
     # dict(name='Sim_1007ef27', orig=0x1007ef27, c='Sim_1007ef27', gen=g_7ef27, trials=400, api={'SendMessageA': h_sendmsg}),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     # dict(name='Sim_1007efb4', orig=0x1007efb4, c='Sim_1007efb4', gen=g_7efb4, trials=500,   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     # api={'SendMessageA': h_sendmsg, 'StretchBlt': h_stretch, 'GetLastError': lambda n, a: hsh(n, 5)}),
     # dict(name='Sim_1007f0c8', orig=0x1007f0c8, c='Sim_1007f0c8', gen=g_7f0c8, trials=600, api={'SendMessageA': h_sendmsg}),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
-    dict(name='Sim_10083692', orig=0x10083692, c='Sim_10083692', gen=g_83692, trials=400),
-    dict(name='Sim_10083d5b', orig=0x10083d5b, c='Sim_10083d5b', gen=g_83d5b, trials=500,
-         api={'SetDIBitsToDevice': h_setdib, 'GetSystemMetrics': lambda n, a: hsh(n, 3) & 0x3f,
-              'GetLastError': lambda n, a: hsh(n, 5)}),
-    dict(name='Win_PumpMessage', orig=0x10086b99, c='Win_PumpMessage', gen=g_pump, trials=800, void=True, api=API_PUMP),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # dict(name='Sim_10083692', orig=0x10083692, c='Sim_10083692', gen=g_83692, trials=400),
+    # deleted: no caller and no pointer in the DLL (DECISIONS.md, "Windows calls: the screen")
+    # dict(name='Sim_10083d5b', orig=0x10083d5b, c='Sim_10083d5b', gen=g_83d5b, trials=500,
+    #      api={'SetDIBitsToDevice': h_setdib, 'GetSystemMetrics': lambda n, a: hsh(n, 3) & 0x3f,
+    #           'GetLastError': lambda n, a: hsh(n, 5)}),
+    # deleted: dead (SDL3 platform/w28 version or unused; DECISIONS.md "Windows calls")
+    # dict(name='Win_PumpMessage', orig=0x10086b99, c='Win_PumpMessage', gen=g_pump, trials=800, void=True, api=API_PUMP),
     dict(name='Sim_1008c6b6', orig=0x1008c6b6, c='Sim_1008c6b6', gen=g_8c6b6, trials=300,
          api={'GetFocus': lambda n, a, uc: hsh(raw(uc, 0), 5)}),
-    dict(name='Win_AuxGetVolume', orig=0x1009eb52, c='Win_AuxGetVolume', gen=g_aux, trials=300, api=API_AUX),
+    # deleted: no caller and no pointer in the DLL (DECISIONS.md "Windows calls")
+    # dict(name='Win_AuxGetVolume', orig=0x1009eb52, c='Win_AuxGetVolume', gen=g_aux, trials=300, api=API_AUX),
     # superseded: the 1.0 CD aux volume; with no CD it is the music volume (spec_music_v12 Music_Volume_v12)
     # dict(name='Win_AuxSetVolume', orig=0x1009eb85, c='Win_AuxSetVolume', gen=g_aux_set, trials=500, api=API_AUX),
     # dict(name='Sim_1009ebeb', orig=0x1009ebeb, c='Sim_1009ebeb', gen=g_aux, trials=300, api=API_AUX),
@@ -674,7 +706,9 @@ SPECS = [
     dict(name='Win_TimeGetTime', orig=0x100b8fdb, c='Win_TimeGetTime', gen=g_time, trials=300,
          api={'timeGetTime': lambda n, a: hsh(n, 1)}),
     dict(name='Sim_100ba285', orig=0x100ba285, c='Sim_100ba285', gen=g_ba285, trials=800, void=True),
-    dict(name='Sim_100bd1b6', orig=0x100bd1b6, c='Sim_100bd1b6', gen=g_bd1b6, trials=300, void=True),
-    dict(name='Win_ErrorBox', orig=0x100d9fc5, c='Win_ErrorBox', gen=g_errbox, trials=400, api=API_ERR),
+    # superseded: no unpacker DLLs to free (DECISIONS.md "Windows calls: the decompressors")
+    # dict(name='Sim_100bd1b6', orig=0x100bd1b6, c='Sim_100bd1b6', gen=g_bd1b6, trials=300, void=True),
+    # deleted: no caller and no pointer in the DLL (DECISIONS.md, "Windows calls: the screen")
+    # dict(name='Win_ErrorBox', orig=0x100d9fc5, c='Win_ErrorBox', gen=g_errbox, trials=400, api=API_ERR),
     dict(name='Sim_100e469b', orig=0x100e469b, c='Sim_100e469b', gen=g_469b, trials=500, void=True),
 ]

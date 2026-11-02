@@ -22,6 +22,7 @@
 #include "../view/view.h"
 #include "../util/util.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x100200d1
 // FUNCTION: HGSIM12 0x100173e1
@@ -210,7 +211,7 @@ void __cdecl Sim_10027fb8(void *node)
             return;
         }
     }
-    SIM_API(W7lHeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, node);
+    Hg_HeapFree(G32(0x1017b8f8), 1, node);
     G32(0x109f13e0) = G32(0x109f13e0) - 1;
 }
 

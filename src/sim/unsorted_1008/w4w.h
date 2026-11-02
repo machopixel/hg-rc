@@ -24,7 +24,6 @@ int __cdecl Sim_10083692(void);
  * to (x1, y1 - GetSystemMetrics(15)). The result goes to dword 0x103729c4; a result of 0 reports GetLastError with
  * Sim_10083495(0x1014afd0, code). Returns 0 when the result equals the scan line count dword 0x109e3d18, else -1.
  */
-int __cdecl Sim_10083d5b(int x1, int y1, int x2, int y2);
 
 /*
  * Frees the block in dword +4 of the record (when set) and clears it, then calls the function at +0x18 of the display

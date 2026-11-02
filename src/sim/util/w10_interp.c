@@ -1,6 +1,7 @@
 #include "w10_interp.h"
 #include "../libm/hg_math.h"
 #include "../simmem.h"
+#include "../crt/hg_winheap.h"
 #include "access.h"
 #include "util.h"
 #include "w3o.h"

@@ -1334,6 +1334,8 @@ static void ResetBatch(void)
 
 static uint8_t expand5[32], expand6[64];
 static int expandReady;
+/* The proportions the frame is laid out in (the viewport): the game's 4:3, or a whole picture's (Vk_PresentPicture). */
+static int g_aspectW = SCREEN_W, g_aspectH = SCREEN_H;
 
 /* (Re)creates the full-resolution layer's image and upload buffers for w x h. 0: ready. */
 static int EnsureHud2(int w, int h)
@@ -1559,12 +1561,12 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
     pc.depthScale = maxIz > 0.0f ? 1.0f / (maxIz * 1.0001f) : 1.0f;
     vk.vkCmdBeginRenderPass(f->cmd, &rbi, VK_SUBPASS_CONTENTS_INLINE);
 
-    /* 4:3 picture centred in the window. */
-    scale = (float)g.extent.width / SCREEN_W;
-    if ((float)g.extent.height / SCREEN_H < scale)
-        scale = (float)g.extent.height / SCREEN_H;
-    vw = SCREEN_W * scale;
-    vh = SCREEN_H * scale;
+    /* 4:3 picture centred in the window (or the proportions of Vk_PresentPicture's picture). */
+    scale = (float)g.extent.width / (float)g_aspectW;
+    if ((float)g.extent.height / (float)g_aspectH < scale)
+        scale = (float)g.extent.height / (float)g_aspectH;
+    vw = (float)g_aspectW * scale;
+    vh = (float)g_aspectH * scale;
     viewport.x = ((float)g.extent.width - vw) * 0.5f;
     viewport.y = ((float)g.extent.height - vh) * 0.5f;
     viewport.width = vw;
@@ -1677,4 +1679,21 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
         vk.vkDeviceWaitIdle(g.device);
         DropAllTextures();
     }
+}
+
+/*
+ * The loading screen (picture_api.h): a whole picture alone, scaled to the window keeping its own proportions. It
+ * goes up as the full-resolution layer over an empty game layer, with no 3D.
+ */
+void Vk_PresentPicture(const uint32_t *rgba, int width, int height)
+{
+    static uint16_t empty[SCREEN_W * SCREEN_H];   /* 0x0000: transparent */
+
+    if (rgba == NULL || width <= 0 || height <= 0)
+        return;
+    g_aspectW = width;
+    g_aspectH = height;
+    Vk_Present(empty, SCREEN_W * (int)sizeof(uint16_t), rgba, width, height);
+    g_aspectW = SCREEN_W;
+    g_aspectH = SCREEN_H;
 }

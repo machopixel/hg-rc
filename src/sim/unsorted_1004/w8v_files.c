@@ -7,6 +7,7 @@
 #include "../unsorted_100a/w5z.h"
 #include "../unsorted_100a/w7o.h"
 #include "../unsorted_100a/w7p.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x100470c7
 int __cdecl Sim_100470c7(const char *name, const void *data)
@@ -52,7 +53,7 @@ int __cdecl Sim_1004712a(const char *name, uint32_t *out)
         rec[i] = 0;
     for (i = 0; i < 5; i++)
         U32(rec, 0x58 + 4 * i) = 0;
-    p = (uint32_t)(uintptr_t)SIM_API(W8vHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x6c);
+    p = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x6c);
     *out = p;
     memcpy(BYTES(*out), rec, 0x6c);
     return -1;

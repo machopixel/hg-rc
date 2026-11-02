@@ -18,6 +18,7 @@
 #include "w6d.h"
 #include "../render/w2n.h"
 #include "../libm/hg_math.h"
+#include "../crt/hg_winheap.h"
 
 /* The original's fcomp tests: "not below" fails for an unordered compare, "equal" holds for it. */
 #define W10_2NOT_BELOW(a, b) ((a) >= (b))
@@ -211,7 +212,6 @@ void __cdecl Sim_1002c1f9(uint8_t *obj)
     }
 }
 
-typedef void *(__stdcall *W10_2HeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
 typedef void(__cdecl *W10_2PanelArgFn)(uint32_t panel, uint32_t arg);
 typedef void(__cdecl *W10_2ReadIntFn)(void *table, int32_t *in, int32_t *out);
 
@@ -250,8 +250,7 @@ void __cdecl Sim_1002bca0(void)
     if (U8(G32(0x1017b8c4), 9) == 0 && G32(0x1015ec58) != 0)
         G32(0x109e898c) = 0;
     for (i = 0; i < 30; i++) {
-        W10_2PANEL(i) = (uint32_t)(uintptr_t)SIM_API(W10_2HeapAllocFn, 0x10ac5658)(
-            (void *)(uintptr_t)G32(0x1017b8f8), 1, 0x148);
+        W10_2PANEL(i) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x148);
         Sim_10028810((void *)(uintptr_t)W10_2PANEL(i));
         W10_2PANEL_CALL(i, 0x10c, G32(0x101381d0 + 4 * i));
         W10_2PANEL_CALL(i, 0x118, 0x109e8660 + 0x14 * i);
@@ -287,8 +286,7 @@ void __cdecl Sim_1002bca0(void)
     Sim_10062a3a();
     if (U8(G32(0x1017b8c4), 9) != 0 || G32(0x1015ec58) == 0)
         Sim_10099928();
-    G32(0x1015dc2c) = (uint32_t)(uintptr_t)SIM_API(W10_2HeapAllocFn, 0x10ac5658)(
-        (void *)(uintptr_t)G32(0x1017b8f8), 1, 0xfe01);
+    G32(0x1015dc2c) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0xfe01);
     G32(0x1015dc38) = 0x51f;
     v = (int32_t)G32(0x1015dc38);
     SIM_FN(W10_2ReadIntFn, 0x1008cdc9)(SIM_PTR(void, 0x109e3e00), &v, &v);

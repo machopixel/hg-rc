@@ -11,10 +11,7 @@
 #include "../render/w3q.h"
 #include "../util/util.h"
 #include "../util/access.h"
-
-typedef int(__stdcall *W7qHeapFreeFn)(uint32_t heap, uint32_t flags, uint32_t block);
-
-#define IAT_HEAPFREE 0x10ac5634u
+#include "../crt/hg_winheap.h"
 
 /* The name of group number n (its first frame in the texture name table, round 31: w31.h). */
 #define W7Q_GROUP_NAME(n) ((char *)W31_NAME((n), 0))
@@ -157,6 +154,6 @@ int __cdecl Sim_100db259(void *src)
     *SIM_PTR(u16a, 0x109f144c) += U16(object, 0x84);
     *SIM_PTR(u16a, 0x109f144e) += U16(object, 0x84);
     *SIM_PTR(u16a, 0x109f1450) += U16(object, 0x84);
-    SIM_API(W7qHeapFreeFn, IAT_HEAPFREE)(G32(0x1017b8f8), 1, (uint32_t)(uintptr_t)object);
+    Hg_HeapFree(G32(0x1017b8f8), 1, object);
     return 1;
 }

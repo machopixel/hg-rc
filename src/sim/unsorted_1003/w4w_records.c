@@ -4,15 +4,14 @@
 #include "../unsorted_1000/w2e.h"
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_1004/w3p.h"
+#include "../crt/hg_winheap.h"
 
-#define HEAP_ALLOC SIM_API(W4wHeapAllocFn, W4W_IAT_HEAPALLOC)
-#define HEAP_FREE SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)
 
 // FUNCTION: HGSIM 0x1003184b
 void *__cdecl Sim_1003184b(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e, uint32_t f,
                            int count)
 {
-    uint8_t *block = (uint8_t *)HEAP_ALLOC(W4W_GAME_HEAP, 1, (uint32_t)count * 4u + 0x2cu);
+    uint8_t *block = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, (uint32_t)count * 4u + 0x2cu);
     int i;
 
     if (block == 0) {
@@ -36,7 +35,7 @@ void *__cdecl Sim_1003184b(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint3
 // FUNCTION: HGSIM 0x10038ccd
 void __cdecl Sim_10038ccd(void)
 {
-    uint8_t *rec = (uint8_t *)HEAP_ALLOC(W4W_GAME_HEAP, 1, 0x698);
+    uint8_t *rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x698);
 
     G32(0x109e3770) = (uint32_t)(uintptr_t)rec;
     G32(0x109e3760) = G32(0x109e3770);
@@ -58,7 +57,7 @@ void __cdecl Sim_10039202(void)
     while (rec != 0) {
         uint32_t next = U32(rec, 0x690);
 
-        HEAP_FREE(W4W_GAME_HEAP, 1, BYTES(rec));
+        Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(rec));
         rec = next;
     }
 }
@@ -90,7 +89,7 @@ void __cdecl Sim_1003c313(void)
 
 static void free_block(uint32_t block)
 {
-    HEAP_FREE(W4W_GAME_HEAP, 1, BYTES(block));
+    Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(block));
 }
 
 // FUNCTION: HGSIM 0x1003edda

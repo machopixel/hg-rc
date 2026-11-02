@@ -1,4 +1,5 @@
 #include "w5b.h"
+#include "../../platform/picture.h"
 #include "../win/w4u_api.h"
 #include "../win/w4u.h"
 #include "../unsorted_1004/w2l.h"
@@ -18,12 +19,11 @@ int __cdecl Sim_10083c45(void)
     if ((G32(0x10179ca0) != 0 || G32(0x10179ca4) != 0) && G32(0x1017b92c) == 0) {
         SIM_CALL_10083801();
     } else {
-        GS32(0x103729c4) = SIM_API(W4uSetDIBitsToDeviceFn, W4U_IAT_SETDIBITSTODEVICE)(
-            *SIM_PTR(void *, 0x1017b3c0), 0, 0, G32(0x109e3d14), G32(0x109e3d18), 0, 0, 0, G32(0x109e3d18),
-            *SIM_PTR(void *, 0x1015e9a0), SIM_PTR(void, 0x109e38c0), 1);
+        /* the original's SetDIBitsToDevice of the whole picture: the loading-screen picture (platform/picture.h),
+           which never fails (the original's GetLastError report is not reached) */
+        GS32(0x103729c4) = Pic_Blit(BYTES(G32(0x1015e9a0)), GS32(0x109e3d14), GS32(0x109e3d18), 0, 0, 0, 0,
+                                    GS32(0x109e3d14), GS32(0x109e3d18));
     }
-    if (GS32(0x103729c4) == 0)
-        W4U_LOG(0x1014af9c, SIM_API(W4uGetLastErrorFn, W4U_IAT_GETLASTERROR)());
     return G32(0x103729c4) != G32(0x109e3d18) ? -1 : 0;
 }
 

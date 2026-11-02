@@ -4,6 +4,7 @@
 #include "../win/w4v.h"
 #include "../win/w4v_api.h"
 #include "../unsorted_100f/w2e.h"
+#include "../crt/hg_winheap.h"
 
 #define PTR(v) ((void *)(uintptr_t)(v))
 
@@ -32,7 +33,7 @@ int __cdecl Sim_1000e520(uint32_t count)
 {
     if (G32(0x1015d0a4) != 0)
         return -1;
-    G32(0x1015d0a4) = (uint32_t)(uintptr_t)SIM_API(W4vHeapAllocFn, W4V_IAT_HEAPALLOC)(W4V_GAME_HEAP, 1, 0x374);
+    G32(0x1015d0a4) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x374);
     if (G32(0x1015d0a4) == 0)
         return -3;
     Mem_Fill(PTR(G32(0x1015d0a4)), 0, 0x374);

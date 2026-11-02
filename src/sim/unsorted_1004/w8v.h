@@ -37,9 +37,7 @@
 /* Not converted: (first argument, handle, frame as a word, third argument, fourth argument). */
 #define W8V_CALL_100e91dc SIM_FN(void(__cdecl *)(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t), 0x100e91dc)
 
-/* Windows HeapAlloc(heap, flags, size), called through the DLL's import slot 0x10ac5658. */
-typedef void *(__stdcall *W8vHeapAllocFn)(uint32_t, uint32_t, uint32_t);
-
+/* HeapAlloc(heap, flags, size) on the game's heaps (Hg_HeapAlloc, src/sim/crt/hg_winheap.c). */
 /* The low-level I/O open mode used for the record files: _O_WRONLY | _O_CREAT | _O_TRUNC | _O_BINARY. */
 #define W8V_O_WRITE_NEW 0x8101u
 

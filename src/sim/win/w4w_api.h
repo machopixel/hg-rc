@@ -9,15 +9,8 @@
 #include <stdint.h>
 #include "../simmem.h"
 
-typedef void *(__stdcall *W4wHeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
-typedef int (__stdcall *W4wHeapFreeFn)(void *heap, uint32_t flags, void *block);
 typedef int (__stdcall *W4wFreeLibraryFn)(void *module);
-typedef void *(__stdcall *W4wGetProcAddressFn)(void *module, const char *name);
-typedef void (__stdcall *W4wOutputDebugStringFn)(const char *text);
-typedef void *(__stdcall *W4wLoadLibraryFn)(const char *name);
-typedef void *(__stdcall *W4wGetModuleHandleFn)(const char *name);
 typedef uint32_t (__stdcall *W4wGetLastErrorFn)(void);
-typedef int (__cdecl *W4wWsprintfFn)(char *out, const char *format, ...);
 typedef int (__stdcall *W4wWvsprintfFn)(char *out, const char *format, void *args);
 typedef int (__stdcall *W4wBoolPtrFn)(void *a);
 typedef int (__stdcall *W4wBool2Fn)(void *a, void *b);
@@ -34,24 +27,14 @@ typedef int (__stdcall *W4wSetDIBitsFn)(void *dc, int xd, int yd, uint32_t w, ui
 typedef void *(__stdcall *W4wSelectObjectFn)(void *dc, void *obj);
 typedef int (__stdcall *W4wReleaseDCFn)(void *hwnd, void *dc);
 typedef int (__stdcall *W4wMessageBoxFn)(void *hwnd, const char *text, const char *caption, uint32_t type);
-typedef uint32_t (__stdcall *W4wU32Fn)(void);
 typedef uint32_t (__stdcall *W4wU32IntFn)(int a);
-typedef uint32_t (__stdcall *W4wAuxGetFn)(uint32_t device, uint32_t *volume);
-typedef uint32_t (__stdcall *W4wAuxSetFn)(uint32_t device, uint32_t volume);
 
 #define W4W_IAT_STRETCHBLT 0x10ac5578u
 #define W4W_IAT_SETDIBITSTODEVICE 0x10ac5570u
 #define W4W_IAT_SELECTOBJECT 0x10ac5590u
 #define W4W_IAT_DELETEOBJECT 0x10ac5594u
 #define W4W_IAT_FREELIBRARY 0x10ac55d8u
-#define W4W_IAT_GETPROCADDRESS 0x10ac55dcu
-#define W4W_IAT_OUTPUTDEBUGSTRING 0x10ac55e0u
-#define W4W_IAT_LOADLIBRARY 0x10ac55e4u
-#define W4W_IAT_GETMODULEHANDLE 0x10ac55ecu
 #define W4W_IAT_GETLASTERROR 0x10ac5600u
-#define W4W_IAT_HEAPFREE 0x10ac5634u
-#define W4W_IAT_HEAPALLOC 0x10ac5658u
-#define W4W_IAT_WSPRINTF 0x10ac5774u
 #define W4W_IAT_GETFOCUS 0x10ac5778u
 #define W4W_IAT_GETSYSTEMMETRICS 0x10ac577cu
 #define W4W_IAT_PEEKMESSAGE 0x10ac5780u
@@ -70,11 +53,7 @@ typedef uint32_t (__stdcall *W4wAuxSetFn)(uint32_t device, uint32_t volume);
 #define W4W_IAT_MESSAGEBOX 0x10ac57e4u
 #define W4W_IAT_WAITMESSAGE 0x10ac57e8u
 #define W4W_IAT_AUXSETVOLUME 0x10ac5848u
-#define W4W_IAT_AUXGETVOLUME 0x10ac584cu
 #define W4W_IAT_JOYGETNUMDEVS 0x10ac5864u
-#define W4W_IAT_TIMEGETTIME 0x10ac5868u
 
 /* The game's heap handle. */
-#define W4W_GAME_HEAP (*SIM_PTR(void *, 0x1017b8f8))
-
 #endif

@@ -32,9 +32,6 @@
 /* Not converted: (face, points, a, b as float bits), like Sim_1002e9f5 / Sim_1002ed0b for the third plane. */
 #define W8U_CALL_1002f021 SIM_FN(int(__cdecl *)(void *, void *, uint32_t, uint32_t), 0x1002f021)
 /* HeapSize / HeapAlloc through the DLL's import slots. */
-typedef uint32_t(__stdcall *W8uHeapSizeFn)(uint32_t heap, uint32_t flags, const void *block);
-typedef void *(__stdcall *W8uHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
-
 /* Appends text to "hgdebug.txt" (mode "a"; fclose is called even when the open failed) and prints it with
  * Mono_PrintText. */
 void __cdecl Debug_LogText(const char *text);

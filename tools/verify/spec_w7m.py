@@ -1229,7 +1229,8 @@ SPECS = [
     dict(name='Sim_1003ca04', orig=0x1003ca04, c='Sim_1003ca04', gen=g_ca04, trials=800, void=True),
     dict(name='Sim_1003c5a0', orig=0x1003c5a0, c='Sim_1003c5a0', gen=g_c5a0, trials=300,
          api={'GetModuleHandleA': lambda n, args: 0x10000000}),
-    dict(name='Sim_100381d0', orig=0x100381d0, c='Sim_100381d0', gen=g_381d0, trials=600, void=True, api=API_381D0),
+    # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+    # dict(name='Sim_100381d0', orig=0x100381d0, c='Sim_100381d0', gen=g_381d0, trials=600, void=True, api=API_381D0),
     dict(name='Sim_100361d8', orig=0x100361d8, c='Sim_100361d8', gen=g_361d8, trials=600, void=True, api=API_361D8),
     dict(name='Sim_10031acd', orig=0x10031acd, c='Sim_10031acd', gen=g_31acd, trials=2000),
     dict(name='Sim_10031f95', orig=0x10031f95, c='Sim_10031f95', gen=g_31f95, trials=2000),

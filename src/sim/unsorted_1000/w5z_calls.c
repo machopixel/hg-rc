@@ -4,8 +4,8 @@
 #include "../win/w4a.h"
 #include "../view/w2l.h"
 #include "../unsorted_100a/w5z.h"
+#include "../crt/hg_winheap.h"
 
-typedef int(__stdcall *HeapFreeFn)(void *heap, uint32_t flags, void *block);
 typedef void(__cdecl *Fn1002feef)(void *obj);
 typedef int(__cdecl *Fn1000a6f0)(uint32_t a, uint32_t b);
 typedef uint32_t(__cdecl *Fn1000ea40)(uint32_t a0, uint32_t a1, uint32_t a2, uint32_t a3, uint32_t a4, uint16_t a5, uint32_t a6);
@@ -33,7 +33,7 @@ void __cdecl Sim_10009369(void *obj)
         Heap_Free(BYTES(cur));
     }
     SIM_FN(Fn1002feef, 0x1002feef)(obj);
-    SIM_API(HeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, obj);
+    Hg_HeapFree(G32(0x1017b8f8), 1, obj);
 }
 
 // FUNCTION: HGSIM 0x10009741

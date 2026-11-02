@@ -11,8 +11,7 @@
 #include "../unsorted_100e/w5b.h"
 #include "../unsorted_100e/w6h.h"
 #include "../unsorted_100f/w2e.h"
-
-typedef int(__stdcall *W8yHeapFreeFn)(uint32_t heap, uint32_t flags, uint32_t block);
+#include "../crt/hg_winheap.h"
 
 /*
  * Floating point as in util/w3o.h: double intermediates (the x87 runs with a 53-bit mantissa), float where the
@@ -38,7 +37,7 @@ static void unitbox_key(uint8_t *key, uint32_t addr)
 static void free_data(const uint8_t *key, uint32_t data)
 {
     if (S16(key, 0) == -1)
-        SIM_API(W8yHeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, data);
+        Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(data));
     else
         Sim_1002828e(S16(key, 0), (const void *)(uintptr_t)G32(0x1014cedc));
 }

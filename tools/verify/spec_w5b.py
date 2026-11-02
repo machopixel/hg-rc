@@ -951,10 +951,12 @@ SPECS = [
     dict(name='Sim_100631ef', orig=0x100631ef, c='Sim_100631ef', gen=g_631ef, trials=600, void=True, fp=True),
     dict(name='Sim_10068bb2', orig=0x10068bb2, c='Sim_10068bb2', gen=g_68bb2, trials=600, void=True, fp=True),
     dict(name='Sim_1006c9a0', orig=0x1006c9a0, c='Sim_1006c9a0', gen=g_6c9a0, trials=400, void=True),
-    dict(name='Sim_10083c45', orig=0x10083c45, c='Sim_10083c45', gen=g_83c45, trials=500,
-         api={'SetDIBitsToDevice': api_sdib, 'GetLastError': lambda n, a: 0x7e + n}),
-    dict(name='Sim_1008404b', orig=0x1008404b, c='Sim_1008404b', gen=g_8404b, trials=300,
-         api={'SetDIBitsToDevice': api_sdib, 'GetLastError': lambda n, a: 0x7e + n}),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # dict(name='Sim_10083c45', orig=0x10083c45, c='Sim_10083c45', gen=g_83c45, trials=500,
+    #      api={'SetDIBitsToDevice': api_sdib, 'GetLastError': lambda n, a: 0x7e + n}),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # dict(name='Sim_1008404b', orig=0x1008404b, c='Sim_1008404b', gen=g_8404b, trials=300,
+    #      api={'SetDIBitsToDevice': api_sdib, 'GetLastError': lambda n, a: 0x7e + n}),
     dict(name='Sim_100878bb', orig=0x100878bb, c='Sim_100878bb', gen=g_878bb, trials=400),
     dict(name='Sim_1008792c', orig=0x1008792c, c='Sim_1008792c', gen=g_8792c, trials=300),
     dict(name='Sim_1008e687', orig=0x1008e687, c='Sim_1008e687', gen=g_8e687, trials=600, fp=True),

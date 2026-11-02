@@ -20,3 +20,4 @@ EXPORTS
     UnlockDisplay
     RefreshDisplay
     HgvkHudApi
+    HgvkPictureApi

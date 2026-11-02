@@ -13,6 +13,7 @@
 #include <SDL3/SDL_system.h>
 
 #include "input.h"
+#include "plat_sdl3.h"
 
 static SDL_Window *g_window;
 static int g_sdlStarted;
@@ -180,8 +181,6 @@ void Input_WaitEvent(void)
 
 int Input_Open(void *nativeWindow)
 {
-    SDL_PropertiesID props;
-
     if (g_window != NULL)
         return 1;
     if (nativeWindow == NULL)
@@ -193,10 +192,8 @@ int Input_Open(void *nativeWindow)
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS))
         return 0;
     g_sdlStarted = 1;
-    props = SDL_CreateProperties();
-    SDL_SetPointerProperty(props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, nativeWindow);
-    g_window = SDL_CreateWindowWithProperties(props);
-    SDL_DestroyProperties(props);
+    /* the one wrap of the game's window, shared with the screen services (plat_window.c) */
+    g_window = PlatSdl_Window(nativeWindow);
     if (g_window == NULL) {
         SDL_Quit();
         g_sdlStarted = 0;
@@ -217,7 +214,7 @@ void Input_Close(void)
         SDL_SetWindowRelativeMouseMode(g_window, false);
     SDL_SetWindowsMessageHook(NULL, NULL);
     if (g_window != NULL) {
-        SDL_DestroyWindow(g_window);
+        PlatSdl_Release();
         g_window = NULL;
     }
     if (g_sdlStarted) {

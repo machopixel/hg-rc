@@ -37,6 +37,23 @@ def g(ctx):
     return []
 
 
-SPECS = [dict(name='Sim_1005f6c6', orig=0x1005f6c6, c='Sim_1005f6c6', gen=g, void=True, trials=2000,
+def g_nokbd(ctx):
+    """KEYBOARD.DLL dropped: the original runs its path for a DLL that does not load."""
+    out = g(ctx)
+    ST['lib'] = 0
+    return out
+
+
+def no_load(log_o, log_c):
+    """The C code no longer asks for KEYBOARD.DLL: the original's (failing) LoadLibraryA leaves the comparison."""
+    return [c for c in log_o if c[0] != 'LoadLibraryA'], log_c
+
+
+# superseded: KEYBOARD.DLL dropped (DECISIONS.md "KEYBOARD.DLL dropped"); the DLL-loading original is compared below
+# SPECS = [dict(name='Sim_1005f6c6', orig=0x1005f6c6, c='Sim_1005f6c6', gen=g, void=True, trials=2000,
+#               api={'LoadLibraryA': lambda n, a: ST['lib'], 'GetProcAddress': gpa,
+#                    'FreeLibrary': lambda n, a: ST['free']})]
+SPECS = [dict(name='Sim_1005f6c6_nokbd', orig=0x1005f6c6, c='Sim_1005f6c6', gen=g_nokbd, void=True, trials=2000,
+              log_map=no_load,
               api={'LoadLibraryA': lambda n, a: ST['lib'], 'GetProcAddress': gpa,
                    'FreeLibrary': lambda n, a: ST['free']})]

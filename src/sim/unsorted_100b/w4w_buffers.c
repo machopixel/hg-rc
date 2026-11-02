@@ -3,11 +3,12 @@
 #include "../win/w4a.h"
 #include "../util/access.h"
 #include "../unsorted_100f/w2e.h"
+#include "../crt/hg_winheap.h"
 
 static void release(uint32_t addr)
 {
     if (G32(addr) != 0) {
-        SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)(W4W_GAME_HEAP, 1, BYTES(G32(addr)));
+        Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(G32(addr)));
         G32(addr) = 0;
     }
 }
@@ -70,8 +71,6 @@ void __cdecl Sim_100ba285(char *s)
 // FUNCTION: HGSIM 0x100bd1b6
 void __cdecl Sim_100bd1b6(void)
 {
-    uint32_t i;
-
-    for (i = 1; i < G32(0x1017e1bc) + 1u; i++)
-        SIM_API(W4wFreeLibraryFn, W4W_IAT_FREELIBRARY)((void *)(uintptr_t)G32(0x1017dfd0 + i * 32u));
+    /* the original freed the archive's unpacker DLLs here (FreeLibrary of each handle at 0x1017dfd0 + i * 32); the
+     * unpackers are ours now and hold nothing (Sim_100bcc50) */
 }

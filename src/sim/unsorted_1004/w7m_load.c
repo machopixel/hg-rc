@@ -1,14 +1,13 @@
 #include "w7m.h"
 #include "../unsorted_100b/w6g.h"
 #include "../unsorted_1002/w2j.h"
-
-typedef int(__stdcall *W7mHeapFreeFn)(uint32_t heap, uint32_t flags, void *block);
+#include "../crt/hg_winheap.h"
 
 /* Releases a loaded record: with HeapFree when the key word is -1, else through Sim_100bb2b0 (name at key + 2). */
 static void Release(const int16_t *key, void *data, uint32_t table)
 {
     if (key[0] == -1)
-        SIM_API(W7mHeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, data);
+        Hg_HeapFree(G32(0x1017b8f8), 1, data);
     else
         Sim_100bb2b0((const uint32_t *)(key + 1), (const char *)(uintptr_t)table);
 }
@@ -89,7 +88,7 @@ int __cdecl Sim_100468c3(const int16_t *key, uint32_t *rects, uint32_t *pair)
     pair[0] = (uint32_t)(int32_t)S16(p, 0);
     pair[1] = (uint32_t)(int32_t)S16(p, 2);
     if (key[0] == -1)
-        SIM_API(W7mHeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, data);
+        Hg_HeapFree(G32(0x1017b8f8), 1, data);
     else
         Sim_1002828e(key[0], (const void *)(uintptr_t)G32(0x1014cef0));
     return 1;

@@ -948,8 +948,9 @@ SPECS = [
     dict(name='Sim_10079664', orig=0x10079664, c='Sim_10079664', gen=g_79664, trials=400, void=True),
     dict(name='Sim_10079b68', orig=0x10079b68, c='Sim_10079b68', gen=g_79b68, trials=500),
     dict(name='ProjFile_FindEntry', orig=0x1007e570, c='ProjFile_FindEntry', gen=g_7e570, trials=600),
-    dict(name='Sim_10083530', orig=0x10083530, c='Sim_10083530', gen=g_83530, trials=400,
-         api={'HeapAlloc': a_heapalloc}),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # dict(name='Sim_10083530', orig=0x10083530, c='Sim_10083530', gen=g_83530, trials=400,
+    #      api={'HeapAlloc': a_heapalloc}),
     dict(name='Sim_10084cee', orig=0x10084cee, c='Sim_10084cee', gen=g_84cee, trials=1000, void=True),
     dict(name='Heap_ReportCheck', orig=0x10084f10, c='Heap_ReportCheck', gen=g_84f10, trials=300, api=API_HEAP),
     dict(name='Sim_10086c32', orig=0x10086c32, c='Sim_10086c32', gen=g_86c32, trials=500, void=True,

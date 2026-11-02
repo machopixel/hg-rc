@@ -16,6 +16,7 @@
 #include "../unsorted_100f/w6i.h"
 #include "../unsorted_100f/w8z.h"
 #include "../unsorted_1004/w3p.h"
+#include "../crt/hg_winheap.h"
 
 typedef union {
     float f;
@@ -306,8 +307,6 @@ int __cdecl Sim_10030c87(const float *grid, uint8_t *points, void *seg)
 }
 
 
-typedef void *(__stdcall *W10_3HeapAlloc2Fn)(void *heap, uint32_t flags, uint32_t bytes);
-
 /* the 17 cleared blocks of 0x100 bytes, in the original's order (the 14th clears 0x1015ecb8 again, not its own);
    1.2 (0x10031389) also allocates the "DI" message buffer (its [0x10131504], g_net10DiBuf) after the third, the {0, 0}
    entry here, and its "AK" buffer after the fifth (ours is the static g_w34AkBuf, round 33) */
@@ -344,7 +343,7 @@ void __cdecl Sim_1003dc19(uint32_t game)
     G32(0x1015d088) = 0;
     G32(0x1015ec8c) = 0x42;
     for (i = 0; i < 18; i++) {
-        void *block = SIM_API(W10_3HeapAlloc2Fn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, 0x100);
+        void *block = Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x100);
 
         if (W10_3BLOCKS[i][0] == 0) {
             g_net10DiBuf = (uint8_t *)block;
@@ -360,8 +359,7 @@ void __cdecl Sim_1003dc19(uint32_t game)
         if (i == 14)
             G32(0x1015d08c) = 0x27;
     }
-    G32(0x1015d008) = (uint32_t)(uintptr_t)SIM_API(W10_3HeapAlloc2Fn, 0x10ac5658)(
-        (void *)(uintptr_t)G32(0x1017b8f8), 1, 0x100);
+    G32(0x1015d008) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x100);
     if (G32(0x1015d008) == 0)
         return;
     for (i = 0; i < NET10_PLAYERS; i++) {

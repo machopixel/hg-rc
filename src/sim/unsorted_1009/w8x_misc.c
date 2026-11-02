@@ -5,9 +5,8 @@
 #include "../util/access.h"
 #include "../util/util.h"
 #include "../util/w3o.h"
+#include "../crt/hg_winheap.h"
 
-typedef void *(__stdcall *W8xHeapAllocFn)(void *heap, uint32_t flags, uint32_t size);
-#define W8X_HEAPALLOC SIM_API(W8xHeapAllocFn, 0x10ac5658)
 
 // FUNCTION: HGSIM 0x1009c860
 void __cdecl Sim_1009c860(uint32_t seed)
@@ -36,7 +35,7 @@ void *__cdecl Sim_1009db70(void *node)
 
     if (node == 0)
         return 0;
-    copy = W8X_HEAPALLOC((void *)(uintptr_t)G32(0x1017b8f8), 1, 0x28);
+    copy = Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x28);
     if (copy == 0)
         return 0;
     U32(copy, 8) = (uint32_t)(uintptr_t)node;

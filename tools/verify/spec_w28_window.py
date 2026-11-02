@@ -18,7 +18,10 @@ if os.environ.get('W28_NEG'):
     CFLAGS.append('-DW28W_MUTATE')
 
 PLAT_STUB = os.path.abspath(os.path.join('tools', 'verify', 'plat_stub.c'))
-SOURCES = closure(['sim/platform/w28_window.c']) + [PLAT_STUB]
+SOURCES = closure(['sim/platform/w28_window.c'])
+# the closure may already bring the stand-in (the platform's window calls, DECISIONS.md "Windows calls: the screen")
+if not any(os.path.basename(f) == 'plat_stub.c' for f in SOURCES):
+    SOURCES.append(PLAT_STUB)
 FN = {'refresh': 0x00F00E00, 'palette': 0x00F00E10, 'resume': 0x00F00E20, 'pause': 0x00F00E30}
 helper(0x10057f53, 'Sim_10057f53', 0)
 helper(0x10037f71, None, 0)

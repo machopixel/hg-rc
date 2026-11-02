@@ -3,8 +3,7 @@
 #include "../unsorted_1002/w3o.h"
 #include "../unsorted_100f/w6h.h"
 #include "../util/w3o.h"
-
-typedef void *(__stdcall *W8w8HeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x10086e27
 int32_t __cdecl Sim_10086e27(const char *name, uint8_t *rec)
@@ -15,7 +14,7 @@ int32_t __cdecl Sim_10086e27(const char *name, uint8_t *rec)
     if (file != 0) {
         W8W8_FREAD(rec, 0x66, 1, file);
         if (U32(rec, 4) != 0) {
-            U32(rec, 0x10) = (uint32_t)(uintptr_t)SIM_API(W8w8HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1,
+            U32(rec, 0x10) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1,
                                                                                         U32(rec, 4) * 0x1e);
             W8W8_FREAD((void *)(uintptr_t)U32(rec, 0x10), 0x1e, U32(rec, 4), file);
             done = 1;

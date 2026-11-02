@@ -69,5 +69,7 @@ void Vk_AddDraw(int topology, int blend, int sampler, int keyed, int painter, Hg
  */
 void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, int hud2W,
                 int hud2H);
+/* Presents width x height pixels (bytes R, G, B, A) alone, scaled to the window with their proportions. */
+void Vk_PresentPicture(const uint32_t *rgba, int width, int height);
 
 #endif

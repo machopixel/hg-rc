@@ -13,7 +13,6 @@
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-int32_t __cdecl SimPlat_GetSystemMetrics(int32_t index);
 uint32_t __cdecl SimPlat_GlobalAlloc(uint32_t flags, uint32_t bytes);
 uint32_t __cdecl SimPlat_GlobalSize(uint32_t mem);
 uint32_t __cdecl SimPlat_GlobalFree(uint32_t mem);
@@ -23,12 +22,5 @@ uint32_t __cdecl SimPlat_HeapCreate(uint32_t options, uint32_t initial, uint32_t
 uint32_t __cdecl SimPlat_HeapAlloc(uint32_t heap, uint32_t flags, uint32_t bytes);
 int32_t __cdecl SimPlat_HeapDestroy(uint32_t heap);
 int32_t __cdecl SimPlat_SetEnvironmentVariable(const char *name, const char *value);
-int32_t __cdecl SimPlat_SendMessage(uint32_t window, uint32_t message, uint32_t wParam, uint32_t lParam);
-int32_t __cdecl SimPlat_ShowCursor(int32_t show);
-uint32_t __cdecl SimPlat_GetDC(uint32_t window);
-int32_t __cdecl SimPlat_ReleaseDC(uint32_t window, uint32_t dc);
-int32_t __cdecl SimPlat_GetDeviceCaps(uint32_t dc, int32_t index);
-int32_t __cdecl SimPlat_PeekMessage(void *msg, uint32_t window, uint32_t first, uint32_t last, uint32_t remove);
-int32_t __cdecl SimPlat_MessageBox(uint32_t window, const char *text, const char *caption, uint32_t type);
 
 #endif

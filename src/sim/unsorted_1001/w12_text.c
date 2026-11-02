@@ -13,8 +13,7 @@
 #include "../unsorted_100f/w2k.h"
 #include "../unsorted_100f/w6h.h"
 #include "../libm/hg_math.h"
-
-typedef void *(__stdcall *W12HeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t bytes);
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x1001a4fa
 int __cdecl Sim_1001a4fa(int mode, char *text)
@@ -26,7 +25,7 @@ int __cdecl Sim_1001a4fa(int mode, char *text)
         char name[100]; /* sscanf's name field; it only goes to Sim_100b8d5c, which ignores it (DECISIONS.md) */
         char *p;
 
-        rec = (uint8_t *)SIM_API(W12HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x1e);
+        rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x1e);
         if (rec == 0)
             return 0;
         *(uint32_t *)(uintptr_t)Sim_100cc8ba((int)Sim_100cc6e0()) = (uint32_t)(uintptr_t)rec;
@@ -97,7 +96,7 @@ int __cdecl Sim_10019fe1(int mode, char *text, int32_t time)
         uint32_t a = 0, b = 0, c = 0, d = 0;
         char *p;
 
-        rec = (uint8_t *)SIM_API(W12HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x1c);
+        rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x1c);
         if (rec == 0)
             return 0;
         *(uint32_t *)(uintptr_t)Sim_100cc8ba((int)Sim_100cc6e0()) = (uint32_t)(uintptr_t)rec;
@@ -160,7 +159,7 @@ int __cdecl Sim_1001a23e(int mode, char *text, int32_t time)
         uint32_t a = 0, b = 0, n = 0, unused = 0;
         char *p;
 
-        rec = (uint8_t *)SIM_API(W12HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x1c);
+        rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x1c);
         if (rec == 0)
             return 0;
         *(uint32_t *)(uintptr_t)Sim_100cc8ba((int)Sim_100cc6e0()) = (uint32_t)(uintptr_t)rec;

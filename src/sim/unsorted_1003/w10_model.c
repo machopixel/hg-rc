@@ -20,10 +20,9 @@
 #include "../unsorted_100e/w5b.h"
 #include "../unsorted_100e/w6h.h"
 #include "../unsorted_100f/w2e.h"
+#include "../crt/hg_winheap.h"
 
 typedef void *(__cdecl *W10_3ModelLoadFn)(const char *name, uint32_t ext, uint32_t *out);
-typedef void *(__stdcall *W10_3HeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
-
 #define W10_3MODEL(rec, i) U32(rec, 0x50u + (uint32_t)(i) * 4u)
 
 // FUNCTION: HGSIM 0x1003aecb
@@ -86,8 +85,7 @@ uint32_t __cdecl Sim_1003aecb(int32_t index, int32_t level, uint32_t mode)
         if (kind == 0xa0)
             Sim_100aa4f0((void *)(uintptr_t)U32(rec, 0x60), 0x1a0);
         Sim_100a9d47((void *)(uintptr_t)U32(rec, 0x60), U32(rec, 0x68), U32(rec, 0x6c), U32(rec, 0x70));
-        U32(U32(rec, 0x60), 0x90) = (uint32_t)(uintptr_t)SIM_API(W10_3HeapAllocFn, 0x10ac5658)(
-            (void *)(uintptr_t)G32(0x1017b8f8), 1, Str_Length(name) + 1);
+        U32(U32(rec, 0x60), 0x90) = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, Str_Length(name) + 1);
         Str_Copy((char *)(uintptr_t)U32(U32(rec, 0x60), 0x90), name);
     } else {
         for (i = 0; i < 4; i++)

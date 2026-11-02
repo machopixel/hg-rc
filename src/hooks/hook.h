@@ -50,6 +50,9 @@ void HooksView_OnSimLoaded(HMODULE sim);
 /* The converted memory cache functions (hooks_mem.c). */
 void HooksMem_OnSimLoaded(HMODULE sim);
 
+/* HGSIM.DLL's heap imports on our heaps (hooks_heap.c). */
+void HooksHeap_OnSimLoaded(HMODULE sim);
+
 /* The converted simulation core functions (hooks_core.c). */
 void HooksCore_OnSimLoaded(HMODULE sim);
 

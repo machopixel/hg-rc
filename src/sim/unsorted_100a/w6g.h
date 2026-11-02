@@ -29,9 +29,7 @@
 
 /* The drawing function the DLL stores in dword 0x1014cb4c: (vertex count, vertices of 0x24 bytes, colour/flags). */
 typedef uint32_t(__cdecl *W6gDrawFn)(int, void *, uint32_t);
-/* HeapAlloc (import slot 0x10ac5658). */
-typedef void *(__stdcall *W6gHeapAllocFn)(uint32_t, uint32_t, uint32_t);
-
+/* HeapAlloc on the game's heap (Hg_HeapAlloc). */
 /*
  * Five vertices (x, y) = the ten integer arguments as floats, each with dword +0x10 = colour and +0x18 = 0xff000000
  * (the other fields are not set, as in the original), drawn through the function in dword 0x1014cb4c with

@@ -2,7 +2,6 @@
  * symbol, so the bodies never run. */
 #include "../../src/platform/plat.h"
 
-void Plat_WindowShow(void *window, int how) { (void)window, (void)how; }
 void Plat_WindowPainted(void *window) { (void)window; }
 int32_t Plat_WindowDefault(void *window, uint32_t message, uint32_t wParam, uint32_t lParam)
 {
@@ -11,7 +10,6 @@ int32_t Plat_WindowDefault(void *window, uint32_t message, uint32_t wParam, uint
 }
 uint32_t Plat_EventTime(void) { return 0; }
 void Plat_RequestQuit(void) {}
-void Plat_CursorVisible(int visible) { (void)visible; }
 uint32_t Plat_TicksMs(void) { return 0; }
 uint32_t Plat_CurrentDir(char *out, uint32_t size) { (void)out, (void)size; return 0; }
 uint32_t Plat_IniInt(const char *path, const char *section, const char *key, uint32_t def)
@@ -76,3 +74,91 @@ int32_t Plat_FileFindClose(uint32_t find) { return PS_API(PsHandleFn, 0x10ac55f0
 uint32_t Plat_ProgramPath(char *out, uint32_t size) { (void)out, (void)size; return 0; }
 int Plat_AssertBox(const char *text, const char *caption) { (void)text, (void)caption; return PLAT_ASSERT_IGNORE; }
 void Plat_DebugBreak(void) {}
+
+/* Windows calls (DECISIONS.md, "Windows calls"): the stand-ins make the call the converted code made before,
+ * through the DLL's import slot, so the specs answer and log it as for the original. */
+typedef uint32_t(__stdcall *PsTimeFn)(void);
+typedef void(__stdcall *PsTextFn)(const char *);
+typedef uint32_t(__stdcall *PsMapKeyFn)(uint32_t, uint32_t);
+typedef int16_t(__stdcall *PsKeyStateFn)(int);
+
+uint32_t Plat_TimeMs(void) { return PS_API(PsTimeFn, 0x10ac5868)(); }
+void Plat_DebugText(const char *text) { PS_API(PsTextFn, 0x10ac55e0)(text); }
+uint32_t Plat_KeyChar(uint32_t key) { return PS_API(PsMapKeyFn, 0x10ac578c)(key, 2); }
+int16_t Plat_KeyState(int key) { return PS_API(PsKeyStateFn, 0x10ac5788)(key); }
+
+/* The screen (DECISIONS.md, "Windows calls: the screen"): where a platform call stands for the original's Windows
+ * call(s), the stand-in makes them through the DLL's import slots, so the specs answer and log them as for the
+ * original. The round-28 specs hook Plat_WindowShow and Plat_CursorVisible by symbol, so these bodies do not change
+ * them. */
+typedef int32_t(__stdcall *PsIntFn)(int32_t);
+typedef int32_t(__stdcall *PsShowFn)(void *, int32_t);
+typedef int32_t(__stdcall *PsWindowFn)(void *);
+typedef int32_t(__stdcall *PsBoxFn)(void *, const char *, const char *, uint32_t);
+typedef int32_t(__stdcall *PsSendFn)(void *, uint32_t, uint32_t, uint32_t);
+typedef int32_t(__stdcall *PsPeekFn)(void *, void *, uint32_t, uint32_t, uint32_t);
+typedef int32_t(__stdcall *PsCounterFn)(void *);
+
+void Plat_WindowShow(void *window, int how)
+{
+    static const int32_t kShow[5] = {0, 4, 6, 9, 10};   /* SW_HIDE, SHOWNOACTIVATE, MINIMIZE, RESTORE, SHOWDEFAULT */
+
+    PS_API(PsShowFn, 0x10ac57dc)(window, kShow[how]);
+    if (how == PLAT_SHOW_DEFAULT)
+        PS_API(PsWindowFn, 0x10ac57e0)(window);           /* UpdateWindow */
+}
+/* The original's ShowCursor loops, call for call as the spec answers them; at most 64 calls, so a spec whose
+ * ShowCursor keeps answering "hidden" (spec_w21_simmain's countdown) cannot hold the loop for ever where the original
+ * made one call (SimMain's last ShowCursor(TRUE)). */
+void Plat_CursorVisible(int visible)
+{
+    int n = 0;
+
+    if (visible) {
+        while (PS_API(PsIntFn, 0x10ac5768)(1) < 0 && ++n < 64) {
+        }
+    } else {
+        while (PS_API(PsIntFn, 0x10ac5768)(0) >= 0 && ++n < 64) {
+        }
+    }
+}
+int Plat_CursorShown(void) { return 1; }
+void Plat_ScreenSize(int *width, int *height)
+{
+    *width = PS_API(PsIntFn, 0x10ac577c)(0);
+    *height = PS_API(PsIntFn, 0x10ac577c)(1);
+}
+void Plat_WindowPlace(void *window, int fullscreen, int x, int y, int width, int height)
+{
+    (void)window, (void)fullscreen, (void)x, (void)y, (void)width, (void)height;
+}
+int Plat_WindowIsFullscreen(void *window) { (void)window; return 1; }
+void Plat_WindowedSize(int *width, int *height) { *width = 1280, *height = 960; }
+void Plat_WindowRect(void *window, int32_t *rect)
+{
+    (void)window;
+    rect[0] = rect[1] = 0;
+    rect[2] = 640, rect[3] = 480;
+}
+int Plat_MessageBox(void *window, const char *text, const char *caption, uint32_t type)
+{
+    return PS_API(PsBoxFn, 0x10ac57e4)(window, text, caption, type);
+}
+uint64_t Plat_CounterNow(void)
+{
+    uint32_t c[2] = {0, 0};
+
+    PS_API(PsCounterFn, 0x10ac55e8)(c);                   /* QueryPerformanceCounter */
+    return (uint64_t)c[1] << 32 | c[0];
+}
+uint64_t Plat_CounterRate(void) { return 1; }
+int32_t Plat_WindowSend(void *window, uint32_t message, uint32_t wParam, uint32_t lParam)
+{
+    return PS_API(PsSendFn, 0x10ac57b8)(window, message, wParam, lParam);
+}
+int Plat_DropEvent(void)
+{
+    uint8_t msg[0x1c];
+
+    return PS_API(PsPeekFn, 0x10ac5780)(msg, 0, 0, 0, 1) != 0;
+}

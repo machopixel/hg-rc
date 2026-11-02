@@ -21,6 +21,7 @@
 #include "../util/util.h"
 #include "../util/w3o.h"
 #include "../../platform/music.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x1001150d
 void __cdecl Sim_1001150d(void *obj)
@@ -269,7 +270,7 @@ int __cdecl Sim_10019da0(int mode, char *text, int n, int div)
     if (mode == 0) {
         char *p;
 
-        rec = (uint8_t *)SIM_API(W7lHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x50);
+        rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x50);
         if (rec == 0)
             return 0;
         slot = (u32a *)(uintptr_t)Sim_100cc8ba((int)Sim_100cc6e0());

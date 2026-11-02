@@ -46,6 +46,15 @@ add_executable(HG WIN32
     ../sim/util/lookup.c
     ../sim/util/record.c
     ../sim/util/ring.c
+    ../sim/util/unpack.c
+    ../../third_party/zlib/adler32.c
+    ../../third_party/zlib/crc32.c
+    ../../third_party/zlib/inffast.c
+    ../../third_party/zlib/inflate.c
+    ../../third_party/zlib/inftrees.c
+    ../../third_party/zlib/uncompr.c
+    ../../third_party/zlib/zutil.c
+    ../../third_party/zlib/contrib/blast/blast.c
     ../sim/view/matrix.c
     ../sim/view/objlist.c
     ../sim/view/viewrect.c
@@ -744,6 +753,7 @@ add_executable(HG WIN32
     ../sim/gfx/w37_line.c
     ../sim/gfx/w37_rotate.c
     ../sim/crt/hg_heap.c
+    ../sim/crt/hg_winheap.c
     ../sim/crt/hg_format.c
     ../sim/crt/hg_rest.c
     ../sim/libm/olm_e_sqrt.c
@@ -779,6 +789,7 @@ add_executable(HG WIN32
     ../hooks/hooks_ddraw.c
     ../hooks/hooks_cd.c
     ../hooks/hooks_hud.c
+    ../hooks/hooks_heap.c
     ../hooks/hook_import.c
     ../platform/input_sdl3.c
     ../platform/audio_sdl3.c
@@ -786,13 +797,18 @@ add_executable(HG WIN32
     ../platform/plat_file.c
     ../platform/plat_ini.c
     ../platform/plat_dialog.c
+    ../platform/plat_window.c
+    ../platform/picture_hgvk.c
     ../platform/plat_win32.c
+    ../platform/force_none.c
     ../platform/display_sdl3.c
 )
 target_link_libraries(HG PRIVATE user32 gdi32 ole32 winmm SDL3::SDL3-static)
 # C runtime replacement: OpenLibm (src/sim/libm wrappers); our shim headers before upstream's
 target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/openlibm/hg
                                      ${CMAKE_SOURCE_DIR}/third_party/openlibm/include)
+# Archive decompressors: zlib + its contrib/blast, decompression parts only (third_party/zlib/HG_VENDOR.md)
+target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/zlib)
 
 if(MSVC)
     # Look like the 1997 exe to Windows: fixed base 0x400000, no DEP, the

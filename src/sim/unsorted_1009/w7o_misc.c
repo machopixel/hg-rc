@@ -4,8 +4,6 @@
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w6h.h"
 
-typedef void *(__stdcall *W7oHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
-typedef int(__stdcall *W7oHeapFreeFn)(uint32_t heap, uint32_t flags, void *block);
 typedef uint32_t(__stdcall *W7oGetLogicalDriveStringsAFn)(uint32_t size, char *buffer);
 typedef uint32_t(__stdcall *W7oGetDriveTypeAFn)(const char *root);
 typedef uint32_t(__stdcall *W7oFindCloseFn)(uint32_t handle);

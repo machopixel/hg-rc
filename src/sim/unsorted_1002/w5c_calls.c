@@ -1,8 +1,7 @@
 #include "w5c.h"
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
-
-typedef void *(__stdcall *W5cHeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x10029ab3
 void __cdecl Sim_10029ab3(uint32_t key, uint32_t value)
@@ -42,7 +41,7 @@ int __cdecl Sim_1002cde1(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_
 // FUNCTION: HGSIM 0x1002fad6
 void *__cdecl Sim_1002fad6(void *arg)
 {
-    uint8_t *block = (uint8_t *)SIM_API(W5cHeapAllocFn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, 0x78);
+    uint8_t *block = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x78);
 
     if (block != 0) {
         Mem_Fill(block, 0, 0x78);

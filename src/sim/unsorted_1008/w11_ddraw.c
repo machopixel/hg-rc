@@ -1,4 +1,5 @@
 #include "w11.h"
+#include "../../platform/picture.h"
 #include "../simmem.h"
 #include "../util/access.h"
 #include "w2i.h"
@@ -14,18 +15,14 @@ typedef uint32_t(__stdcall *W11SurfMethod2Fn)(uint32_t self, uint32_t a, uint32_
 #define W11_SURF_METHOD(type, slot, off) ((type)(uintptr_t)U32(BYTES(U32(BYTES(G32(slot)), 0)), (off)))
 #define W11_RESULT G32(0x10372b94)
 
-typedef int(__stdcall *W11SetDIBitsToDeviceFn)(uint32_t dc, int x, int y, uint32_t w, uint32_t h, int sx, int sy,
-                                               uint32_t start, uint32_t lines, const void *bits, const void *info,
-                                               uint32_t usage);
 typedef void *(__cdecl *W11MemcpyFn)(void *dst, const void *src, uint32_t n);
 
-/* the window blit of the whole picture, starting at scan line start, placed at y */
+/* the window blit of the whole picture, starting at scan line start, placed at y: the original's
+   SetDIBitsToDevice, now the loading-screen picture (platform/picture.h), the rows from start on drawn from y down */
 static uint32_t W11_Blit(int y, uint32_t start)
 {
-    return (uint32_t)SIM_API(W11SetDIBitsToDeviceFn, 0x10ac5570)(G32(0x1017b3c0), 0, y, G32(0x109e3d14),
-                                                                 G32(0x109e3d18), 0, 0, start, G32(0x109e3d18),
-                                                                 (const void *)(uintptr_t)G32(0x1015e9a0),
-                                                                 SIM_PTR(void, 0x109e38c0), 1);
+    return (uint32_t)Pic_Blit(BYTES(G32(0x1015e9a0)), GS32(0x109e3d14), GS32(0x109e3d18), 0, y, 0, (int)start,
+                              GS32(0x109e3d14), GS32(0x109e3d18));
 }
 
 /* the jitter: each row of the effect's area shifted right by a running offset clamped to 0..width-1 */

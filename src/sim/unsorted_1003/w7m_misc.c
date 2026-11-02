@@ -1,4 +1,5 @@
 #include "w7m.h"
+#include "../../platform/plat.h"
 #include "w2e.h"
 #include "w5b.h"
 #include "w6e.h"
@@ -82,30 +83,33 @@ void __cdecl Sim_100361d8(char *name, uint8_t *list)
 // FUNCTION: HGSIM 0x100381d0
 void __cdecl Sim_100381d0(const uint32_t *rec)
 {
+    void *window = (void *)(uintptr_t)G32(0x1017b8f0);
+    int sw, sh;
+
     if (rec == 0)
         return;
-    if (rec[1] == 2)
-        SIM_API(W7mSetWindowLongFn, 0x10ac5770)(G32(0x1017b8f0), -16, rec[2] | 0x10000000);
-    else
-        SIM_API(W7mSetWindowLongFn, 0x10ac5770)(G32(0x1017b8f0), -16, (rec[2] | 0x10000000) & 0xfff7ffff);
+    /* The original sets the window's style (SetWindowLongA: rec[2] with WS_VISIBLE, a type-2 class keeping its
+       frame) and places a type-2 window (SetWindowPos to [0x109e3780..]). Now one SDL3 placement (DECISIONS.md,
+       "Windows calls: the screen"): a type-2 class gets a framed window with that client rectangle, unless it
+       covers the whole screen; the others (the renderer) borderless full screen, where the original's popup kept
+       the window's desktop size. */
+    Plat_ScreenSize(&sw, &sh);
     if (rec[1] == 2) {
         if (G32(0x1015e688) != 0 && U32(G32(0x1015e688), 0) == 0) {
-            G32(0x1015da2c) = SIM_API(W7mTimeGetTimeFn, 0x10ac5868)();
+            G32(0x1015da2c) = Plat_TimeMs();
             G32(0x1015dbc8) = G32(0x1015da2c) + 0xbb8;
             G32(0x1017b938) = 1;
         }
-        SIM_API(W7mSetWindowPosFn, 0x10ac576c)(G32(0x1017b8f0), -2, GS32(0x109e3780), GS32(0x109e3784),
-                                                GS32(0x109e3788), GS32(0x109e378c), 0x10);
-        if (G32(0x1017b92c) != 0 && W7M_CALL_100766ca(5) == 0) {
-            while (SIM_API(W7mShowCursorFn, 0x10ac5768)(1) < 0) {
-            }
-        }
-    } else if (G32(0x1017b92c) != 0) {
-        while (SIM_API(W7mShowCursorFn, 0x10ac5768)(0) >= 0) {
-        }
+        Plat_WindowPlace(window, GS32(0x109e3788) >= sw && GS32(0x109e378c) >= sh, GS32(0x109e3780),
+                         GS32(0x109e3784), GS32(0x109e3788), GS32(0x109e378c));
+        if (G32(0x1017b92c) != 0 && W7M_CALL_100766ca(5) == 0)
+            Plat_CursorVisible(1);
+    } else {
+        Plat_WindowPlace(window, 1, 0, 0, sw, sh);
+        if (G32(0x1017b92c) != 0)
+            Plat_CursorVisible(0);
     }
-    if (SIM_API(W7mGetSystemMetricsFn, 0x10ac577c)(0) <= GS32(0x109e3d14) &&
-        SIM_API(W7mGetSystemMetricsFn, 0x10ac577c)(1) <= GS32(0x109e3d18))
+    if (sw <= GS32(0x109e3d14) && sh <= GS32(0x109e3d18))
         G32(0x1015e9bc) = 1;
     else
         G32(0x1015e9bc) = rec[1];

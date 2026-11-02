@@ -94,8 +94,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     uint32_t opts[2];           /* [ebp-0x90] / [ebp-0x8c] */
     char mission[0x48];         /* [ebp-0xd8] */
     uint8_t memStatus[0x20];    /* [ebp-0x108] */
-    uint8_t msg[0x1c];          /* [ebp-0x130] */
-    uint32_t dc, firstQuit = 0, zero34 = 0, zeroDc = 0, fd, i, j, hasDc, *res;
+    uint32_t firstQuit = 0, zero34 = 0, zeroDc = 0, fd, i, j, hasDc, *res;
     int32_t cfg, ret;
     uint32_t cd;
     const char *name;
@@ -111,8 +110,13 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     C0(0x1005f6c6);
     G32(0x1017b8f0) = window;
     G32(0x1017b8f4) = instance;
-    G32(0x1015e9c4) = (uint32_t)SimPlat_GetSystemMetrics(0);
-    G32(0x1015e9c8) = (uint32_t)SimPlat_GetSystemMetrics(1);
+    {
+        int sw, sh;
+
+        Plat_ScreenSize(&sw, &sh);      /* GetSystemMetrics(SM_CXSCREEN / SM_CYSCREEN): SDL3 */
+        G32(0x1015e9c4) = (uint32_t)sw;
+        G32(0x1015e9c8) = (uint32_t)sh;
+    }
     G32(0x1017b958) = SimPlat_GlobalAlloc(0, 0x249f0);
     G32(0x1017b95c) = SimPlat_GlobalSize(G32(0x1017b958));
     SimPlat_GetSystemTime(systemTime);
@@ -189,10 +193,9 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         g_w33Voodoo = 1;
     LOGSTEP(0x1014b218);
     C6(0x1003795b, 5, 0, S(0x109e3e20), 0xffffffffu, 0xffffffffu, 0);
-    SimPlat_SendMessage(G32(0x1017b8f0), 0x41f, 0, 0);
-    SimPlat_SendMessage(G32(0x1017b8f0), 0x1c, 1, 0);
-    while (SimPlat_ShowCursor(0) >= 0)
-        ;
+    Plat_WindowSend((void *)(uintptr_t)G32(0x1017b8f0), 0x41f, 0, 0);
+    Plat_WindowSend((void *)(uintptr_t)G32(0x1017b8f0), 0x1c, 1, 0);
+    Plat_CursorVisible(0);          /* the original's ShowCursor(FALSE) loop: SDL3 */
     G32(0x1017b93c) = 0;
     if (G32(0x1015ec58) != 0) {
         if (net == 0)
@@ -234,8 +237,9 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         LOGSTEP(0x1014b298);
         C2(0x100b9eab, S(0x1014b2b8), S(0x1014b2ac));
         LOGSTEP(0x1014b2c4);
-        dc = SimPlat_GetDC(G32(0x1017b8f0));
-        hasDc = SimPlat_GetDeviceCaps(dc, 0x18) == -1 || G32(0x1015e9bc) == 1 ? 1 : 0;
+        /* the original's GetDC and GetDeviceCaps(NUMCOLORS) == -1: a true-colour screen, which every screen is now
+           (SDL3 and Vulkan; no 256-colour palette device): always 1 (DECISIONS.md, "Windows calls: the screen") */
+        hasDc = 1;
         C1(0x100b82a0, hasDc);
         LOGSTEP(0x1014b2d4);
         NETPOLL();
@@ -427,7 +431,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         }
         if (g_w31Tex)
             C0(0x100908b3);
-        if (SimPlat_GetDeviceCaps(dc, 0x18) == -1 || G32(0x1015e9bc) == 1) {
+        if (hasDc != 0) {           /* the original asks GetDeviceCaps(NUMCOLORS) again: a true-colour screen */
             LOGSTEP(0x1014b5d0);
             C1(0x100d3877, 0);
             NETPOLL();
@@ -445,7 +449,6 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             C0(0x10062386);
         }
         G32(0x1017b924) = 1;
-        SimPlat_ReleaseDC(G32(0x1017b8f0), dc);
         if (G32(0x1017b958) != 0)
             SimPlat_GlobalFree(G32(0x1017b958));
         G32(0x1017b958) = 0;
@@ -588,9 +591,9 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         }
         NETPOLL();
         C0(0x10035478);
-        while (SimPlat_PeekMessage(msg, 0, 0, 0, 1) != 0)
+        while (Plat_DropEvent() != 0)
             NETPOLL();
-        SimPlat_SendMessage(G32(0x1017b8f0), 0x41e, 0, 0);
+        Plat_WindowSend((void *)(uintptr_t)G32(0x1017b8f0), 0x41e, 0, 0);
         C0(0x10033c24);
         C0(0x10025dac);
         C0(0x1002a10e);
@@ -621,8 +624,8 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     }
     W21_FINALLY {
         if (W21_ABNORMAL() != 0 && G32(0x1015dca0) != 0) {
-            SimPlat_SendMessage(G32(0x1017b8f0), 0x41e, 0, 0);
-            SimPlat_MessageBox(0, SIM_PTR(const char, 0x1014b658), SIM_PTR(const char, 0x1014b64c), 0x10);
+            Plat_WindowSend((void *)(uintptr_t)G32(0x1017b8f0), 0x41e, 0, 0);
+            Plat_MessageBox(0, SIM_PTR(const char, 0x1014b658), SIM_PTR(const char, 0x1014b64c), 0x10);
         }
     }
     NETPOLL();
@@ -647,7 +650,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     G32(0x1017b8fc) = 0;
     G32(0x1017b90c) = 0;
     G32(0x1017b914) = 0;
-    SimPlat_ShowCursor(1);
+    Plat_CursorVisible(1);
     NETPOLL();
     C0(0x1003edda);
     ret = G32(0x1015ebf8) != 0 ? 0xff : 0;

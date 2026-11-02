@@ -61,9 +61,6 @@ uint32_t __cdecl Sim_10105db0(void);
 uint32_t __cdecl Sim_10109890(uint32_t fh);
 
 /* ---- w7s_heap.c ---- */
-/* Small-block heap: n map bytes from the current region (0x1015be58), the other regions, the
- * uncommitted pages of a region, or a new region (Sim_10106660); returns the address or 0. */
-uint32_t __cdecl Sim_101069c0(int32_t n);
 
 /* ---- w7s_locale.c: wrappers around the Windows string functions ---- */
 /* GetStringTypeA, or GetStringTypeW on the text converted with MultiByteToWideChar (the choice is

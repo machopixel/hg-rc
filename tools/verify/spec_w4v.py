@@ -198,6 +198,13 @@ def g_libs(ctx):
     return []
 
 
+def g_force_noff(ctx):
+    """Force feedback without a device (platform/force.h): the original with FFORCE.DLL missing."""
+    out = g_force(ctx)
+    w32(ctx, 0x1015ef44, 0)
+    return out
+
+
 def g_force(ctx):
     begin(ctx)
     r = ctx.rng
@@ -632,11 +639,18 @@ SPECS = [
     dict(name='Heap_AllocRaw', orig=0x100b659a, c='Heap_AllocRaw', gen=g_alloc_raw, trials=300, api=API),
     dict(name='Heap_FreeRaw', orig=0x100a7800, c='Heap_FreeRaw', gen=g_free_raw, trials=300, api=API),
     dict(name='Sim_100a77ef', orig=0x100a77ef, c='Sim_100a77ef', gen=g_alloc_raw, trials=300, api=API),
-    dict(name='Mouse_Unclip', orig=0x1007d948, c='Mouse_Unclip', gen=g_none, trials=100, api=API),
-    dict(name='Sim_10083de1', orig=0x10083de1, c='Sim_10083de1', gen=g_stretch, trials=400, api=API),
-    dict(name='Sim_10083e4e', orig=0x10083e4e, c='Sim_10083e4e', gen=g_stretch, trials=400, api=API),
-    dict(name='Sim_100bcc50', orig=0x100bcc50, c='Sim_100bcc50', gen=g_libs, trials=400, api=API),
-    dict(name='Force_ExitSystem', orig=0x10045e19, c='Force_ExitSystem', gen=g_force, trials=400, api=API),
+    # deleted: dead (SDL3 platform/w28 version or unused; DECISIONS.md "Windows calls")
+    # dict(name='Mouse_Unclip', orig=0x1007d948, c='Mouse_Unclip', gen=g_none, trials=100, api=API),
+    # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+    # dict(name='Sim_10083de1', orig=0x10083de1, c='Sim_10083de1', gen=g_stretch, trials=400, api=API),
+    # deleted: no caller and no pointer in the DLL (DECISIONS.md, "Windows calls: the screen")
+    # dict(name='Sim_10083e4e', orig=0x10083e4e, c='Sim_10083e4e', gen=g_stretch, trials=400, api=API),
+    # superseded: the unpackers are ours, no DLL is loaded (DECISIONS.md "Windows calls: the decompressors";
+    # checked natively by tools/verify/unpack_native.c against pkware.dll / zlib.dll on every packed entry)
+    # dict(name='Sim_100bcc50', orig=0x100bcc50, c='Sim_100bcc50', gen=g_libs, trials=400, api=API),
+    # superseded: FFORCE.DLL is platform/force.h now (DECISIONS.md "Force feedback kept for rumble")
+    # dict(name='Force_ExitSystem', orig=0x10045e19, c='Force_ExitSystem', gen=g_force, trials=400, api=API),
+    dict(name='Force_ExitSystem_noff', orig=0x10045e19, c='Force_ExitSystem', gen=g_force_noff, trials=400, api=API),
     dict(name='Sim_100092dd', orig=0x100092dd, c='Sim_100092dd', gen=g_list_remove, trials=500, void=True, api=API),
     dict(name='Sim_1000e520', orig=0x1000e520, c='Sim_1000e520', gen=g_1000e520, trials=400, api=API),
     dict(name='Sim_1002a29f', orig=0x1002a29f, c='Sim_1002a29f', gen=g_1002a29f, trials=400, api=API),

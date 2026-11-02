@@ -2788,3 +2788,199 @@ driver.
   (re-run there for the ones not already known: Sim_10047e1a, Sim_10041444, Sim_1004158c, Sim_100421b0,
   Sim_1005874a, Sim_10041b2d), so none comes from the deletions. The Release build compiles and links HG.exe and
   HGVK.dll. I did not run the game.
+
+## KEYBOARD.DLL dropped; force feedback kept for rumble (Diego, 2026-11-02: "We can drop keyboard.dll and fforce.dll", then "No, don't drop it, I will add rumble later.")
+
+- KEYBOARD.DLL (the language keyboard remap the sim loads in Sim_1005f6c6, with simtext.txt) is dropped: the keyboard
+  stays the plain one. The code goes in the Windows-calls round (group 5, loading DLLs).
+- Force feedback stays: the game's effect requests (TSFF_SIM_Effect and the 1.2 ports of rounds 33 / 35) are kept,
+  for rumble later. Only the way they reach a device changes: FFORCE.DLL / TS_SFRCE.dll cannot load on Linux / Mac,
+  so in the Windows-calls round the calls go to one small C interface of ours (no device for now), which the rumble
+  work later connects to SDL3.
+
+## Windows calls (Diego, 2026-11-02: "Start the changes and let me decide on vulkan later.")
+
+The sim's C code called 96 Windows functions through HGSIM.DLL's import slots (SIM_API). The plan, by group (the
+order agreed in the project thread): (1) dead code out, (2) memory, (6) timing, (7) debug output, (3) window /
+keyboard / cursor / message boxes, (5) DLLs loaded at run time; (8), the C runtime's insides, goes with the DLL.
+The Vulkan questions (HGVK built in, the loading screen through Vulkan, group 4) wait for Diego.
+
+### Dead code (group 1)
+
+- Deleted: Win_PumpMessage (0x10086b99), Win_PollMouse (0x1007d9d8), Win_CenterCursorAxis (0x1007d961) and
+  Mouse_Unclip (0x1007d948): the SDL3 platform's versions (src/sim/platform, conv_w28.inc) take those addresses and
+  these had their hooks commented out. Sim_101069c0 (VirtualAlloc, small-block heap): no hook, no caller.
+- Win_AuxGetVolume (0x1009eb52, the CD drive's aux volume): no caller and no pointer anywhere in the DLL; deleted
+  instead of turned into a music volume read.
+- Their spec entries are commented out with a "deleted:" note.
+
+### Memory (group 2)
+
+- **Our heaps** (src/sim/crt/hg_winheap.c, standard C): Hg_HeapCreate / Alloc / ReAlloc / Free / Size / Validate /
+  Destroy with Windows' meaning. Each block has a checked head and sits in its heap's list, so HeapDestroy frees the
+  heap as a whole (SimMain makes seven heaps, [0x1017b8fc]..[0x1017b910], the game heap [0x1017b8f8] is one of them,
+  and destroys them at its end).
+- **The DLL shares them** (src/hooks/hooks_heap.c): HGSIM.DLL's import slots for the seven heap functions point at
+  them, so the original code still in use (about four functions that allocate or free on the game heap, plus the
+  DLL's own reads of HeapSize) and the C code use the same blocks. A heap Windows made before the slots changed (the
+  DLL's C runtime heap [0x10ac3714], made while the DLL loads) is not ours: its calls go on to Windows'. "noconv"
+  leaves the slots alone.
+- **The C call sites** (37 files, plus the w8z / w8x / w4w_records macros and SimMain's SimPlat_Heap* wrappers) call
+  Hg_Heap* directly. The C runtime's own heap code (w6i_mem, w6i_crt, w6j_heap, w6k_sbh, w7r_heap) keeps the slots:
+  that heap is Windows' and goes with the DLL (group 8).
+- **Differences (recorded):** a block never grows in place (HEAP_REALLOC_IN_PLACE_ONLY growth fails; Windows grows
+  one when it has room after it; only the C runtime's realloc asks, on its Windows heap). A fixed-size heap
+  (maximum != 0) caps the blocks' total without Windows' overhead; the game never makes one (all 10 HeapCreate calls
+  pass 0). No lock, as the game's flag 1 (HEAP_NO_SERIALIZE) asks.
+- **Checked natively** (tools/verify/winheap_native.c): against Windows' heap, 40 heaps, 800,000 random steps
+  (alloc with and without zero fill, realloc, size, validate, free, destroy): no difference.
+- **Checker:** tools/verify/stand_in/hg_winheap.c calls the slots as before, so the specs compare the code around
+  the heap calls.
+- **Specs** (the entries of every changed function, plus SimMain): 74 entries pass; Sim_1003dc19 in
+  spec_w10_1003dc19.py fails as on commit fca1e91 (the same 1852 of 3000: a 1.0 spec of a function the network round
+  moved to 1.2; its 1.2 spec spec_net_start_v12 passes). The Release build compiles and links; the game was not run.
+
+### Timing, debug output, keyboard (groups 6 / 7 / part of 3)
+
+- New platform functions (src/platform/plat.h, Windows backend in plat_win32.c; Linux / Mac still to do):
+  Plat_TimeMs (timeGetTime), Plat_DebugText (OutputDebugStringA), Plat_KeyChar (MapVirtualKeyA type 2),
+  Plat_KeyState (GetKeyState). On Windows each makes exactly the original call.
+- Win_TimeGetTime, Debug_Printf (its "debugger" output) and Input_QueueKey use them. Specs: the three entries pass
+  (the checker stand-ins in tools/verify/plat_stub.c make the original calls through the import slots).
+- Not done, on purpose: the message boxes (Debug_Printf's box, Sim_1005573d, Win_ErrorBox, Sim_1008663f,
+  Sim_100bc47e: with the screen group, Diego 2026-11-02 "do not do anything regardint the screen yet"); the
+  QueryPerformanceCounter of the video-mode profiling (Sim_10037cab) and Sim_100381d0's timeGetTime (screen code);
+  the debug lines of the force-feedback calls in w4w_net.c / w4v_dll.c (that code is replaced in the DLL group).
+
+### DLLs loaded at run time (group 5): KEYBOARD.DLL, FFORCE.DLL
+
+- **KEYBOARD.DLL** (Sim_1005f6c6): no longer loaded; the function takes the original's own path for a DLL that does
+  not load (the key table [0x10143a00] keeps its built-in contents: no language-specific remap). Spec:
+  Sim_1005f6c6_nokbd compares with the original given a missing DLL (its failing LoadLibraryA left out of the call
+  comparison); 2000 trials pass. HGSHELL.DLL still loads KEYBOARD.DLL itself (the shell's own round).
+- **FFORCE.DLL** (kept for rumble): the sim's three calls go to src/platform/force.h (Force_Present / Init / Effect /
+  Exit, FFORCE.DLL's answers). force_none.c is the only version so far: no device, so the sim runs the original's
+  path for a missing FFORCE.DLL: "Error loading TS_SFRCE.dll" as debug text, [0x1015ef3c] = 1 when the option is on
+  (as before), every effect request answered 0x8004050f. The effect requests themselves (the 1.2 ports, the 1.2
+  table W2k_FfTable12) are unchanged. The loader Sim_10045ec2 and the export lookup Sim_10045e5d are deleted (only
+  each other and 0x10045d70 called them). Specs: Sim_10045d70_noff, Sim_10045db9_noff, Force_ExitSystem_noff pass
+  (600 / 300 / 400 trials, against the original with FFORCE.DLL missing). A force-feedback joystick no longer
+  rumbles on Windows (joysticks are not supported, Diego 2026-11-02).
+- Release build compiles and links; the game was not run.
+
+### The decompressors (group 5): pkware.dll / zlib.dll
+
+- **What they were:** the game archive (HEAVYG.MAP / HEAVYG.PRJ, the same in 1.0 and 1.2) names its packing methods
+  "pkware.dll" and "zlib.dll"; Sim_100bcc50 loaded each by that name and the pack reader (Sim_100bc70d) called their
+  "Uncompress"(out, &size, packed, packedSize). Of 19,545 entries 15,824 are zlib streams, 1,419 PKWARE DCL
+  "implode" data (all binary literals, 1 KB dictionary), 2,302 not packed.
+- **Now** (src/sim/util/unpack.c): Unpack_Zlib calls zlib's uncompress and Unpack_Pkware calls blast() (zlib's
+  contrib/blast, Mark Adler's PKWARE DCL decoder; it also reads the ASCII form, absent from the data), both from
+  zlib 1.3.2's source in third_party/zlib (decompression files only, compiled into the program like OpenLibm;
+  third_party/zlib/HG_VENDOR.md). Sim_100bcc50 puts
+  them in the unpacker table by name (letter case aside), with a 0 library handle; a name that is neither gets an
+  unpacker that always fails (the original retried LoadLibrary every 2 s for ever). Sim_100bd1b6 no longer frees the
+  DLLs.
+- **Checked natively** (tools/verify/unpack_native.c): all 17,243 packed entries give the DLLs' answer, size and
+  bytes exactly; 12,930 damaged copies (cut short, one byte changed, one byte too little room) never make ours write
+  past the room or crash.
+- **Difference (recorded):** damaged data. The DLLs answer success for data cut short or bigger than the room (and
+  can crash on it); ours answer a failure, so the pack reader takes its own failure path. The game's data is not
+  damaged (every entry checked).
+- **zlib + blast, bundled source** (Diego, 2026-11-02, decision card 19:40): the real zlib and its contrib/blast
+  replace the decoders first written here. Considered: our own hand-written decoders (they also matched the DLLs on
+  the whole archive, but are code nobody else maintains), miniz (one-file zlib work-alike; no DCL decoder),
+  libdeflate (fast, but a bigger library for a one-shot load), StormLib's pklib (DCL only, pulls in a large
+  library). zlib is the reference implementation of the format the archive names, and blast comes in the same
+  release from the same author. Same native check as before, re-run on zlib 1.3.2: identical on all 17,243
+  entries, no crash or overrun on the damaged copies.
+- Specs Sim_100bcc50 and Sim_100bd1b6 are superseded (no DLL to compare with); the native check stands for them.
+  HGSHELL.DLL is not touched (its own round).
+- Release build compiles and links; the game was not run.
+
+### The screen (group 3; Diego, 2026-11-02: "just focus on moving the code to sdl3 and keep the current setup. Only add Fullscreen or windowed and keep hud in 640*480 regardless of resolution. ignore vsync")
+
+- **What moved to SDL3** (src/platform/plat_window.c, one implementation for every system; plat.h): the screen
+  size (GetSystemMetrics), placing the window (SetWindowLongA / SetWindowPos / AdjustWindowRect, now
+  Plat_WindowPlace: a framed window by its client rectangle, or borderless full screen without a display mode
+  change), showing it (ShowWindow / UpdateWindow), the client rectangle (GetWindowRect / ClientToScreen), message boxes (MessageBoxA, GetFocus) and the video-mode timing clock
+  (QueryPerformanceCounter). Call sites: Display_SetMode, Sim_100381d0, ToggleFullScreen, Sim_10037cab, SimMain,
+  Sim_1005573d, Sim_100bc47e, Sim_10086c32, Debug_Printf, Sim_1008663f, Win_ClientRectToScreen; the w28 window
+  procedure's Plat_WindowShow is SDL3's too. SDL3 wraps the game's window once (PlatSdl_Window), shared with the
+  SDL3 input.
+- **Kept the Windows way, on purpose:** the launcher still makes the window (CreateWindowExA) and routes its messages.
+  The 1.2 shell, still the original HGSHELL.DLL, needs raw window messages; SDL creating the window would put its
+  message handling in front of the shell's (the shell round). So SimMain's routing messages (SendMessageA 0x41e /
+  0x41f / WM_ACTIVATEAPP) go through Plat_WindowSend and its queue flush through Plat_DropEvent, both in
+  plat_win32.c with the window procedure's plumbing (AFTER_DLL.md).
+- **Full screen / windowed (the one addition):** with the renderer (display class 3, Vulkan), Alt+Enter (the game's
+  own key 0x40d, ToggleFullScreen) switches between borderless full screen and a framed window of the largest whole
+  multiple of 640 x 480 that fits the screen, centred (1280 x 960 on a 2560 x 1440 screen), keeping the renderer.
+  The original looked for a windowed display driver (the GDI one) and moved the whole display to it, which cannot
+  show the 3D. The game starts as before (full screen). The HUD and the game's 2D stay laid out at 640 x 480 at any
+  window size (HGVK scales the 4:3 picture, unchanged). No settings file, no vsync change.
+- **Differences (recorded):**
+  - The window rectangle the sim keeps ([0x109e3780..]) is the client rectangle, not the frame one (no
+    AdjustWindowRect); only the position lock after the old DirectDraw driver read it, which the Vulkan game never
+    sets.
+  - A type-2 (windowed) display class whose rectangle covers the screen goes borderless full screen; the
+    original's captioned window of the desktop's size looked the same.
+  - The pointer goes through Plat_CursorVisible / Plat_CursorShown, but stays Windows' display count (ShowCursor,
+    plat_win32.c) while the launcher's Windows window is the game window. A first version used SDL3's
+    SDL_HideCursor: Diego's play test (2026-11-02) showed the pointer after Alt+Tab, because SDL's hiding holds only
+    while SDL sees the mouse in the window and the game drops the mouse messages while the pointer is hidden
+    (input_sdl3.c MessageAllowed), so Windows put the window class's arrow back. The count hides it whatever has
+    the focus, as in 1.2. The loops become one call each ("show" / "hide"); SimMain's single ShowCursor(TRUE) at
+    its end now shows it fully.
+  - GetDeviceCaps(NUMCOLORS) == -1 (a true-colour screen) is always taken: no 256-colour palette device is left.
+  - Debug_Printf's box, the fatal box (Sim_100bc47e: minimised, not "minimised without activating") and the error
+    boxes are SDL3 message boxes with the same buttons and answers.
+  - Unchanged on purpose (1.2's behaviour, "keep the current setup"): losing the focus still minimises the game
+    window, also when Alt+Enter made it a framed window.
+- **Deleted:** Win_ErrorBox (0x100d9fc5: MessageBeep, wvsprintfA, MessageBoxA), Sim_10083d5b (0x10083d5b, a GDI blit
+  below the menu bar), Sim_1008375a (0x1008375a, the GDI
+  driver's DIB section) and Sim_10083e4e (0x10083e4e, its second stretch): no caller and no pointer in the DLL.
+- **Checker:** tools/verify/plat_stub.c stands in for the new platform calls with the original's Windows calls where
+  there is one (screen size, show window, pointer loops, message box, send, peek, counter). The pointer loops stop
+  after 64 calls: spec_w21_simmain's ShowCursor keeps answering "hidden", and SimMain's last ShowCursor(TRUE), one
+  call in the original, is Plat_CursorVisible(1) now, whose stand-in loop otherwise never ended (a first run hung
+  for an hour). The entries whose Windows
+  calls changed shape are superseded with a note (Display_SetMode, Sim_100381d0, ToggleFullScreen, Sim_10037cab,
+  Win_ClientRectToScreen, Sim_1005573d, Sim_100bc47e); Debug_Printf, Sim_1008663f, Sim_10086c32, Sim_100840dc,
+  Sim_10055048 and the 1.2 window procedure (Sim_100867a2_v12) pass. SimMain passes, 4000 / 0
+  (spec_w21_simmain.py: the original's GetDC / GetDeviceCaps / ReleaseDC leave its call log as they happen, so the
+  stubs that answer by log position answer both sides alike; it is given a true-colour screen; runs of the same
+  ShowCursor call count as one; the texture table's mapping is applied after that). The 1.0 window spec
+  (spec_w28_window.py) builds again (it linked plat_stub.c twice) and differs from 1.0 only by 1.2's focus pause,
+  which spec_w28_window_v12.py checks against 1.2.
+
+### The loading screen through Vulkan (Diego, 2026-11-02: "include the loading screen in hgvk now")
+
+- **What it was:** SimMain starts the windowed GDI display driver (mode 5) first for the loading screen, before the
+  renderer: an 8-bit picture of the screen's size with a 6-bit palette, drawn with GDI (GetDC, CreatePalette /
+  SelectPalette / SetPaletteEntries / RealizePalette, SetDIBitsToDevice, StretchDIBits, ReleaseDC, DeleteObject).
+- **Now** (src/platform/picture.h, picture_hgvk.c; HGVK's new export HgvkPictureApi, src/plugins/hgvk/picture_api.h):
+  the driver's functions keep all their own logic and data, and only their GDI calls go to the picture: Sim_10083530
+  (start: Pic_Open, Vulkan started on the game window), Gdi_SetPalette (Pic_SetPalette), Sim_10083c45 /
+  Gdi_BitBltRect / Sim_10083801's rolling blit (Pic_Blit), Sim_10083de1 (Pic_Stretch), Sim_10083692 (Pic_Close).
+  The window's picture is kept in 32 bits on the sim's side (as the window kept what GDI drew) and each drawing call
+  presents it through Vulkan, scaled to the window with the picture's own proportions (Vk_PresentPicture). Loading
+  stays single-threaded, in the original's order. HGVK's FirstDevice keeps the Vulkan the loading screen started (one
+  device, one swapchain on the window); LastDevice ends it as before.
+- **Vulkan only:** when Vulkan cannot start, the player gets a message box ("Heavy Gear could not start Vulkan ...",
+  see hgvk.log) and the program ends; there is no GDI fallback.
+- **Checked natively** (tools/verify/picture_native.c): the three drawing calls, made with the original's exact GDI
+  arguments (SetDIBitsToDevice of a rectangle with its bottom-up source y, of the whole picture, the rolling pair
+  with a start scan line; StretchDIBits of a part over the whole) into a 32-bit GDI bitmap, against the picture code
+  on random pictures and palettes (640 x 480, 320 x 200, 100 x 37, 36 x 64): 240 calls, the same pixels every time.
+  The stretch takes the source pixel under each pixel's centre, as GDI does.
+- **Differences (recorded):** the drawing never fails (the original's GetLastError reports are not reached, nor the
+  driver's "start failed" path after a failed blit); the palette and device-context marks ([0x1017b3c0],
+  [0x1017b3c4]) are 1, not GDI handles; a picture whose width is not a multiple of 4 (a 1366-wide desktop) shows its
+  rows as the game packs them, where GDI read 8-bit rows rounded up to 4 bytes and sheared the picture (an original
+  bug, fixed); each drawing call presents, so a palette fade waits for the screen's refresh per step (FIFO) where
+  GDI drew at once.
+- **Checker:** the driver's entries are superseded (Gdi_BitBltRect, Gdi_SetPalette, Sim_1008400d, Sim_10083c45,
+  Sim_1008404b, Sim_10083530, Sim_10083692, Sim_10083801, Sim_10083de1); the native check stands for them.
+  tools/verify/picture_stub.c links the picture calls in the checker's image.
+- Release build compiles and links (HG.exe, HGVK.dll); the game was not run.

@@ -84,6 +84,14 @@ def build_c(sources, cflags=()):
             add.append(os.path.join(HERE, 'plat_stub.c'))
         if any(n.startswith('Music_') for n in missing):   # the music folder's stand-in (no CD audio)
             add.append(os.path.join(HERE, 'music_stub.c'))
+        if any(n.startswith('Force_') for n in missing):   # force feedback without a device (portable C)
+            add.append(os.path.join(SRC, 'platform', 'force_none.c'))
+        if any(n.startswith('Pic_') for n in missing):     # the loading-screen picture (Vulkan): link targets only
+            add = [f for f in add if not f.replace('\\', '/').endswith('platform/picture_hgvk.c')]
+            add.append(os.path.join(HERE, 'picture_stub.c'))
+        if any(n.startswith('Unpack_') for n in missing):  # the archive unpackers (zlib): checked natively instead
+            add = [f for f in add if not f.replace('\\', '/').endswith('sim/util/unpack.c')]
+            add.append(os.path.join(HERE, 'unpack_stub.c'))
         add = [f for f in add if f not in cmd]
         if not add:
             break
@@ -641,7 +649,7 @@ def main():
         os.environ['DIFFTEST_VERBOSE'] = '1'
     jobs = 1
     if args and args[0].startswith('-j'):
-        jobs = int(args[0][2:] or os.cpu_count() or 1)
+        jobs = min(int(args[0][2:] or 16), 16)   # Diego, 2026-11-02: at most 16 processes
         args = args[1:]
     dll, specfile = args[0], args[1]
     want = set(args[2:])

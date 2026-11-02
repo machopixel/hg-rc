@@ -115,9 +115,22 @@ def _devcaps(n, args):
     return ST['caps'][n % 2]
 
 
+def _unseen(answer):
+    """The screen (DECISIONS.md, 'Windows calls: the screen'): the C makes no GetDC / GetDeviceCaps / ReleaseDC. The
+    original's calls leave the call log while it runs, so the later stubs, which answer by log position, answer both
+    sides alike."""
+    def h(n, args):
+        m = ST['m']
+        m.api_log.pop()
+        m.api_n -= 1
+        return answer(n, args)
+    return h
+
+
 API = {'ShowCursor': _countdown('ShowCursor', 'cursor', 0, 0xffffffff),
        'PeekMessageA': _countdown('PeekMessageA', 'peek', 1, 0),
-       'GlobalMemoryStatus': _memstatus, 'HeapAlloc': _heapalloc, 'GetDeviceCaps': _devcaps,
+       'GlobalMemoryStatus': _memstatus, 'HeapAlloc': _heapalloc, 'GetDeviceCaps': _unseen(_devcaps),
+       'GetDC': _unseen(lambda n, args: 1), 'ReleaseDC': _unseen(lambda n, args: 1),
        'HeapCreate': lambda n, args: ST['hc'][n % len(ST['hc'])]}
 
 
@@ -136,7 +149,9 @@ def g(ctx):
     ST['peek'] = r.choice([0, 1, 2])
     ST['phys'] = r.choice([0x1e84800, 0x1e84801, 0x16e3600, 0x16e3601, 0x800000, r.getrandbits(32)])
     ST['heap'] = [newbuf(ctx, 0x13c), newbuf(ctx, 0x10)]
-    ST['caps'] = [r.choice([-1, 8, 16]) for _ in range(2)]
+    # the screen (DECISIONS.md, 'Windows calls: the screen'): the C takes a true-colour screen for granted, so the
+    # original is given one (GetDeviceCaps(NUMCOLORS) -1)
+    ST['caps'] = [-1, -1]
     ST['hc'] = [r.choice([0, 0x1234, 0x5678]) if r.random() < 0.2 else 0x1000 + k for k in range(7)]
     rets(0x1002ad50, *[r.choice([1, 1, 1, 0]) for _ in range(3)])
     res = newbuf(ctx, 0x48)
@@ -197,6 +212,24 @@ def post_c(m):
 # round 33: 1.2 also sets the 3DFX flag for a "POWERVR" plugin path (a second name test, read from 1.2's SimMain);
 # this 1.0 comparison builds the C without it (W21V_MUTATE), so both make the same calls
 CFLAGS = list(CFLAGS) + ['-DW21V_MUTATE']
+
+
+def screen_log(log_o, log_c):
+    """The screen (DECISIONS.md, 'Windows calls: the screen'): the C's pointer calls (Plat_CursorVisible) repeat
+    ShowCursor until it answers 'shown' where the original's last one is a single call: runs of the same ShowCursor
+    call count as one (GetDC / GetDeviceCaps / ReleaseDC never reach the log, _unseen)."""
+    def keep(log, drop):
+        out = []
+        for c in log:
+            if c[0] in drop:
+                continue
+            if c[0] == 'ShowCursor' and out and out[-1] == c:
+                continue
+            out.append(c)
+        return out
+    return keep(log_o, ('GetDC', 'GetDeviceCaps', 'ReleaseDC')), keep(log_c, ())
+
+
 SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, trials=300 if NEG else 4000,
               post_c=post_c,
               ignore_syms={'g_w33CdNeeded': 4,      # 1.2's CD flag (round 33), no 1.0 counterpart
@@ -206,6 +239,7 @@ SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, t
 exec(open('tools/verify/w31_map.py').read())
 SOURCES = SOURCES + [x for x in W31_SOURCES + ['../tools/verify/plat_stub.c'] if x not in SOURCES]
 SPECS = w31_wrap(SPECS, None)
+SPECS[0]['log_map'] = lambda log_o, log_c: w31_log_map(*screen_log(log_o, log_c))   # both mappings, in turn
 _w31_post = SPECS[0]['post_c']
 
 

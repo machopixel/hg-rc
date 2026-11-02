@@ -2,6 +2,7 @@
 #include "fns.h"
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
 #define SOUND_STATE G32(0x1015d0a4)
 
@@ -12,7 +13,7 @@ int __cdecl Sound_Init(uint32_t voices, uint32_t window)
 
     if (SOUND_STATE != 0)
         return -1;
-    SOUND_STATE = (uint32_t)(uintptr_t)SIM_API(W6eHeapAllocFn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, 0x374);
+    SOUND_STATE = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x374);
     if (SOUND_STATE == 0)
         return -3;
     Mem_Fill((void *)(uintptr_t)SOUND_STATE, 0, 0x374);
@@ -24,7 +25,7 @@ int __cdecl Sound_Init(uint32_t voices, uint32_t window)
     Sim_1003a52b(0);
     W6E_CALL_1003a0e4(SIM_PTR(void, 0x109e369c), window);
     if (G32(0x109e369c) == 0) {
-        SIM_API(W6eHeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)SOUND_STATE);
+        Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)SOUND_STATE);
         SOUND_STATE = 0;
         return -4;
     }

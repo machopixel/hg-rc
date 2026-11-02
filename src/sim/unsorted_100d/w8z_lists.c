@@ -33,16 +33,16 @@ static int W8z_LoadList(const char *name, uint32_t tag, uint32_t size, uint32_t 
         count = S32(res, 0x28);
         src = res + 0x2c;
         for (i = 0; i < count; i++) {
-            node = (uint32_t)(uintptr_t)W8Z_HEAP_ALLOC(W8Z_HEAP, 1, 0x38);
+            node = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x38);
             Mem_Fill((void *)(uintptr_t)node, 0, 0x38);
-            copy = (uint32_t)(uintptr_t)W8Z_HEAP_ALLOC(W8Z_HEAP, 1, size);
+            copy = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, size);
             Mem_Move((void *)(uintptr_t)copy, (const void *)(uintptr_t)src, size);
             U32(node, 0x34) = copy;
             Mem_Move(BYTES(node) + 0x10, BYTES(copy) + at, 4);
             Str_Copy((char *)BYTES(node) + 0x14, (const char *)BYTES(copy) + at);
             if (Sim_100da4f7((void *)(uintptr_t)node, SIM_PTR(uint8_t, list)) == 0) {
-                W8Z_HEAP_FREE(W8Z_HEAP, 1, (void *)(uintptr_t)node);
-                W8Z_HEAP_FREE(W8Z_HEAP, 1, (void *)(uintptr_t)copy);
+                Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)node);
+                Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)copy);
                 *SIM_PTR(u32a, counter) -= 1;
             }
             src += size;

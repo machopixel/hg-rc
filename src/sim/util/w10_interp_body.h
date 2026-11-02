@@ -305,8 +305,6 @@ tail:
 }
 
 /* ---- 0x1001a706 (round 14): a unit following a path ------------------------------------------------------------ */
-typedef void *(__stdcall *W10iHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t bytes);
-
 /* The path's start: the position and angle interpolators restarted (rate 0.3, angles wrapped at 360), the length
  * +0x10 summed over the points (+0x40 points of 0x1c bytes from +0x44, their time at +0x18), and the unit +0 found
  * by the key of the text (0 when there is none). */
@@ -374,7 +372,7 @@ int __cdecl W10I_FN(Sim_1001a706)(int mode, char *text, int32_t time)
         char how[64], turn[64], name[64];
         char *s;
 
-        rec = (uint8_t *)SIM_API(W10iHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x88);
+        rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x88);
         if (rec == 0)
             return 0;
         *(uint32_t *)(uintptr_t)Sim_100cc8ba((int)Sim_100cc6e0()) = (uint32_t)(uintptr_t)rec;

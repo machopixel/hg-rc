@@ -16,6 +16,7 @@
 #include <windows.h>
 
 #include "hud2d.h"
+#include "picture_api.h"
 #include "vk.h"
 
 #define EXPORT __declspec(dllexport)
@@ -202,7 +203,10 @@ EXPORT int FirstDevice(FirstDeviceParams *p)
         HgvkLog("FirstDevice: 2D buffer of %d rows", rows);
     }
     g_depth = !ConfigHasWord("nozbuf");
-    if (Vk_Init(p->hwnd, g_depth) != 0)
+    /* the loading screen (HgvkPictureApi) may have started Vulkan on this window already: it is kept */
+    if (Vk_IsReady())
+        Hud_SetTarget(g_screen);
+    else if (Vk_Init(p->hwnd, g_depth) != 0)
         HgvkLog("FirstDevice: Vulkan unavailable, falling back to GDI for the HUD");
     else
         Hud_SetTarget(g_screen); /* the HUD hooks may now draw at full resolution */
@@ -766,6 +770,32 @@ static void DumpHud(void)
 }
 
 /* The hooks in HG.EXE fetch the full-resolution HUD interface here (hooks_hud.c). */
+/* ---- the loading screen (picture_api.h) ---------------------------------- */
+
+static int PictureOpen(void *window)
+{
+    if (Vk_IsReady())
+        return 0;
+    HgvkLog("Picture: starting Vulkan for the loading screen, hwnd=%p", window);
+    return Vk_Init((HWND)window, !ConfigHasWord("nozbuf")) != 0;
+}
+
+static void PictureClose(void)
+{
+}
+
+static void PictureShow(const uint32_t *rgba, int width, int height)
+{
+    Vk_PresentPicture(rgba, width, height);
+}
+
+EXPORT const HgvkPictureFns *HgvkPictureApi(void)
+{
+    static const HgvkPictureFns api = {PictureOpen, PictureClose, PictureShow};
+
+    return &api;
+}
+
 EXPORT const HudApi *HgvkHudApi(void)
 {
     return Hud_Api();

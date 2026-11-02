@@ -7,6 +7,7 @@
  */
 #include "w10_interp.h"
 #include "../simmem.h"
+#include "../crt/hg_winheap.h"
 #include "access.h"
 #include "util.h"
 #include "w3o.h"

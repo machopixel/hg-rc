@@ -6,6 +6,7 @@
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w2j.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x100355ad
 void __cdecl Sim_100355ad(void)
@@ -31,9 +32,9 @@ void __cdecl Sim_100355ad(void)
     file = File_LoadWhole(name, 0);
     if (file == 0)
         return;
-    image = SIM_API(W8u3HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0x502e);
+    image = Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x502e);
     if (image != 0) {
-        palette = SIM_API(W8u3HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 9, 0x300);
+        palette = Hg_HeapAlloc(G32(0x1017b8f8), 9, 0x300);
         if (palette != 0) {
             ((W8uDriverPaletteFn)(uintptr_t)U32(G32(0x1015e688), 0x14))(0, 0x100, palette, 1);
             memcpy(rect, GBYTES(0x109e3e00), sizeof(rect));
@@ -49,9 +50,9 @@ void __cdecl Sim_100355ad(void)
             }
             W8U_CALL_100ed6aa(file, palette);
             ((W8uDriverFadeFn)(uintptr_t)U32(G32(0x1015e688), 0x1c))(palette, 0x3c);
-            SIM_API(W8u3HeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, palette);
+            Hg_HeapFree(G32(0x1017b8f8), 1, palette);
         }
-        SIM_API(W8u3HeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, image);
+        Hg_HeapFree(G32(0x1017b8f8), 1, image);
     }
     Heap_Free_100461d0(file);
 }

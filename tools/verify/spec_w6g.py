@@ -844,7 +844,8 @@ SPECS = [
     spec('Sim_100b65b7', 0x100b65b7, g_b65b7, 600),
     spec('Sim_100bb2b0', 0x100bb2b0, g_bb2b0, 600),
     spec('Sim_100bb350', 0x100bb350, g_bb2b0, 600),
-    spec('Sim_100bc47e', 0x100bc47e, g_bc47e, 300, void=True),
+    # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+    # spec('Sim_100bc47e', 0x100bc47e, g_bc47e, 300, void=True),
     spec('Sim_100bc535', 0x100bc535, g_bc535, 300),
     spec('Sim_100bd69c', 0x100bd69c, g_bd69c, 400, void=True),
     spec('Sim_100beced', 0x100beced, g_beced, 1500),

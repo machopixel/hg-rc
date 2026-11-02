@@ -18,6 +18,7 @@
 #include "../unsorted_1008/w3s.h"
 #include "../unsorted_100f/w2e.h"
 #include "../render/w2n.h"
+#include "../crt/hg_winheap.h"
 
 #define PTR(v) ((void *)(uintptr_t)(v))
 
@@ -81,7 +82,7 @@ void *__cdecl Sim_100a9830(void *parent, uint32_t flags)
             return 0;
         U32(node, 0x94) = 2;
     } else if ((flags & 4) != 0) {
-        node = SIM_API(W6gHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, 0xa4);
+        node = Hg_HeapAlloc(G32(0x1017b8f8), 1, 0xa4);
         if (node == 0)
             return 0;
         U32(node, 0x94) = 4;

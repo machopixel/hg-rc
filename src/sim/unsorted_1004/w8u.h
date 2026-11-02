@@ -38,9 +38,6 @@
 /* Not converted: (name, [0x1014cee4], [0x1014cf50], 3, &out, "ANFLOBJICID"); returns the loaded data or 0. */
 #define W8U_CALL_100b8d6c SIM_FN(uint8_t *(__cdecl *)(const void *, uint32_t, uint32_t, int, uint32_t *, const char *), 0x100b8d6c)
 /* HeapAlloc / HeapFree through the DLL's import slots. */
-typedef void *(__stdcall *W8u4HeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
-typedef int(__stdcall *W8u4HeapFreeFn)(uint32_t heap, uint32_t flags, void *block);
-
 /*
  * Position packet of unit `index` (not the own one, [0x1017b8c8]): six ints at +2.. scaled by [0x10111528] into
  * the floats 0x1015dd58.. and the unit's +0x28 record +0x554..; a sound (Sim_1000ebfb "AFXHGCOO") whose volume

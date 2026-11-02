@@ -4,8 +4,7 @@
 #include "../util/access.h"
 #include "../unsorted_1004/w3p.h"
 #include "../../platform/music.h"
-
-typedef int(__stdcall *W5cHeapFreeFn)(void *heap, uint32_t flags, void *block);
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x1003a052
 int __cdecl Sim_1003a052(void)
@@ -23,7 +22,7 @@ int __cdecl Sim_1003a052(void)
         if (U32(G32(0x1015d0a4), 0x54 + 4 * i) != 0)
             U32(G32(0x1015d0a4), 0x54 + 4 * i) = 0;
     }
-    SIM_API(W5cHeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015d0a4));
+    Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015d0a4));
     G32(0x1015d0a4) = 0;
     return 1;
 }
@@ -61,7 +60,7 @@ void __cdecl Sim_100354ff(void)
             ((void(__cdecl *)(void))(uintptr_t)U32(G32(0x1015e68c), 0x18))();
     }
     if (G32(0x1015e534) != 0)
-        SIM_API(W5cHeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015e534));
+        Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015e534));
     G32(0x1015e538) = 0;
     Sim_10037c6c();
 }

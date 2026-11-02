@@ -9,10 +9,10 @@
 #include "../unsorted_100f/w8z.h"
 #include "../unsorted_100a/w12.h"
 #include "../libm/hg_math.h"
+#include "../crt/hg_winheap.h"
 
-typedef int(__stdcall *W10HeapFreeFn)(void *heap, uint32_t flags, void *block);
 #define W10_HEAPFREE(block) \
-    SIM_API(W10HeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)(block))
+    Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)(block))
 
 // FUNCTION: HGSIM 0x1005b197
 void __cdecl Sim_1005b197(void *rec)
@@ -92,9 +92,8 @@ int32_t __cdecl Sim_100591ff(const void *poly, const void *verts, int32_t b, flo
     return level;
 }
 
-typedef void *(__stdcall *W10HeapAllocFn)(void *heap, uint32_t flags, uint32_t size);
 #define W10_HEAPALLOC(size) \
-    SIM_API(W10HeapAllocFn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, (uint32_t)(size))
+    Hg_HeapAlloc(G32(0x1017b8f8), 1, (uint32_t)(size))
 
 /* The original allocates on [0x1017b910] when it is set and puts [0x1017b900] back afterwards. */
 static void *W10_ModelAlloc(uint32_t size)

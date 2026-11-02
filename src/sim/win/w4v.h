@@ -18,8 +18,6 @@ int __cdecl Heap_FreeRaw(void *block);
 /* Heap_AllocZero(size) (another copy of the call in the original). */
 void *__cdecl Sim_100a77ef(uint32_t size);
 
-/* ClipCursor(NULL) and clears the dword at 0x10179d64. Returns 0. (src/hooks/hooks_input.c patches it: MouseUnclip.) */
-int __cdecl Mouse_Unclip(void);
 /*
  * Two identical functions: StretchDIBits(dc [0x1017b3c0], 0, 0, [0x109e3d14], [0x109e3d18], x0, [0x109e3d18] - y1 - 1,
  * x1 - x0 + 1, y1 - y0 + 1, bits [0x1015e9a0], info 0x109e38c0, 1, SRCCOPY): copies the rectangle (x0,y0)-(x1,y1)
@@ -27,18 +25,18 @@ int __cdecl Mouse_Unclip(void);
  * equals the height [0x109e3d18], else -1.
  */
 int __cdecl Sim_10083de1(int x0, int y0, int x1, int y1);
-int __cdecl Sim_10083e4e(int x0, int y0, int x1, int y1);
 
 /*
- * Loads the libraries of the table at 0x1017dfb8 (entries 1..[0x1017e1bc], 0x20 bytes each: name, handle at +0x18,
- * the address of its export "Uncompress" at +0x1c). A library that fails to load is retried after Sleep(2000), for ever.
- * Returns 1.
+ * Sets up the archive's unpackers, the table at 0x1017dfb8 (entries 1..[0x1017e1bc], 0x20 bytes each: the method's
+ * name, a library handle at +0x18, its "Uncompress" at +0x1c). The original loaded each name as a DLL (retrying after
+ * Sleep(2000) for ever); now "pkware.dll" and "zlib.dll" get our unpackers (util/unpack.h), the handle is 0, and any
+ * other name an unpacker that always fails. Returns 1.
  */
 int __cdecl Sim_100bcc50(void);
 /*
- * Calls the force feedback library's TSFF_ExitSystem through the pointer at 0x1015ef44. Returns 0 when the library
- * is not in use ([0x1015ef3c] == 0), 0x8004050f when the pointer is NULL, else the call's result (a negative one is
- * reported with OutputDebugStringA).
+ * Force feedback stop (FFORCE.DLL's TSFF_ExitSystem, now platform/force.h's Force_Exit). Returns 0 when force
+ * feedback is not in use ([0x1015ef3c] == 0), 0x8004050f without a device (the original: FFORCE.DLL missing), else
+ * Force_Exit's result (a negative one is reported as debug text).
  */
 int __cdecl Force_ExitSystem(void);
 

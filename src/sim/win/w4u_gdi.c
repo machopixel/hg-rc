@@ -1,40 +1,22 @@
 #include "w4u.h"
+#include "../../platform/picture.h"
 #include "w4u_api.h"
 #include "../unsorted_1004/w2l.h"
 
 #define WINDOW (*SIM_PTR(void *, 0x1017b35c))
 #define LAST_RESULT (*SIM_PTR(int, 0x10372d8c))
 
-// FUNCTION: HGSIM 0x1008375a
-int __cdecl Sim_1008375a(void)
-{
-    if (*SIM_PTR(uint32_t, 0x1017b7d0) != 0) {
-        *SIM_PTR(uint32_t, 0x103729c4) = SIM_API(W4uSetDIBColorTableFn, W4U_IAT_SETDIBCOLORTABLE)(
-            *SIM_PTR(void *, 0x1017b7cc), 0, 0x100, SIM_PTR(void, 0x1017b3c8));
-    } else {
-        *SIM_PTR(void *, 0x1017b7d0) = SIM_API(W4uCreateDIBSectionFn, W4U_IAT_CREATEDIBSECTION)(
-            *SIM_PTR(void *, 0x1017b3c0), SIM_PTR(void, 0x109e38c0), 1, *SIM_PTR(void **, 0x1015e698), 0, 0);
-        if (*SIM_PTR(uint32_t, 0x1017b7d0) == 0 || **SIM_PTR(uint32_t *, 0x1015e698) == 0) {
-            W4U_LOG(0x1014af78, SIM_API(W4uGetLastErrorFn, W4U_IAT_GETLASTERROR)());
-            return 0;
-        }
-        *SIM_PTR(uint32_t, 0x1015e9a0) = **SIM_PTR(uint32_t *, 0x1015e698);
-        *SIM_PTR(void *, 0x103729d4) = SIM_API(W4uSelectObjectFn, W4U_IAT_SELECTOBJECT)(
-            *SIM_PTR(void *, 0x1017b7cc), *SIM_PTR(void *, 0x1017b7d0));
-    }
-    return 1;
-}
+/* Sim_1008375a (0x1008375a, the DIB section of the windowed driver) is deleted: no caller and no pointer in the DLL
+   (DECISIONS.md, "The loading screen through Vulkan"). */
 
 // FUNCTION: HGSIM 0x10083cd5
 int __cdecl Gdi_BitBltRect(int a, int b, int c, int d)
 {
-    uint32_t lines = *SIM_PTR(uint32_t, 0x109e3d18);
-
-    *SIM_PTR(int, 0x103729c4) = SIM_API(W4uSetDIBitsToDeviceFn, W4U_IAT_SETDIBITSTODEVICE)(
-        *SIM_PTR(void *, 0x1017b3c0), a, b, (uint32_t)(c - a + 1), (uint32_t)(d - b + 1), a,
-        (int)(lines - (uint32_t)d - 1), 0, lines, *SIM_PTR(void *, 0x1015e9a0), SIM_PTR(void, 0x109e38c0), 1);
-    if (*SIM_PTR(int, 0x103729c4) == 0)
-        W4U_LOG(0x1014afb4, SIM_API(W4uGetLastErrorFn, W4U_IAT_GETLASTERROR)());
+    /* the original's SetDIBitsToDevice of the rectangle (source y counted from the bottom, lines - d - 1: the same
+       rows b..d of the top-down picture): the loading-screen picture (platform/picture.h). It never fails, so the
+       original's error report (GetLastError) is not reached */
+    *SIM_PTR(int, 0x103729c4) = Pic_Blit(BYTES(G32(0x1015e9a0)), GS32(0x109e3d14), GS32(0x109e3d18), a, b, a, b,
+                                         c - a + 1, d - b + 1);
     return *SIM_PTR(uint32_t, 0x103729c4) != *SIM_PTR(uint32_t, 0x109e3d18) ? -1 : 0;
 }
 
@@ -61,16 +43,12 @@ int __cdecl Gdi_SetPalette(int start, int count, const uint8_t *rgb)
         entry[2] = (uint8_t)(from[2] << 2);
         entry[3] = 4;
     }
-    if (*SIM_PTR(void *, 0x1017b3c4) == 0) {
-        *SIM_PTR(void *, 0x1017b3c4) =
-            SIM_API(W4uCreatePaletteFn, W4U_IAT_CREATEPALETTE)(SIM_PTR(void, 0x1014ab20));
-        *SIM_PTR(void *, 0x103729dc) = SIM_API(W4uSelectPaletteFn, W4U_IAT_SELECTPALETTE)(
-            *SIM_PTR(void *, 0x1017b3c0), *SIM_PTR(void *, 0x1017b3c4), 0);
-    } else {
-        SIM_API(W4uSetPaletteEntriesFn, W4U_IAT_SETPALETTEENTRIES)(*SIM_PTR(void *, 0x1017b3c4), 0, 0x100,
-                                                                   SIM_PTR(void, 0x1014ab24));
-    }
-    SIM_API(W4uRealizePaletteFn, W4U_IAT_REALIZEPALETTE)(*SIM_PTR(void *, 0x1017b3c0));
+    /* the window's GDI palette (CreatePalette and SelectPalette the first time, else SetPaletteEntries; then
+       RealizePalette): the loading-screen picture's palette (platform/picture.h); [0x1017b3c4] keeps a nonzero
+       mark for "made" */
+    if (*SIM_PTR(uint32_t, 0x1017b3c4) == 0)
+        *SIM_PTR(uint32_t, 0x1017b3c4) = 1;
+    Pic_SetPalette(SIM_PTR(uint8_t, 0x1015e6a0));
     return 1;
 }
 

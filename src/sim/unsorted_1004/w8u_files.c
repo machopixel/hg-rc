@@ -10,6 +10,7 @@
 #include "../unsorted_1010/w6k.h"
 #include "../win/w4v.h"
 #include "../util/w3o.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x100461e8
 void *__cdecl File_LoadWhole(const char *name, void *buffer)
@@ -24,7 +25,7 @@ void *__cdecl File_LoadWhole(const char *name, void *buffer)
     size = Crt_FTell(f);
     W8U_FSEEK_1004(f, 0, 0);
     if (buffer == 0)
-        p = SIM_API(W8u4HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, (uint32_t)size);
+        p = Hg_HeapAlloc(G32(0x1017b8f8), 1, (uint32_t)size);
     else
         p = buffer;
     W8U_FREAD_1004(p, 1, (uint32_t)size, f);
@@ -122,7 +123,7 @@ int32_t __cdecl File_ReadAll(const char *name, uint32_t *size, uint32_t *buffer,
         return -1;
     *size = (uint32_t)File_GetLength((uint32_t)h);
     if (alloc == 0)
-        *buffer = (uint32_t)(uintptr_t)SIM_API(W8u4HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, *size);
+        *buffer = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, *size);
     else {
         /* the original also reads *alloc and passes it as a second argument, which Heap_AllocRaw does not use */
         volatile uint32_t unused = *alloc;
@@ -136,7 +137,7 @@ int32_t __cdecl File_ReadAll(const char *name, uint32_t *size, uint32_t *buffer,
     }
     if ((uint32_t)W8U_READ_1004((uint32_t)h, (void *)(uintptr_t)*buffer, *size) != *size) {
         if (alloc == 0)
-            SIM_API(W8u4HeapFreeFn, 0x10ac5634)(G32(0x1017b8f8), 1, (void *)(uintptr_t)*buffer);
+            Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)*buffer);
         W8U_CLOSE_1004((uint32_t)h);
         return -1;
     }
@@ -219,7 +220,7 @@ int __cdecl Sim_10046fe5(const char *name, uint8_t **out)
     uint32_t size, buffer;      /* [ebp-4], [ebp-0xc] */
     int32_t h;
 
-    *out = SIM_API(W8u4HeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 9, 0x17);
+    *out = Hg_HeapAlloc(G32(0x1017b8f8), 9, 0x17);
     h = File_ReadAll(Sim_100474db(name), &size, &buffer, 0);
     if (h != -1)
         Mem_Move(*out, (const void *)(uintptr_t)buffer, size);

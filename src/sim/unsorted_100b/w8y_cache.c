@@ -16,11 +16,10 @@
 #include "../unsorted_100f/w7q.h"
 #include "../unsorted_1010/w6k.h"
 #include "../unsorted_1010/w7s.h"
+#include "../crt/hg_winheap.h"
 
 typedef uint32_t(__stdcall *W8yTimeKillEventFn)(uint32_t id);
 typedef uint32_t(__stdcall *W8yTimeEndPeriodFn)(uint32_t period);
-typedef int(__stdcall *W8yHeapFree2Fn)(uint32_t heap, uint32_t flags, uint32_t block);
-typedef int(__stdcall *W8yHeapDestroyFn)(uint32_t heap);
 typedef int(__cdecl *W8yDriverAskFn)(void);
 typedef void(__cdecl *W8yDriverRectFn)(uint32_t, uint32_t, uint32_t, uint32_t);
 typedef uint64_t(__cdecl *W8yTimeFn)(void);
@@ -40,11 +39,11 @@ void __cdecl Sim_100b8938(void)
         SIM_API(W8yTimeEndPeriodFn, 0x10ac5838)(G32(0x10199448));
     }
     if (G32(0x1017d5d0) != 0) {
-        SIM_API(W8yHeapFree2Fn, 0x10ac5634)(G32(0x1017b8f8), 1, G32(0x1017d5d0));
+        Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(G32(0x1017d5d0)));
         G32(0x1017d5d0) = 0;
     }
     if (G32(0x1017d5d4) != 0) {
-        SIM_API(W8yHeapFree2Fn, 0x10ac5634)(G32(0x1017b8f8), 1, G32(0x1017d5d4));
+        Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(G32(0x1017d5d4)));
         G32(0x1017d5d4) = 0;
         G32(0x1017d5d8) = 0;
     }
@@ -104,7 +103,7 @@ static const uint32_t kLoadNames[9] = {0x101511e0, 0x101511e4, 0x101511e8, 0x101
 static void drop_wtb_heap(void)
 {
     if (G32(0x1017b914) == G32(0x1017b904)) {
-        SIM_API(W8yHeapDestroyFn, 0x10ac5608)(G32(0x1017b904));
+        Hg_HeapDestroy(G32(0x1017b904));
         G32(0x1017b904) = 0;
     }
     G32(0x1017b914) = 0;

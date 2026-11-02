@@ -1,4 +1,5 @@
 #include "w11.h"
+#include "../../platform/plat.h"
 #include "../simmem.h"
 #include "../util/access.h"
 #include "w5b.h"
@@ -16,7 +17,6 @@ typedef int(__stdcall *W11MessageBoxFn)(uint32_t window, const char *text, const
 #define W11_FMT(addr) SIM_PTR(const char, addr)
 #define W11_TEXT(key) Sim_100b7834((const uint32_t *)(uintptr_t)G32(0x1017d594), (uint32_t)(uintptr_t)(key))
 #define W11_SPRINTF SIM_FN(W11SprintfFn, 0x100fc780)
-#define W11_SHOWCURSOR SIM_API(W11ShowCursorFn, 0x10ac5768)
 
 // FUNCTION: HGSIM 0x1005573d
 void __cdecl Sim_1005573d(int code, uint32_t value, const char *key)
@@ -52,17 +52,16 @@ void __cdecl Sim_1005573d(int code, uint32_t value, const char *key)
         break;
     }
     Sim_1005f9aa(W11_BUF);
-    if (W11_SHOWCURSOR(1) <= 0) {
+    /* the original's ShowCursor loops (shown, remembering it was hidden) and MessageBoxA over the focus window
+       (GetFocus): SDL3, over the game window */
+    if (!Plat_CursorShown()) {
         hidden = 1;
-        while (W11_SHOWCURSOR(1) < 0)
-            ;
+        Plat_CursorVisible(1);
     }
-    if (SIM_API(W11MessageBoxFn, 0x10ac57e4)(SIM_API(W11GetFocusFn, 0x10ac5778)(), W11_BUF,
-                                             (const char *)(uintptr_t)G32(0x101c4be0), 0x12041) == 2) {
+    if (Plat_MessageBox((void *)(uintptr_t)G32(0x1017b8f0), W11_BUF, (const char *)(uintptr_t)G32(0x101c4be0), 0x12041) == 2) {
         Sim_100bc451();
         SIM_FN(W11ExitFn, 0x100ff3b0)(code);
     }
     if (hidden != 0)
-        while (W11_SHOWCURSOR(0) >= 0)
-            ;
+        Plat_CursorVisible(0);
 }

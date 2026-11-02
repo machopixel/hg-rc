@@ -1,4 +1,6 @@
 #include "w7n.h"
+#include "../../platform/plat.h"
+#include "../../platform/picture.h"
 #include "w2i.h"
 #include "w3r.h"
 #include "w4w.h"
@@ -15,10 +17,10 @@
 #include "../win/w4u.h"
 #include "../util/util.h"
 #include "../util/w3o.h"
+#include "../crt/hg_winheap.h"
 
 typedef void(__cdecl *W7nDriverFn)(void);
 typedef uint32_t(__stdcall *W7nGetDCFn)(uint32_t window);
-typedef uint32_t(__stdcall *W7nHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
 typedef int(__stdcall *W7nShowCursorFn)(int show);
 
 // FUNCTION: HGSIM 0x10083530
@@ -34,13 +36,16 @@ int __cdecl Sim_10083530(uint32_t *out, int width, int height)
             W7N8_CALL_100381d0(SIM_PTR(void, 0x1014af28));
         G32(0x1015e688) = G32(0x1013a2a0);
     }
-    G32(0x1017b3c0) = SIM_API(W7nGetDCFn, 0x10ac57ac)(G32(0x1017b8f0));
+    /* the window's GDI device context: the loading-screen picture through Vulkan (platform/picture.h; DECISIONS.md,
+       "The loading screen through Vulkan"); the slot keeps a nonzero mark for the tests on it */
+    Pic_Open((void *)(uintptr_t)G32(0x1017b8f0));
+    G32(0x1017b3c0) = 1;
     Dib_InitHeader((uint32_t)width, height);
     for (i = 0; i < 0x100; i++)
         SIM_PTR(u16a, 0x109e38e8)[i] = (uint16_t)i;
     if (Gdi_SetPalette(0, 0x100, GBYTES(0x1015e6a0)) == 0)
         return -1;
-    out[0] = SIM_API(W7nHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 9, (uint32_t)width * (uint32_t)height);
+    out[0] = (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 9, (uint32_t)width * (uint32_t)height);
     if (out[0] == 0)
         return 2;
     G32(0x1015e9a0) = out[0];
@@ -112,8 +117,7 @@ void __cdecl Sim_10086c32(void)
     }
     if (W7N8_CALL_100766ca(5) == 0 && G32(0x1017b920) != 0 && G32(0x1017b930) == 0) {
         if (G32(0x1017b92c) != 0) {
-            while (SIM_API(W7nShowCursorFn, 0x10ac5768)(0) >= 0)
-                ;
+            Plat_CursorVisible(0);          /* the original's ShowCursor loop: SDL3 */
             G32(0x1017b93c) = 0;
             Sim_10083495(); /* "WinMain(3): pause_timer(false)": the debug print is empty */
             W7N8_CALL_100e46d0(0x80, 0);
@@ -130,8 +134,7 @@ void __cdecl Sim_10086c32(void)
         *SIM_PTR(u16a, 0x1015fd4c) = 0;
     }
     if (W7N8_CALL_100766ca(5) == 0 && G32(0x1015e9bc) != 1) {
-        while (SIM_API(W7nShowCursorFn, 0x10ac5768)(1) < 0)
-            ;
+        Plat_CursorVisible(1);
         G32(0x1017b93c) = 1;
     }
     Sim_10083495(); /* "WinMain(4): pause_timer(TRUE)" */

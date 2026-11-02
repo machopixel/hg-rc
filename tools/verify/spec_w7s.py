@@ -810,7 +810,8 @@ SPECS = [
     dict(name='Sim_10105a60', orig=0x10105a60, c='Sim_10105a60', gen=g_filbuf, trials=800, api=API),
     dict(name='Sim_10105db0', orig=0x10105db0, c='Sim_10105db0', gen=g_ioinit, trials=600, api=API),
     dict(name='Sim_101062b0', orig=0x101062b0, c='Sim_101062b0', gen=g_pow, trials=2000, api=API),
-    dict(name='Sim_101069c0', orig=0x101069c0, c='Sim_101069c0', gen=g_sbh_alloc, trials=1500, api=API),
+    # deleted: dead (SDL3 platform/w28 version or unused; DECISIONS.md "Windows calls")
+    # dict(name='Sim_101069c0', orig=0x101069c0, c='Sim_101069c0', gen=g_sbh_alloc, trials=1500, api=API),
     dict(name='Sim_10107910', orig=0x10107910, c='Sim_10107910', gen=g_wtomb_env, trials=500, api=API),
     dict(name='Sim_10107990', orig=0x10107990, c='Sim_10107990', gen=g_setenvp, trials=500, api=API, void=True),
     dict(name='Sim_10107a80', orig=0x10107a80, c='Sim_10107a80', gen=g_setargv, trials=400, api=API),

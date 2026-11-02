@@ -1227,7 +1227,8 @@ SPECS = [
     spec('Sim_10036108', 0x10036108, g_36108, 400),
     spec('Plugin_LoadAll', 0x10036466, g_loadall, 400),
     spec('Sim_100355ad', 0x100355ad, g_355ad, 500, void=True, api=HEAP_API),
-    spec('Display_SetMode', 0x1003795b, g_display, 1500, api=DISPLAY_API),
+    # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+    # spec('Display_SetMode', 0x1003795b, g_display, 1500, api=DISPLAY_API),
     spec('Sim_10038913', 0x10038913, g_38913, 800),
     spec('Sim_1003a990', 0x1003a990, g_3a990, 600),
     spec('Gear_SetLod', 0x1003ad51, g_3ad51, 800),

@@ -1,18 +1,12 @@
 /*
- * The Windows backend of the platform layer (plat.h). The game window is the sim's own Windows window, so the
- * window calls are the Windows ones the sim made; SDL3 (input_sdl3.c, display_sdl3.c) wraps that same window.
+ * The Windows backend of the platform layer (plat.h): what is left of the window procedure's plumbing (the launcher
+ * makes the game window the Windows way), the clocks, libraries and keys. The screen services are SDL3's
+ * (plat_window.c), which wraps that same window.
  */
 #include <windows.h>
+#include <mmsystem.h>
 
 #include "plat.h"
-
-void Plat_WindowShow(void *window, int how)
-{
-    static const int kShow[] = {SW_HIDE, SW_SHOWNOACTIVATE, SW_MINIMIZE, SW_RESTORE};
-
-    if (how >= 0 && how < (int)(sizeof(kShow) / sizeof(kShow[0])))
-        ShowWindow((HWND)window, kShow[how]);
-}
 
 void Plat_WindowPainted(void *window)
 {
@@ -34,9 +28,17 @@ void Plat_RequestQuit(void)
     PostQuitMessage(0);
 }
 
+/* Plat_WindowShow and the other screen services: plat_window.c (SDL3). */
+
+/*
+ * The pointer as the game had it: Windows' display count (ShowCursor), which hides it over the window whatever has
+ * the focus. SDL3's own hiding (SDL_HideCursor) holds only while SDL sees the mouse in the window, and the game drops
+ * the mouse messages while the pointer is hidden, so after Alt+Tab Windows showed the window class's arrow again
+ * (Diego's play test, 2026-11-02). Back to SDL3 when SDL makes the window (AFTER_DLL.md).
+ */
 void Plat_CursorVisible(int visible)
 {
-    /* the Windows display count: up to 0 to show, below 0 to hide */
+    /* up to 0 to show, below 0 to hide */
     if (visible) {
         while (ShowCursor(TRUE) < 0) {
         }
@@ -46,9 +48,49 @@ void Plat_CursorVisible(int visible)
     }
 }
 
+int Plat_CursorShown(void)
+{
+    int count = ShowCursor(TRUE);
+
+    ShowCursor(FALSE);
+    return count > 0;       /* the count was 0 or more before */
+}
+
+int32_t Plat_WindowSend(void *window, uint32_t message, uint32_t wParam, uint32_t lParam)
+{
+    return (int32_t)SendMessageA((HWND)window, message, (WPARAM)wParam, (LPARAM)(int32_t)lParam);
+}
+
+int Plat_DropEvent(void)
+{
+    MSG msg;
+
+    return PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) != 0;
+}
+
 uint32_t Plat_TicksMs(void)
 {
     return (uint32_t)GetTickCount();
+}
+
+uint32_t Plat_TimeMs(void)
+{
+    return (uint32_t)timeGetTime();
+}
+
+void Plat_DebugText(const char *text)
+{
+    OutputDebugStringA(text);
+}
+
+uint32_t Plat_KeyChar(uint32_t key)
+{
+    return (uint32_t)MapVirtualKeyA(key, 2);
+}
+
+int16_t Plat_KeyState(int key)
+{
+    return (int16_t)GetKeyState(key);
 }
 
 uint32_t Plat_CurrentDir(char *out, uint32_t size)

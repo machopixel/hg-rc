@@ -6,6 +6,7 @@
 #include "../view/view.h"
 #include "../unsorted_100f/w2e.h"
 #include "../libm/hg_math.h"
+#include "../crt/hg_winheap.h"
 
 #define GF(addr) (*SIM_PTR(float, addr))
 
@@ -76,8 +77,6 @@ int32_t *__cdecl Sim_1008eaaf(const void *rect, float angle, int32_t *out)
     return Sim_1008ec46(rect, centre, mode, Sim_1008486e(c, -s), out);
 }
 
-typedef void *(__stdcall *W10_8HeapAllocFn)(void *heap, uint32_t flags, uint32_t size);
-typedef int(__stdcall *W10_8HeapFreeFn)(void *heap, uint32_t flags, void *block);
 typedef int32_t(__cdecl *W10_8FontFn)(void *font);
 typedef int32_t(__cdecl *W10_8WidthFn)(void *font, int ch);
 typedef void(__cdecl *W10_8TextFn)(const int32_t *pane, int32_t x, int32_t y, void *font, const char *text,
@@ -95,7 +94,7 @@ void __cdecl Sim_1008dba2(const int32_t *pane, const char *text, void *font)
     len = Str_Length(text);
     if (len == 0)
         return;
-    copy = (char *)SIM_API(W10_8HeapAllocFn, 0x10ac5658)((void *)(uintptr_t)G32(0x1017b8f8), 1, len + 1);
+    copy = (char *)Hg_HeapAlloc(G32(0x1017b8f8), 1, len + 1);
     p = copy;
     end = copy + len;
     Str_Copy(copy, text);
@@ -138,5 +137,5 @@ void __cdecl Sim_1008dba2(const int32_t *pane, const char *text, void *font)
         pos[1] += lineh;
         p++;
     }
-    SIM_API(W10_8HeapFreeFn, 0x10ac5634)((void *)(uintptr_t)G32(0x1017b8f8), 1, copy);
+    Hg_HeapFree(G32(0x1017b8f8), 1, copy);
 }

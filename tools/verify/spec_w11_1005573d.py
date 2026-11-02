@@ -52,5 +52,7 @@ def g(ctx):
     return [r.choice([0x6e, 0x6f, 0x70, 0x71, 0]), r.getrandbits(32), key]
 
 
-SPECS = [dict(name='Sim_1005573d', orig=0x1005573d, c='Sim_1005573d', gen=g, void=True, trials=3000,
-              api={'ShowCursor': show, 'GetFocus': lambda n, a: 0x1234, 'MessageBoxA': lambda n, a: ST['box']})]
+# superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
+# SPECS = [dict(name='Sim_1005573d', orig=0x1005573d, c='Sim_1005573d', gen=g, void=True, trials=3000,
+#               api={'ShowCursor': show, 'GetFocus': lambda n, a: 0x1234, 'MessageBoxA': lambda n, a: ST['box']})]
+SPECS = []

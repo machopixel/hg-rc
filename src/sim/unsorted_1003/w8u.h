@@ -31,14 +31,11 @@
 /* Not converted: (object). */
 #define W8U_CALL_100897c7 SIM_FN(void(__cdecl *)(uint32_t), 0x100897c7)
 /* Windows through the DLL's import slots. */
-typedef void(__stdcall *W8uOutputDebugStringFn)(const char *text);
 typedef int(__stdcall *W8uMessageBoxFn)(uint32_t window, const char *text, const char *caption, uint32_t type);
 typedef int(__stdcall *W8uGetSystemMetricsFn)(int index);
 typedef int(__stdcall *W8uAdjustWindowRectFn)(void *rect, uint32_t style, int menu);
 typedef int(__stdcall *W8uShowWindowFn)(uint32_t window, int show);
 typedef int(__stdcall *W8uUpdateWindowFn)(uint32_t window);
-typedef void *(__stdcall *W8u3HeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t size);
-typedef int(__stdcall *W8u3HeapFreeFn)(uint32_t heap, uint32_t flags, void *block);
 /* Entries of a display driver table (0x1013a2a8 / 0x1013a298, current ones in [0x1015e68c] / [0x1015e688]):
  * +0x10 set mode (a, width, height), +0x14 / +0x18 no arguments; of [0x1015e688]: +0x14 (first, count, palette,
  * 1), +0x1c (palette, 0x3c), +0x20 no arguments. */

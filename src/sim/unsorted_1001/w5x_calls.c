@@ -5,10 +5,7 @@
 #include "../view/view.h"
 #include "../win/w4u.h"
 #include "../util/access.h"
-
-typedef int(__stdcall *HeapFreeFn)(void *heap, uint32_t flags, void *block);
-
-#define IAT_HEAPFREE 0x10ac5634u
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x10010aa0
 void __cdecl Sim_10010aa0(void)
@@ -68,5 +65,5 @@ void __cdecl Sim_1001f47d(void)
     /* (Cd_Shutdown here: nothing without a CD; no CD audio, DECISIONS.md "dropped features") */
     SIM_CALL_1003a052();
     SIM_CALL_1004724c(GBYTES(0x10132220), G32(0x1015d1b8));
-    SIM_API(HeapFreeFn, IAT_HEAPFREE)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015d1b8));
+    Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015d1b8));
 }

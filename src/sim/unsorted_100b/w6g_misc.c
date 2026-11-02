@@ -1,4 +1,5 @@
 #include "w6g.h"
+#include "../../platform/plat.h"
 #include "fns.h"
 #include "w2h.h"
 #include "w2l.h"
@@ -112,10 +113,10 @@ void __cdecl Sim_100bc47e(uint32_t code)
     text = Sim_100bc4f7(G32(0x10151414), code);
     Sim_1002ab26();
     Sim_100556c2();
-    while (SIM_API(W6gShowCursorFn, 0x10ac5768)(1) < 0) {
-    }
-    SIM_API(W6gShowWindowFn, 0x10ac57dc)(G32(0x1017b8f0), 7);
-    SIM_API(W6gMessageBoxFn, 0x10ac57e4)(0, text, (const char *)GBYTES(0x1015146c), 0x12010);
+    /* ShowCursor loop, ShowWindow(SW_SHOWMINNOACTIVE) and MessageBoxA: SDL3 */
+    Plat_CursorVisible(1);
+    Plat_WindowShow((void *)(uintptr_t)G32(0x1017b8f0), PLAT_SHOW_MINIMIZE);
+    Plat_MessageBox(0, text, (const char *)GBYTES(0x1015146c), 0x12010);
     Sim_10083495();
     W6G_CALL_100ff3b0(0xff);
 }

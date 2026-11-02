@@ -33,5 +33,7 @@ def g(ctx):
     return []
 
 
-SPECS = [dict(name='Sim_10083801', orig=0x10083801, c='Sim_10083801', gen=g, void=True, trials=3000,
-              api={'SetDIBitsToDevice': lambda n, a: 480 + n})]
+# superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
+# SPECS = [dict(name='Sim_10083801', orig=0x10083801, c='Sim_10083801', gen=g, void=True, trials=3000,
+#               api={'SetDIBitsToDevice': lambda n, a: 480 + n})]
+SPECS = []

@@ -108,7 +108,7 @@ int __cdecl Sim_100d3510(int32_t index, int32_t time, int mode)
         Sim_100bb2b0((const uint32_t *)(uintptr_t)W8z_PaletteName(index), W8Z_EXT);
     }
     if (previous == -1)
-        W8Z_HEAP_FREE(W8Z_HEAP, 1, (void *)(uintptr_t)from);
+        Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)from);
     else
         Sim_100bb2b0((const uint32_t *)(uintptr_t)W8z_PaletteName(previous), W8Z_EXT);
     return done;
@@ -136,7 +136,7 @@ void __cdecl Sim_100d3877(int flag)
             Sim_100bb2b0((const uint32_t *)(uintptr_t)name, W8Z_EXT);
             ((W8zDrv1Fn)(uintptr_t)W8Z_DRIVER(0x18))((void *)(uintptr_t)pal);
         } else if (G32(0x1017b940) == 0) {
-            mem = W8Z_HEAP_ALLOC(W8Z_HEAP, 9, G32(0x109e3ce8));
+            mem = Hg_HeapAlloc(G32(0x1017b8f8), 9, G32(0x109e3ce8));
             if (mem != 0) {
                 memcpy(first, SIM_PTR(uint8_t, 0x109e3e00), sizeof(first));
                 first[0] = (uint32_t)(uintptr_t)second;
@@ -159,7 +159,7 @@ void __cdecl Sim_100d3877(int flag)
                 if (G32(0x1017b920) != 0)
                     ((W8zVoidFn)(uintptr_t)U32(G32(0x1015e68c), 0x18))();
                 ((W8zDrv1Fn)(uintptr_t)W8Z_DRIVER(0x18))((void *)(uintptr_t)pal);
-                W8Z_HEAP_FREE(W8Z_HEAP, 1, mem);
+                Hg_HeapFree(G32(0x1017b8f8), 1, mem);
                 W8Z_TIMER_FREE((unsigned)timer);
             }
         }

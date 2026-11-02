@@ -8,6 +8,7 @@
 #include "../unsorted_100f/w6h.h"
 #include "../unsorted_100f/w7q.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
 /* One line of the cache dump: id (word +0), type (dword +4 as 4 characters), lock (word +2), HeapSize. */
 static void W8u_DumpNode(void *f, uint32_t format, uint8_t *node, char *type)
@@ -15,7 +16,7 @@ static void W8u_DumpNode(void *f, uint32_t format, uint8_t *node, char *type)
     uint32_t size;
 
     *(u32a *)type = U32(node, 4);
-    size = SIM_API(W8uHeapSizeFn, 0x10ac5638)(G32(0x1017b8f8), 1, node);
+    size = Hg_HeapSize(G32(0x1017b8f8), 1, node);
     Crt_FPrintf(f, SIM_PTR(const char, format), (uint32_t)U16(node, 0), type, (int)S16(node, 2), size);
 }
 
@@ -78,7 +79,7 @@ void *__cdecl Cache_UseItem(uint32_t a, int key, const void *name)
     if (size <= 0)
         return 0;
     for (;;) {
-        block = SIM_API(W8uHeapAllocFn, 0x10ac5658)(G32(0x1017b8f8), 1, (uint32_t)size + 0x14);
+        block = Hg_HeapAlloc(G32(0x1017b8f8), 1, (uint32_t)size + 0x14);
         if (block != 0)
             break;
         if (G32(0x109f13f0) == 0) {

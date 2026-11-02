@@ -17,6 +17,7 @@
 #include "../util/w3p.h"
 #include "../win/w4w_api.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
 static float BitsFloat(uint32_t u)
 {
@@ -138,7 +139,7 @@ void __cdecl Sim_10027e6a(void)
     G32(0x109f13e0) = 0;
     G32(0x109f13f0) = 0;
     G32(0x109f13f4) = 0;
-    SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)(W4W_GAME_HEAP, 1, (void *)(uintptr_t)G32(0x1015dc30));
+    Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015dc30));
 }
 
 // FUNCTION: HGSIM 0x10028b90
@@ -235,10 +236,10 @@ int __cdecl Sim_1002c63a(void)
         if (U32(obj, 0x108) != 0)
             ((void(__cdecl *)(void *))(uintptr_t)U32(SIM_PTR(u32a, 0x109e88e0)[i], 0x108))(
                 (void *)(uintptr_t)SIM_PTR(u32a, 0x109e88e0)[i]);
-        SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)(W4W_GAME_HEAP, 1, (void *)(uintptr_t)SIM_PTR(u32a, 0x109e88e0)[i]);
+        Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)SIM_PTR(u32a, 0x109e88e0)[i]);
     }
     Sim_100481dd(-1);
-    return SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)(W4W_GAME_HEAP, 1, (void *)(uintptr_t)G32(0x1015dc2c));
+    return Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015dc2c));
 }
 
 // FUNCTION: HGSIM 0x1002ce45

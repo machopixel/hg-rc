@@ -53,9 +53,6 @@ static inline float W6e_Float(uint32_t u)
 typedef void *(__stdcall *W6eLoadLibraryFn)(const char *name);
 typedef void *(__stdcall *W6eGetProcAddressFn)(void *module, const char *name);
 typedef int(__stdcall *W6eFreeLibraryFn)(void *module);
-typedef void *(__stdcall *W6eHeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
-typedef int(__stdcall *W6eHeapFreeFn)(void *heap, uint32_t flags, void *block);
-
 /*
  * Runs 0x10007890, 0x100d3491 and 0x100d33ec; then, when [0x109e3dac] is set, calls slot 0x20 of the
  * table at [0x1015e68c] with (rect left + 1, top + 1, right, bottom) of the rectangle at 0x109e3e04, copies the five

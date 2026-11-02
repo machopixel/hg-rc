@@ -1,10 +1,9 @@
 #include "w4u.h"
+#include "../../platform/plat.h"
 #include "w3p.h"
 #include "../core/core.h"
 #include "../win/w4u_api.h"
 
-typedef int(__stdcall *W4uQueryCounterFn)(void *counter);
-typedef int(__stdcall *W4uGetWindowRectFn)(void *window, void *rect);
 typedef void(__cdecl *W4uLog1Fn)(const void *format);
 typedef void(__cdecl *W4uLog7Fn)(const void *format, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t e,
                                  uint32_t f);
@@ -12,8 +11,14 @@ typedef void(__cdecl *W4uMethod0Fn)(void);
 typedef uint32_t(__cdecl *W4uMethod3Fn)(uint32_t a, uint32_t b, uint32_t c);
 typedef void(__cdecl *W4uMethod4Fn)(uint32_t a, uint32_t b, uint32_t c, uint32_t d);
 
-#define W4U_IAT_QUERYPERFORMANCECOUNTER 0x10ac55e8u
-#define W4U_IAT_GETWINDOWRECT 0x10ac5764u
+/* The original's QueryPerformanceCounter: the platform's fine clock (SDL3), which does not fail. */
+static void W4u_Counter(uint32_t *out)
+{
+    uint64_t now = Plat_CounterNow();
+
+    out[0] = (uint32_t)now;
+    out[1] = (uint32_t)(now >> 32);
+}
 
 #define CURRENT G32(0x1015e68c)
 #define ACTIVE G32(0x1015e694)
@@ -29,10 +34,7 @@ void __cdecl Sim_10037cab(void)
         return;
     }
     if (STEP == 1) {
-        if (SIM_API(W4uQueryCounterFn, W4U_IAT_QUERYPERFORMANCECOUNTER)(GBYTES(0x1015e680)) == 0) {
-            ACTIVE = 0;
-            return;
-        }
+        W4u_Counter(SIM_PTR(uint32_t, 0x1015e680));
         STEP = STEP + 1;
         return;
     }
@@ -40,10 +42,7 @@ void __cdecl Sim_10037cab(void)
         STEP = STEP + 1;
         return;
     }
-    if (SIM_API(W4uQueryCounterFn, W4U_IAT_QUERYPERFORMANCECOUNTER)(now) == 0) {
-        ACTIVE = 0;
-        return;
-    }
+    W4u_Counter(now);
     /* The original tests whether the high words are equal, but computes the same difference either way. */
     U32(CURRENT, 0xc) = now[0] - G32(0x1015e680);
     SIM_FN(W4uLog7Fn, 0x10083495)(GBYTES(0x1013a2ec), U32(CURRENT, 0), G32(0x1015e680), G32(0x1015e684), now[0],
@@ -82,6 +81,27 @@ void __cdecl ToggleFullScreen(void)
         return;
     SIM_FN(W4uLog1Fn, 0x10083495)(GBYTES(0x1013a370));
     Timer_Pause(0x80, 1);
+    if (U32(G32(0x1015e688), 0) == 3) {
+        /* Deviation (Diego, 2026-11-02: "Only add Fullscreen or windowed"): with the renderer (display class 3,
+           Vulkan) Alt+Enter switches the window between borderless full screen and a framed window, keeping the
+           renderer. The original looked for a windowed display driver (the GDI one, mode 5) and moved the whole
+           display to it, which cannot show the 3D. */
+        void *window = *SIM_PTR(void *, 0x1017b8f0);
+        int sw, sh, w, h;
+
+        if (Plat_WindowIsFullscreen(window)) {
+            Plat_ScreenSize(&sw, &sh);
+            Plat_WindowedSize(&w, &h);
+            Plat_WindowPlace(window, 0, (sw - w) / 2, (sh - h) / 2, w, h);
+        } else {
+            Plat_WindowPlace(window, 1, 0, 0, 0, 0);
+        }
+        if (G32(0x1017b92c) == 0) {
+            SIM_FN(W4uLog1Fn, 0x10083495)(GBYTES(0x1013a498));
+            Timer_Pause(0x80, 0);
+        }
+        return;
+    }
     if (U32(G32(0x1015e688), 4) == 1) {
         for (i = 0; i < 7; i++) {
             uint32_t other;
@@ -109,7 +129,8 @@ void __cdecl ToggleFullScreen(void)
             return;
         }
         target = G32(0x1015e690);
-        SIM_API(W4uGetWindowRectFn, W4U_IAT_GETWINDOWRECT)(*SIM_PTR(void *, 0x1017b8f0), GBYTES(0x109e3780));
+        /* the original's GetWindowRect: the client rectangle, as the window is placed by it (Plat_WindowPlace) */
+        Plat_WindowRect(*SIM_PTR(void *, 0x1017b8f0), SIM_PTR(int32_t, 0x109e3780));
         G32(0x109e3788) = G32(0x109e3788) - G32(0x109e3780);
         G32(0x109e378c) = G32(0x109e378c) - G32(0x109e3784);
     }

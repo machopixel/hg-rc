@@ -4,11 +4,12 @@
 #include "../unsorted_1000/w2e.h"
 #include "../unsorted_1008/w2i.h"
 #include "../unsorted_100f/w2e.h"
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x10074b80
 int __cdecl Sim_10074b80(uint32_t value)
 {
-    uint8_t *entry = (uint8_t *)SIM_API(W4wHeapAllocFn, W4W_IAT_HEAPALLOC)(W4W_GAME_HEAP, 1, 0x18);
+    uint8_t *entry = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0x18);
 
     if (entry == 0)
         return 0;

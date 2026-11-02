@@ -26,7 +26,7 @@ int __cdecl Sim_100b35b0(void);
 /* Removes the trailing space, CR, LF and TAB characters of the string in place (index 0 is never examined). */
 void __cdecl Sim_100ba285(char *s);
 
-/* Calls FreeLibrary on the module (dword +0) of the 32 byte entries 1..dword 0x1017e1bc of the table at 0x1017dfd0. */
+/* Did FreeLibrary on the archive's unpacker DLLs (handles at 0x1017dfd0 + i * 32); does nothing now (Sim_100bcc50). */
 void __cdecl Sim_100bd1b6(void);
 
 #endif

@@ -16,7 +16,6 @@
 #endif
 
 /* Creates the window's DIB section, or sets its colour table when it exists. Returns 1, or 0 when the DIB section cannot be created. */
-int __cdecl Sim_1008375a(void);
 /* SetDIBitsToDevice of the rectangle (a, b)..(c, d) of the bitmap at dword 0x1015e9a0 (the message "GDI BitBlt Rect err" on failure); returns -1 unless all lines (dword 0x109e3d18) were drawn. */
 int __cdecl Gdi_BitBltRect(int a, int b, int c, int d);
 /* Copies `count` RGB triples to palette entries start.. (0x1015e6a0), rebuilds the GDI palette from all 256 (value << 2). Returns 1, or 0 for bad arguments. */

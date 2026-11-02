@@ -3,6 +3,7 @@
 #include "../unsorted_100f/w6h.h"
 #include "../unsorted_100f/w7q.h"
 #include "../util/access.h"
+#include "../../platform/plat.h"
 
 // FUNCTION: HGSIM 0x100347d5
 void __cdecl Debug_AppendLog(const char *text)
@@ -32,12 +33,12 @@ void __cdecl Debug_Printf(const char *format, ...)
         Sim_10034777(text);
         break;
     case 2:
-        SIM_API(W8uOutputDebugStringFn, 0x10ac55e0)(text);
+        Plat_DebugText(text);
         break;
     case 3:
         if (G32(0x1015e4fc) != 0)
-            SIM_API(W8uMessageBoxFn, 0x10ac57e4)(G32(0x1015e4fc), text, SIM_PTR(const char, 0x10139f58),  /* "DEBUG Message" */
-                                                 G32(0x10139e50));
+            Plat_MessageBox((void *)(uintptr_t)G32(0x1015e4fc), text, SIM_PTR(const char, 0x10139f58),  /* "DEBUG Message" */
+                            G32(0x10139e50));
         break;
     case 4:
         Debug_AppendLog(text);

@@ -225,3 +225,27 @@ start (the checker needs the DLL to compare against).
   driver slot of 0x1013f150 and the count call.
 - **Software-renderer branches** ([0x1017b940] == 0, 178 sites): after the per-site analysis, the branches that only
   the software renderer takes go.
+
+## Windows calls (DECISIONS.md)
+
+- **Heap import slots** (src/hooks/hooks_heap.c): HGSIM.DLL's seven heap imports point at our heaps so the original
+  code shares them. After: the hook goes; Hg_Heap* stay (or the game heaps become malloc / free once nothing needs
+  HeapDestroy's "free the whole heap").
+- **The C runtime's heap** [0x10ac3714] stays Windows' (w6i_mem, w6i_crt, w6j_heap, w6k_sbh, w7r_heap): goes with
+  the DLL.
+- **The multimedia timer kill** in Sim_100b8938 (timeKillEvent / timeEndPeriod): only reached when the original
+  Windows loading animation started its timer (the d3d / winplat modes, no SDL3 platform). After: delete the branch.
+- **Checker only:** tools/verify/stand_in/hg_winheap.c.
+- **Unpacker table** (0x1017dfb8, Sim_100bcc50): our unpackers stored as 32-bit addresses in the DLL's table. After:
+  the pack reader calls Unpack_Zlib / Unpack_Pkware by method directly.
+- **Force feedback** (platform/force.h): only force_none.c so far; rumble (SDL3) later, by Diego.
+- **The game window is still the launcher's Windows window** (src/launcher/main.c CreateMainWindow, the message
+  routing 0x41e / 0x41f): SDL3 wraps it (plat_window.c PlatSdl_Window). Plat_WindowSend, Plat_DropEvent,
+  Plat_WindowPainted, Plat_WindowDefault, Plat_EventTime, Plat_RequestQuit and the pointer (Plat_CursorVisible /
+  Plat_CursorShown, Windows' ShowCursor count) stay in plat_win32.c for it. After (and
+  after the shell round): SDL3 creates the window, the window procedure becomes SDL event handling, and these go.
+- **Loading-screen marks** ([0x1017b3c0] "device context", [0x1017b3c4] "palette"): 1 instead of GDI handles, kept
+  because the driver tests them. After: a plain "picture open" flag.
+- **HGVK's own Win32 bits** (vk.c GetClientRect and the Win32 Vulkan surface, hgvk.c GetSystemMetrics and
+  PresentGdi): with HGVK built into the program, the surface and the window size come from SDL3
+  (SDL_Vulkan_CreateSurface, SDL_GetWindowSizeInPixels).

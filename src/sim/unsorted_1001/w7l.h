@@ -36,9 +36,7 @@
 #define W7L_FN_100029eb 0x100029ebu
 #define W7L_FN_10001dfc 0x10001dfcu
 #define W7L_FN_10003102 0x10003102u
-/* HeapAlloc through the DLL's import slot 0x10ac5658. */
-typedef void *(__stdcall *W7lHeapAllocFn)(uint32_t heap, uint32_t flags, uint32_t bytes);
-
+/* HeapAlloc on the game's heap (Hg_HeapAlloc, src/sim/crt/hg_winheap.c). */
 /*
  * Resets an object: 0x1001457f(obj); words +0x1a8, +0x1aa and dword +0x1ae = 0; word +0x1a6 = 0xc when its
  * dword +0x14 is 2, or 3 with +0xc equal to [0x1017b8c8], else 0; Sim_10016a6b(obj, slot, -1, 0) for slots

@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include "../simmem.h"
 #include "../unsorted_100f/w8z.h"
+#include "../crt/hg_winheap.h"
 
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
@@ -42,8 +43,6 @@ typedef void(__cdecl *W8zDrv4Fn)(uint32_t a, uint32_t b, void *data, uint32_t d)
 typedef void(__cdecl *W8zDrv1Fn)(void *data);
 typedef void(__cdecl *W8zDrv2Fn)(void *data, uint32_t b);
 typedef void(__cdecl *W8zSlotFn)(uint32_t a, void *table);
-typedef void *(__stdcall *W8zHeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
-typedef int(__stdcall *W8zHeapFreeFn)(void *heap, uint32_t flags, void *block);
 
 #define W8Z_CALL_100ba7d5_D SIM_FN(W8zResource3Fn, 0x100ba7d5)
 #define W8Z_CALL_100f01ea SIM_FN(W8zIndexFn, 0x100f01ea)
@@ -60,9 +59,6 @@ typedef int(__stdcall *W8zHeapFreeFn)(void *heap, uint32_t flags, void *block);
 #define W8Z_TIMER_ELAPSED SIM_FN(W8zTimerFn, 0x100e45e7)
 #define W8Z_TIMER_FREE SIM_FN(W8zTimerVoidFn, 0x100e469b)
 #define W8Z_DRIVER(off) (U32(G32(0x1015e688), (off)))
-#define W8Z_HEAP ((void *)(uintptr_t)G32(0x1017b8f8))
-#define W8Z_HEAP_ALLOC SIM_API(W8zHeapAllocFn, 0x10ac5658)
-#define W8Z_HEAP_FREE SIM_API(W8zHeapFreeFn, 0x10ac5634)
 
 /* ---- w8z_project.c: points to the screen ---- */
 /*

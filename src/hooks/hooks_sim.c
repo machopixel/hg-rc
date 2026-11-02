@@ -166,6 +166,7 @@ void Hooks_OnModuleLoaded(const char *moduleName, HMODULE module)
     if (_stricmp(moduleName, "HGSIM.DLL") == 0) {
         g_simBase = (unsigned char *)module;
         HooksView_OnSimLoaded(module);
+        HooksHeap_OnSimLoaded(module);
         HooksMem_OnSimLoaded(module);
         HooksCore_OnSimLoaded(module);
         HooksConv_OnSimLoaded(module);

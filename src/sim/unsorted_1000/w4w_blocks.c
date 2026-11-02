@@ -3,6 +3,7 @@
 #include "../util/access.h"
 #include "../util/util.h"
 #include "../unsorted_100f/w2e.h"
+#include "../crt/hg_winheap.h"
 
 static float key_float(uint32_t bits)
 {
@@ -29,7 +30,7 @@ void *__cdecl Sim_10008cbc(void *owner, uint32_t key, int n, int m, uint32_t ext
     headerSize = (uint32_t)n * 0x58u;
     tableSize = (uint32_t)m * 0x28u;
     total = headerSize + tableSize + 0x18u + extra;
-    block = (uint8_t *)SIM_API(W4wHeapAllocFn, W4W_IAT_HEAPALLOC)(W4W_GAME_HEAP, 1, total);
+    block = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, total);
     if (block == 0)
         return 0;
     Mem_Fill(block, 0, total);
@@ -65,7 +66,7 @@ void *__cdecl Sim_10008cbc(void *owner, uint32_t key, int n, int m, uint32_t ext
 // FUNCTION: HGSIM 0x10008f1c
 void *__cdecl Sim_10008f1c(int a, int b, uint32_t c, uint32_t *d)
 {
-    uint8_t *rec = (uint8_t *)SIM_API(W4wHeapAllocFn, W4W_IAT_HEAPALLOC)(W4W_GAME_HEAP, 1, 0xb4);
+    uint8_t *rec = (uint8_t *)Hg_HeapAlloc(G32(0x1017b8f8), 1, 0xb4);
 
     if (rec == 0)
         return 0;
@@ -74,7 +75,7 @@ void *__cdecl Sim_10008f1c(int a, int b, uint32_t c, uint32_t *d)
     U32(rec, 0x2c) = 0;
     U32(rec, 0x30) = 0;
     if (Sim_10008cbc(rec, 0, a, b, c, d) == 0) {
-        SIM_API(W4wHeapFreeFn, W4W_IAT_HEAPFREE)(W4W_GAME_HEAP, 1, rec);
+        Hg_HeapFree(G32(0x1017b8f8), 1, rec);
         return 0;
     }
     U16(rec, 2) = 0;

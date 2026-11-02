@@ -9,9 +9,8 @@
 
 #include "../simmem.h"
 #include "../util/access.h"
+#include "../crt/hg_winheap.h"
 
-typedef int(__stdcall *W4uHeapFreeFn)(void *heap, uint32_t flags, void *block);
-typedef void *(__stdcall *W4uHeapAllocFn)(void *heap, uint32_t flags, uint32_t bytes);
 typedef int(__stdcall *W4uFreeLibraryFn)(void *module);
 typedef uint32_t(__stdcall *W4uMciSendFn)(uint32_t device, uint32_t message, uint32_t flags, void *parms);
 typedef uint32_t(__stdcall *W4uAuxGetNumDevsFn)(void);
@@ -33,8 +32,6 @@ typedef uint32_t(__stdcall *W4uSetPaletteEntriesFn)(void *palette, uint32_t star
 typedef uint32_t(__stdcall *W4uRealizePaletteFn)(void *dc);
 typedef void(__cdecl *W4uLogFn)(const void *format, uint32_t value);
 
-#define W4U_IAT_HEAPFREE 0x10ac5634u
-#define W4U_IAT_HEAPALLOC 0x10ac5658u
 #define W4U_IAT_FREELIBRARY 0x10ac55d8u
 #define W4U_IAT_MCISENDCOMMAND 0x10ac5850u
 #define W4U_IAT_AUXGETNUMDEVS 0x10ac5830u
@@ -54,17 +51,15 @@ typedef void(__cdecl *W4uLogFn)(const void *format, uint32_t value);
 #define W4U_IAT_REALIZEPALETTE 0x10ac5588u
 
 /* The game's heap handle (dword 0x1017b8f8), read at every call like the original. */
-#define W4U_HEAP (*SIM_PTR(void *, 0x1017b8f8))
-
 /* HeapFree(heap, 1, block) and HeapAlloc(heap, 1, bytes): flag 1 only, the memory is not zeroed. */
 static inline int W4u_HeapFree(uint32_t block)
 {
-    return SIM_API(W4uHeapFreeFn, W4U_IAT_HEAPFREE)(W4U_HEAP, 1, (void *)(uintptr_t)block);
+    return Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)block);
 }
 
 static inline uint32_t W4u_HeapAlloc(uint32_t bytes)
 {
-    return (uint32_t)(uintptr_t)SIM_API(W4uHeapAllocFn, W4U_IAT_HEAPALLOC)(W4U_HEAP, 1, bytes);
+    return (uint32_t)(uintptr_t)Hg_HeapAlloc(G32(0x1017b8f8), 1, bytes);
 }
 
 /* Sim_10083495(format, value): an empty function in this build (it was the debug print); still called, like the original. */

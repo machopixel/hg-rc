@@ -1,10 +1,7 @@
 #include "w5x.h"
 #include "w2j.h"
 #include "../util/access.h"
-
-typedef int(__stdcall *HeapFreeFn)(void *heap, uint32_t flags, void *block);
-
-#define IAT_HEAPFREE 0x10ac5634u
+#include "../crt/hg_winheap.h"
 
 // FUNCTION: HGSIM 0x1002009d
 // FUNCTION: HGSIM12 0x100173ad
@@ -20,7 +17,7 @@ void __cdecl Sim_10027a8f(void *p)
 {
     if (p != 0) {
         if (U32(p, 0) == 0)
-            SIM_API(HeapFreeFn, IAT_HEAPFREE)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)U32(p, 0x17));
+            Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)U32(p, 0x17));
         else
             SIM_CALL_100b9203((uint8_t *)p + 6, G32(0x1014cefc));
     }
