@@ -86,6 +86,7 @@ def _rt_defs():
 
 def closure(files):
     files = [f.replace('\\', '/') for f in files]
+    files = [f for f in files if os.path.exists(os.path.join(W10_SRC, f))]     # deleted (dropped features)
     defs = {}
     for rel in _sim_files():
         if rel.endswith('_test.c') or '/w9e_shim' in rel:

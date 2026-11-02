@@ -776,7 +776,7 @@ SPECS = [
     spec('Sim_10090513', 0x10090513, g_90513, 800),
     spec('Sim_10090cc8', 0x10090cc8, g_90cc8, 800, True),
     spec('Sim_1009ca21', 0x1009ca21, g_none, 300),
-    spec('Sim_1009eb24', 0x1009eb24, g_eb24),
+    # spec('Sim_1009eb24', 0x1009eb24, g_eb24),   # deleted: no CD audio (DECISIONS.md "dropped features")
     # util
     spec('Sim_1009c9a5', 0x1009c9a5, g_9c9a5, 500),
     # unsorted_100a

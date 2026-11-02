@@ -1178,7 +1178,7 @@ SPECS = [
     spec('Sim_1009524d', 0x1009524d, g_9524d, 500),
     spec('Sim_1009b99b', 0x1009b99b, g_modes, 600, void=True),
     spec('Sim_1009bc94', 0x1009bc94, g_modes, 600, void=True),
-    spec('Cd_PollDisc', 0x1009e5d0, g_cdpoll, 600, api=dict(CD_API, GetStringTypeA=gst_handler)),
+    # spec('Cd_PollDisc', 0x1009e5d0, g_cdpoll, 600, api=dict(CD_API, GetStringTypeA=gst_handler)),   # deleted: no CD audio (DECISIONS.md "dropped features")
     spec('Str_CopyUpper', 0x1009ffad, g_upper, 500, api={'GetStringTypeA': gst_handler}),
     spec('Sim_1009cfd4', 0x1009cfd4, g_slab, 800),
     spec('Sim_10099510', 0x10099510, g_drive, 400, api=DRIVE_API),

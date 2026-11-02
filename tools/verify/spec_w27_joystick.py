@@ -9,7 +9,7 @@ exec(open('tools/verify/w10_common.py').read())
 if os.environ.get('W27_NEG'):
     CFLAGS.append('-DW27J_MUTATE')
 
-SOURCES = closure(['sim/unsorted_1005/w27_joystick.c', 'sim/win/w4w_win.c'])
+SOURCES = closure(['sim/win/w4w_win.c'])
 ACTIVE = ()
 M = {}
 
@@ -64,5 +64,6 @@ def g_poll(ctx):
 
 SPECS = [dict(name='Win_JoyGetNumDevs', orig=0x10056210, c='Win_JoyGetNumDevs', gen=g_count, api=API_COUNT,
               trials=300),
-         dict(name='Sim_1005621b', orig=0x1005621b, c='Sim_1005621b', gen=g_open, api=API, trials=3000),
-         dict(name='Sim_100567cb', orig=0x100567cb, c='Sim_100567cb', gen=g_poll, api=API, trials=3000)]
+    # dict(name='Sim_1005621b', orig=0x1005621b, c='Sim_1005621b', gen=g_open, api=API, trials=3000),   # deleted: no joystick (DECISIONS.md "dropped features")
+    # dict(name='Sim_100567cb', orig=0x100567cb, c='Sim_100567cb', gen=g_poll, api=API, trials=3000),   # deleted: no joystick (DECISIONS.md "dropped features")
+]

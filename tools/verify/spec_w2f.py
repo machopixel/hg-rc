@@ -693,7 +693,7 @@ SPECS = [
     S('Sim_100480ab', 0x100480ab, g_480ab, void=True),
     S('Sim_100480f2', 0x100480f2, g_480f2, void=True),
     S('Sim_10048422', 0x10048422, g_48422, void=True),
-    S('Sim_100570e7', 0x100570e7, none),
+    # S('Sim_100570e7', 0x100570e7, none),   # deleted: no joystick (DECISIONS.md "dropped features")
     S('Sim_10057a51', 0x10057a51, none),
     S('Sim_10058549', 0x10058549, g_58549, void=True),
     S('Sim_100585c4', 0x100585c4, g_585c4),
@@ -702,7 +702,7 @@ SPECS = [
     S('Sim_1006ab0c', 0x1006ab0c, g_6ab0c, void=True, trials=600),
     S('Sim_1007b02d', 0x1007b02d, g_7b02d, void=True, trials=1500),
     S('Sim_1007cbb9', 0x1007cbb9, none),
-    S('Sim_1007f0b4', 0x1007f0b4, g_7f0b4),
+    # S('Sim_1007f0b4', 0x1007f0b4, g_7f0b4),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     S('Sim_10087b32', 0x10087b32, g_87b32, void=True),
     S('Sim_1008988f', 0x1008988f, g_8988f, void=True),
     S('Sim_1008cc04', 0x1008cc04, g_8cc04, trials=800),

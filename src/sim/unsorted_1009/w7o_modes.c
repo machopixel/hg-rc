@@ -59,28 +59,3 @@ void __cdecl Sim_1009bc94(void)
     SwitchView(3, 1, &applied);
 }
 
-// FUNCTION: HGSIM 0x1009e5d0
-int __cdecl Cd_PollDisc(void)
-{
-    int status;
-    int tries;
-
-    if (G32(0x1017d08c) == 0)
-        return 0;
-    status = Cd_GetStatus();
-    if ((uint32_t)status == G32(0x1017d078))
-        return 0;
-    if (status == 1) {
-        Cd_FreeTracks(SIM_PTR(uint32_t, 0x1017d080));
-    } else if (status == 2 && G32(0x1017d078) == 1) {
-        for (tries = 0; tries < 3; tries++) {
-            if (Cd_LoadTracks(SIM_PTR(uint32_t, 0x1017d080)) == 0)
-                break;
-            Sim_1010d2f0(7);
-        }
-        if (tries == 3)
-            Proc_Exit(0);
-    }
-    G32(0x1017d078) = (uint32_t)status;
-    return 1;
-}

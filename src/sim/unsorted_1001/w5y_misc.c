@@ -45,7 +45,10 @@ float __cdecl Sim_100144bb(uint32_t unused, float f, int n)
 int __cdecl Sim_1001f415(int a)
 {
     SIM_FN(int(__cdecl *)(int, int), 0x10039aca)(0xb, a);
-    SIM_FN(int(__cdecl *)(void), 0x1009e1ef)();
+    /* the CD open (Cd_Open 0x1009e1ef) without a CD, which is all the game has now (no CD audio: DECISIONS.md,
+     * "dropped features"): it only cleared these two */
+    G32(0x1017d060) = 0;
+    G32(0x1017d064) = 0;
     Sim_1000df50();
     Sim_1001f6c0();
     G32(0x109f4228) = G32(0x1015dc78) + 0x389;

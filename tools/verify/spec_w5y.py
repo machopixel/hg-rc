@@ -828,7 +828,8 @@ SPECS = [
     SPY('Sim_10010b38', 0x10010b38, g_mode, 300, 0x10010632, void=True),
     S('Sim_1001403a', 0x1001403a, g_1403a, 600),
     S('Sim_100144bb', TRAMP, g_144bb, 500, c='Test_100144bb'),
-    S('Sim_1001f415', 0x1001f415, with_stubs(g_1f415, 0x10039aca, 0x1009e1ef), 300),
+    # superseded: 1.0 drove the CD here; no CD audio (DECISIONS.md "dropped features")
+    # S('Sim_1001f415', 0x1001f415, with_stubs(g_1f415, 0x10039aca, 0x1009e1ef), 300),
     S('Sim_1001f4ba', 0x1001f4ba, g_1f4ba, 300, void=True),
     S('Sim_1002001f', 0x1002001f, g_2001f, 400, void=True),
     S('Sim_10020441', 0x10020441, g_20441, 400),

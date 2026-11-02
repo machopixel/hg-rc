@@ -19,7 +19,6 @@
 /* Not converted: (index, out, out, out) with dword outputs; returns 0 when the index is out of range. */
 #define W5A_CALL_100529a2 SIM_FN(int(__cdecl *)(uint32_t, uint32_t *, uint32_t *, uint32_t *), 0x100529a2)
 /* Not converted: no arguments. */
-#define W5A_CALL_1009e5d0 SIM_FN(int(__cdecl *)(void), 0x1009e5d0)
 
 /*
  * The three functions below do the same with different constants. For an index below 8 whose record
@@ -50,7 +49,7 @@ void __cdecl Sim_10015a63(void *obj);
  * Adds [0x1015dc80] to [0x1015d1c4]. At 0x16a (signed) or more: clears it and, when [0x1015d1bc] is 0,
  * bit 3 of [0x101321c0] is set, 0x1009e5d0() is not 0 and the track [0x101321a8] is not -1:
  * Cd_PlayTrack(track), Cd_UpdateStatus().
- * With HG_MUSIC_FILES (the game build): 1.2's WAV music poll (1.2 0x10015fbd) on platform/music.h: at the same
+ * No CD (the music folder, DECISIONS.md "dropped features"): 1.2's WAV music poll (1.2 0x10015fbd) on platform/music.h: at the same
  * moments, with a track and bit 3, Music_Play(track) when Music_IsPlaying() is 0.
  */
 void __cdecl Sim_1001f3ac(void);

@@ -1159,7 +1159,8 @@ SPECS = [
     dict(name='Sim_100178af', orig=0x100178af, c='Sim_100178af', gen=g_178af, trials=400),
     dict(name='Sim_10019cc0', orig=0x10019cc0, c='Sim_10019cc0', gen=g_19cc0, trials=400),
     dict(name='Sim_1001c107', orig=0x1001c107, c='Sim_1001c107', gen=g_1c107, trials=400, void=True),
-    dict(name='Sim_1001f26e', orig=0x1001f26e, c='Sim_1001f26e', gen=g_1f26e, trials=500, void=True, api=API),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # dict(name='Sim_1001f26e', orig=0x1001f26e, c='Sim_1001f26e', gen=g_1f26e, trials=500, void=True, api=API),
     dict(name='Sim_1001fb6d', orig=0x1001fb6d, c='Sim_1001fb6d', gen=g_1fb6d, trials=400, void=True),
     dict(name='Sim_1001fe29', orig=0x1001fe29, c='Sim_1001fe29', gen=g_1fe29, trials=400),
     dict(name='Sim_1001fee5', orig=0x1001fee5, c='Sim_1001fee5', gen=g_1fee5, trials=500, void=True),

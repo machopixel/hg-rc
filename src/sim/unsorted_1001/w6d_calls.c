@@ -14,9 +14,7 @@
 #include "../view/w3r.h"
 #include "../win/w4u.h"
 #include "../util/access.h"
-#ifdef HG_MUSIC_FILES
 #include "../../platform/music.h"
-#endif
 
 static uint32_t FloatBits(float f)
 {
@@ -223,7 +221,6 @@ void __cdecl Sim_1001f26e(void)
         G32(0x1015d1c0) = 1;
         W6D_SSCANF(SIM_PTR(const char, 0x1015dcb5), SIM_PTR(const char, 0x1013221c), SIM_PTR(uint32_t, 0x101321a8));
     }
-#ifdef HG_MUSIC_FILES
     /* 1.2's WAV music start (1.2 0x10015e83), with the Ogg files of platform/music.h and no CD: a track past the
      * last file is -1; otherwise, with music on, it plays from its start and the music is not paused. */
     if (GS32(0x101321a8) < 0 || GS32(0x101321a8) > Music_LastTrack()) {
@@ -232,20 +229,6 @@ void __cdecl Sim_1001f26e(void)
         Music_Play(GS32(0x101321a8));
         G32(0x1015d1bc) = 0;
     }
-#else
-    if (Sim_1009eb24() == 0) {
-        G32(0x101321a8) = 0xffffffffu;
-    } else if (Cd_GetStatus() == 1) {
-        G32(0x101321a8) = 0xffffffffu;
-    } else if (Sim_1009eb2e((int32_t)G32(0x101321a8)) == 0) {
-        G32(0x101321a8) = 0xffffffffu;
-    } else if ((G32(0x101321c0) & 8) != 0) {
-        Cd_PlayTrack((int)G32(0x101321a8));
-        if (Cd_UpdateStatus() != 3)
-            G32(0x101321a8) = 0xffffffffu;
-    }
-    G32(0x101321ac) = 0xffffffffu;
-#endif
 }
 
 // FUNCTION: HGSIM 0x1001fb6d

@@ -32,7 +32,7 @@ exec(open('tools/verify/v12_common.py').read())
 SOURCES = closure(['sim/unsorted_1001/w6d_calls.c', 'sim/unsorted_1001/w4u_cd.c', 'sim/unsorted_1001/w5a_misc.c',
                    'sim/unsorted_1001/w7l_misc.c', 'sim/unsorted_1001/w9d_misc.c', 'sim/win/w4w_win.c'])
 SOURCES = SOURCES + ['../tools/verify/music_stub.c']
-CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe', '-DHG_MUSIC_FILES']
+CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 if os.environ.get('MUSIC_NEG12'):
     CFLAGS.append('-DW5AM_MUTATE')
 

@@ -1,12 +1,6 @@
 #include "w2f.h"
 #include "../util/access.h"
 
-// FUNCTION: HGSIM 0x100570e7
-int __cdecl Sim_100570e7(void)
-{
-    return 2;
-}
-
 // FUNCTION: HGSIM 0x10057a51
 int __cdecl Sim_10057a51(void)
 {

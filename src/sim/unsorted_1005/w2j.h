@@ -12,8 +12,6 @@
 
 /* Dword 0x1013f140 = 0. */
 void __cdecl Sim_1005570e(void);
-/* Returns 0. */
-int __cdecl Sim_10056df3(void);
 /*
  * Resets the table of 0x100 records of 0x4c bytes at 0x109b16e0: dword 0x101668d4
  * and 0x101668d0 = 0, dword 0x109b0eac (count) = 0x100, dword 0x109b0eb0 = 0xff,

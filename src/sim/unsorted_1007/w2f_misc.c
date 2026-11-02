@@ -53,10 +53,3 @@ int __cdecl Sim_1007cbb9(void)
 {
     return 1;
 }
-
-// FUNCTION: HGSIM 0x1007f0b4
-int __cdecl Sim_1007f0b4(void)
-{
-    U32(G32(0x1015e698), 0) = G32(0x1015e9a0);
-    return 0;
-}

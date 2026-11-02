@@ -822,8 +822,8 @@ SPECS = [
     spec('Sim_1009cc82', 0x1009cc82, g_cc82, 500, void=True, fp=True),
     spec('Sim_1009cdd5', 0x1009cdd5, g_cdd5, 600, void=True, fp=True),
     spec('Sim_1009ceab', 0x1009ceab, g_ceab, 600, void=True, fp=True),
-    spec('Cd_Open', 0x1009e1ef, g_cd_open, 600),
-    spec('Cd_OpenDoor', 0x1009e39d, g_cd_door, 300, void=True),
+    # spec('Cd_Open', 0x1009e1ef, g_cd_open, 600),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # spec('Cd_OpenDoor', 0x1009e39d, g_cd_door, 300, void=True),   # deleted: no CD audio (DECISIONS.md "dropped features")
     spec('Sim_100a2823', 0x100a2823, g_a2823, 400),
     spec('Sim_100a5336', 0x100a5336, g_a5336, 300),
     spec('Sim_100a7880', 0x100a7880, g_a7880, 400),

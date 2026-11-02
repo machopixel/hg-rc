@@ -11,12 +11,6 @@
 #define STACK SIM_PTR(int32_t, 0x109B12C0)
 #define ENTRY(n) SIM_PTR(uint8_t, 0x109B16E0u + (uint32_t)(n) * 0x4Cu)
 
-// FUNCTION: HGSIM 0x100570f1
-int __cdecl Sim_100570f1(void)
-{
-    return 2;
-}
-
 // FUNCTION: HGSIM 0x10057f53
 void __cdecl Sim_10057f53(void)
 {

@@ -66,13 +66,6 @@ int __cdecl Input_ReadLine(char *buf, int n, uint8_t *stream);
  */
 uint8_t *__cdecl Input_AddAnalogSink(const uint32_t *src);
 /*
- * Reads the OEM name of joystick `index` (0-based) from the registry key of `driver`
- * (...\MediaResources\Joystick\<driver>\CurrentJoystickSettings, value Joystick<n>OEMName, then
- * ...\MediaProperties\PrivateProperties\Joystick\OEM\<that>, value OEMName) and copies at most n characters to
- * out. Returns 1 on success, else 0. Uses the buffers 0x10166720 (key name) and 0x101666e0 (value).
- */
-int __cdecl Joy_GetOemName(int index, const char *driver, char *out, uint32_t n);
-/*
  * Queues the character of virtual key `key` (table 0x10143a00, else MapVirtualKeyA type 2 passed through
  * 0x100ff280) with 0x100 / 0x400 / 0x200 added while GetKeyState(0x11 / 0x12 / 0x10) has bit 0x1000 set, in the
  * 64-entry ring at 0x10165ee0 (write index [0x1016686c], read index [0x10166868]). Nothing for character 0.

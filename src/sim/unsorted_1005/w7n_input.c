@@ -218,18 +218,6 @@ uint8_t *__cdecl Input_AddAnalogSink(const uint32_t *src)
     return rec;
 }
 
-// FUNCTION: HGSIM 0x10057186
-int __cdecl Joy_GetOemName(int index, const char *driver, char *out, uint32_t n)
-{
-    /* C runtime replacement, the rest (DECISIONS.md): the original read the joystick's maker name from the Windows
-     * registry: "Joystick<n>OEMName" under HKEY_LOCAL_MACHINE System\CurrentControlSet\Control\MediaResources
-     * \Joystick\<driver>\CurrentJoystickSettings, then "OEMName" under ...\Control\MediaProperties
-     * \PrivateProperties\Joystick\OEM\<that name>. Joysticks are not supported (Diego, 2026-11-02): no name, as the
-     * original answers when a key is missing (it also printed an empty debug line then). */
-    (void)index, (void)driver, (void)out, (void)n;
-    return 0;
-}
-
 // FUNCTION: HGSIM 0x10057c1a
 void __cdecl Input_QueueKey(int key)
 {

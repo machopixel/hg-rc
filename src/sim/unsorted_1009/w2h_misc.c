@@ -19,15 +19,3 @@ int32_t __cdecl Sim_10098e54(int32_t value)
 {
     return value;
 }
-
-// FUNCTION: HGSIM 0x1009e5c3
-void __cdecl Sim_1009e5c3(uint32_t value)
-{
-    G32(0x1017d060) = value;
-}
-
-// FUNCTION: HGSIM 0x1009eb2e
-int __cdecl Sim_1009eb2e(int32_t value)
-{
-    return value >= GS32(0x1017d080) && value <= GS32(0x1017d084);
-}

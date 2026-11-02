@@ -24,7 +24,5 @@
 void __cdecl Sim_1007b02d(void);
 /* Returns 1. */
 int __cdecl Sim_1007cbb9(void);
-/* *[0x1015e698] = [0x1015e9a0]; returns 0. */
-int __cdecl Sim_1007f0b4(void);
 
 #endif

@@ -53,7 +53,5 @@ int __cdecl Sim_10098e74(void);
 void __cdecl Sim_1009b2b4(void);
 /* Fills three blocks (at 0x1014c31c, 0x1014c3c4 and 0x1014c46c, 0xa8 bytes apart): dwords 0, 2, 4, 7, 8 of each from the dwords at 0x101c528c, 0x101c4bcc, 0x101c4f78, 0x101c45f4, 0x101c4b90, and dwords 1, 3, 5 with the addresses 0x101d02c0, 0x101d02a0, 0x101d0340. */
 void __cdecl Sim_1009c710(void);
-/* [0x1017d064] = value. */
-void __cdecl Sim_1009e5ac(uint32_t value);
 
 #endif

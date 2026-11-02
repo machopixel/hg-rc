@@ -7,12 +7,6 @@ void __cdecl Sim_1005570e(void)
     G32(0x1013f140) = 0;
 }
 
-// FUNCTION: HGSIM 0x10056df3
-int __cdecl Sim_10056df3(void)
-{
-    return 0;
-}
-
 // FUNCTION: HGSIM 0x10058389
 void __cdecl Sim_10058389(void)
 {

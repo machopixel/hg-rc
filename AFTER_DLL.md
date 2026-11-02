@@ -212,3 +212,16 @@ start (the checker needs the DLL to compare against).
   Crt_Assert (or a plain assert of ours) directly. The unreachable runtime pieces listed in DECISIONS.md ("The
   rest": signal, maths error path, FDIV check, runtime-error box, locale copies, start-up set-up) go with the DLL.
   Plat_ProgramPath needs its Linux / Mac backend.
+
+## Dropped features: CD audio, joystick, DirectDraw / DISPDIB (DECISIONS.md)
+
+- **Original code still behind the deleted conversions.** While the DLL is loaded, the CD wrappers, the joystick
+  driver, and the DirectDraw / DISPDIB drivers run as original code if something reaches them. In the Vulkan build
+  nothing does; /D3D reaches the DirectDraw driver.
+  - After: their driver-table entries and the launcher's d3d / soft choices go; the display mode table keeps 5
+    (GDI start-up window) and 6 (Vulkan).
+  - hooks_sim.c's HookedCdAudioInit goes with the noconv runs.
+- **Joystick count.** Win_JoyGetNumDevs returns 0 so the input code never opens a joystick. After: drop the joystick
+  driver slot of 0x1013f150 and the count call.
+- **Software-renderer branches** ([0x1017b940] == 0, 178 sites): after the per-site analysis, the branches that only
+  the software renderer takes go.

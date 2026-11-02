@@ -1069,7 +1069,8 @@ SPECS = [
     SF('Sim_10010699', 0x10010699, 'Sim_10010699', g_state, 400, void=True),
     SF('Sim_10012a72', 0x10012a72, 'Sim_10012a72', g_12a72, 500),
     SF('Sim_10015a63', 0x10015a63, 'Sim_10015a63', g_15a63, 500, void=True),
-    SF('Sim_1001f3ac', 0x1001f3ac, 'Sim_1001f3ac', g_1f3ac, 600, void=True, api=W4['API']),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # SF('Sim_1001f3ac', 0x1001f3ac, 'Sim_1001f3ac', g_1f3ac, 600, void=True, api=W4['API']),
     SF('Sim_100203cf', 0x100203cf, 'Sim_100203cf', g_203cf, 300, void=True),
     SF('Sim_10029125', 0x10029125, 'Sim_10029125', g_29125, 400, void=True),
     SF('Sim_1002d1c0', 0x1002d1c0, 'Sim_1002d1c0', g_d1c0, 400, api=API),

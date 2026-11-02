@@ -30,9 +30,3 @@ void __cdecl Sim_1009b2fc(void)
     if (GS32(0x1015d1ac) == 4)
         Sim_1009b362();
 }
-
-// FUNCTION: HGSIM 0x1009e5a2
-uint32_t __cdecl Sim_1009e5a2(void)
-{
-    return G32(0x1017d064);
-}

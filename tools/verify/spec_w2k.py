@@ -638,7 +638,7 @@ SPECS = [
     dict(name='Sim_10098e39', orig=0x10098e39, c='Sim_10098e39', gen=g_none, void=True, trials=300),
     dict(name='Sim_10098e3e', orig=0x10098e3e, c='Sim_10098e3e', gen=g_none, trials=300),
     dict(name='Sim_1009ca28', orig=0x1009ca28, c='Sim_1009ca28', gen=g_none, trials=300),
-    dict(name='Sim_1009e5b9', orig=0x1009e5b9, c='Sim_1009e5b9', gen=make_reader(0x1017d060), trials=300),
+    # dict(name='Sim_1009e5b9', orig=0x1009e5b9, c='Sim_1009e5b9', gen=make_reader(0x1017d060), trials=300),   # deleted: no CD audio (DECISIONS.md "dropped features")
     dict(name='Sim_100aa190', orig=0x100aa190, c='Sim_100aa190', gen=g_a190, void=True, trials=600),
     dict(name='Sim_100abb1b', orig=0x100abb1b, c='Sim_100abb1b', gen=g_bb1b, void=True, trials=1000),
     dict(name='Sim_100abbe8', orig=0x100abbe8, c='Sim_100abbe8', gen=g_bbe8, trials=1000),

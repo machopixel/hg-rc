@@ -201,9 +201,3 @@ void __cdecl Sim_1009c710(void)
         b[8] = G32(0x101C4B90);
     }
 }
-
-// FUNCTION: HGSIM 0x1009e5ac
-void __cdecl Sim_1009e5ac(uint32_t value)
-{
-    G32(0x1017D064) = value;
-}

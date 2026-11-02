@@ -733,7 +733,7 @@ SPECS = [
     dict(name='Sim_1004e4c2', orig=0x1004e4c2, c='Sim_1004e4c2', gen=g_4e4c2, trials=800),
     dict(name='Sim_1004e61a', orig=0x1004e61a, c='Sim_1004e61a', gen=g_4e61a, void=True, trials=300),
     dict(name='Sim_1005570e', orig=0x1005570e, c='Sim_1005570e', gen=g_global0(0x1013f140), void=True, trials=300),
-    dict(name='Sim_10056df3', orig=0x10056df3, c='Sim_10056df3', gen=g_none, trials=300),
+    # dict(name='Sim_10056df3', orig=0x10056df3, c='Sim_10056df3', gen=g_none, trials=300),   # deleted: no joystick (DECISIONS.md "dropped features")
     dict(name='Sim_10058389', orig=0x10058389, c='Sim_10058389', gen=g_58389, void=True, trials=300),
     dict(name='Sim_1005892e', orig=0x1005892e, c='Sim_1005892e', gen=g_5892e, void=True, trials=600),
     dict(name='Sim_1005fa30', orig=0x1005fa30, c='Sim_1005fa30', gen=g_5fa30, void=True, trials=300),
@@ -749,7 +749,7 @@ SPECS = [
     dict(name='Sim_1009a6b3', orig=0x1009a6b3, c='Sim_1009a6b3', gen=g_9a6b3, trials=500),
     dict(name='Sim_1009b2fc', orig=0x1009b2fc, c='Sim_1009b2fc', gen=g_9b362, void=True, trials=400),
     dict(name='Sim_1009b362', orig=0x1009b362, c='Sim_1009b362', gen=g_9b362, void=True, trials=500),
-    dict(name='Sim_1009e5a2', orig=0x1009e5a2, c='Sim_1009e5a2', gen=g_global0(0x1017d064), trials=300),
+    # dict(name='Sim_1009e5a2', orig=0x1009e5a2, c='Sim_1009e5a2', gen=g_global0(0x1017d064), trials=300),   # deleted: no CD audio (DECISIONS.md "dropped features")
     dict(name='Sim_100aac3d', orig=0x100aac3d, c='Sim_100aac3d', gen=g_aac3d, trials=600),
     dict(name='Sim_100abab0', orig=0x100abab0, c='Sim_100abab0', gen=g_abab0, void=True, trials=500),
     dict(name='Sim_100abc5d', orig=0x100abc5d, c='Sim_100abc5d', gen=g_abc5d, trials=600),

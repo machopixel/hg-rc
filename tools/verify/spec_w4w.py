@@ -654,10 +654,10 @@ SPECS = [
     dict(name='Win_CenterCursorAxis', orig=0x1007d961, c='Win_CenterCursorAxis', gen=g_7d961, trials=600, api=API_MOUSE),
     dict(name='Win_PollMouse', orig=0x1007d9d8, c='Win_PollMouse', gen=g_7d9d8, trials=1000, api=API_MOUSE),
     dict(name='Win_ClientRectToScreen', orig=0x1007dbb1, c='Win_ClientRectToScreen', gen=g_7dbb1, trials=300, void=True, api=API_MOUSE),
-    dict(name='Sim_1007ef27', orig=0x1007ef27, c='Sim_1007ef27', gen=g_7ef27, trials=400, api={'SendMessageA': h_sendmsg}),
-    dict(name='Sim_1007efb4', orig=0x1007efb4, c='Sim_1007efb4', gen=g_7efb4, trials=500,
-         api={'SendMessageA': h_sendmsg, 'StretchBlt': h_stretch, 'GetLastError': lambda n, a: hsh(n, 5)}),
-    dict(name='Sim_1007f0c8', orig=0x1007f0c8, c='Sim_1007f0c8', gen=g_7f0c8, trials=600, api={'SendMessageA': h_sendmsg}),
+    # dict(name='Sim_1007ef27', orig=0x1007ef27, c='Sim_1007ef27', gen=g_7ef27, trials=400, api={'SendMessageA': h_sendmsg}),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
+    # dict(name='Sim_1007efb4', orig=0x1007efb4, c='Sim_1007efb4', gen=g_7efb4, trials=500,   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
+    # api={'SendMessageA': h_sendmsg, 'StretchBlt': h_stretch, 'GetLastError': lambda n, a: hsh(n, 5)}),
+    # dict(name='Sim_1007f0c8', orig=0x1007f0c8, c='Sim_1007f0c8', gen=g_7f0c8, trials=600, api={'SendMessageA': h_sendmsg}),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     dict(name='Sim_10083692', orig=0x10083692, c='Sim_10083692', gen=g_83692, trials=400),
     dict(name='Sim_10083d5b', orig=0x10083d5b, c='Sim_10083d5b', gen=g_83d5b, trials=500,
          api={'SetDIBitsToDevice': h_setdib, 'GetSystemMetrics': lambda n, a: hsh(n, 3) & 0x3f,
@@ -666,8 +666,9 @@ SPECS = [
     dict(name='Sim_1008c6b6', orig=0x1008c6b6, c='Sim_1008c6b6', gen=g_8c6b6, trials=300,
          api={'GetFocus': lambda n, a, uc: hsh(raw(uc, 0), 5)}),
     dict(name='Win_AuxGetVolume', orig=0x1009eb52, c='Win_AuxGetVolume', gen=g_aux, trials=300, api=API_AUX),
-    dict(name='Win_AuxSetVolume', orig=0x1009eb85, c='Win_AuxSetVolume', gen=g_aux_set, trials=500, api=API_AUX),
-    dict(name='Sim_1009ebeb', orig=0x1009ebeb, c='Sim_1009ebeb', gen=g_aux, trials=300, api=API_AUX),
+    # superseded: the 1.0 CD aux volume; with no CD it is the music volume (spec_music_v12 Music_Volume_v12)
+    # dict(name='Win_AuxSetVolume', orig=0x1009eb85, c='Win_AuxSetVolume', gen=g_aux_set, trials=500, api=API_AUX),
+    # dict(name='Sim_1009ebeb', orig=0x1009ebeb, c='Sim_1009ebeb', gen=g_aux, trials=300, api=API_AUX),
     dict(name='Sim_100b35b0', orig=0x100b35b0, c='Sim_100b35b0', gen=g_35b0, trials=500, api={'HeapAlloc': h_alloc}),
     dict(name='Sim_100b372b', orig=0x100b372b, c='Sim_100b372b', gen=g_372b, trials=400, void=True),
     dict(name='Win_TimeGetTime', orig=0x100b8fdb, c='Win_TimeGetTime', gen=g_time, trials=300,

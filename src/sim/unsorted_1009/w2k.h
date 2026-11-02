@@ -20,7 +20,5 @@ void __cdecl Sim_10098e39(void);
 int __cdecl Sim_10098e3e(void);
 /* Returns 0x400. */
 int __cdecl Sim_1009ca28(void);
-/* The dword at 0x1017d060. */
-uint32_t __cdecl Sim_1009e5b9(void);
 
 #endif

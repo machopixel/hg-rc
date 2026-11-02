@@ -20,9 +20,7 @@
 #include "../win/w4u.h"
 #include "../util/util.h"
 #include "../util/w3o.h"
-#ifdef HG_MUSIC_FILES
 #include "../../platform/music.h"
-#endif
 
 // FUNCTION: HGSIM 0x1001150d
 void __cdecl Sim_1001150d(void *obj)
@@ -439,7 +437,6 @@ void __cdecl Sim_1001ee7c(int index, uint32_t value)
     case 2:
         old = G32(0x101321bc);
         G32(0x101321bc) = value;
-#ifdef HG_MUSIC_FILES
         /* 1.2's music volume option with its WAV map (1.2 0x1001550d), the Ogg files of platform/music.h and no
          * CD: music that is not playing starts (track 2 when none is set), paused music goes on. The new volume
          * is set whenever it changed; 1.2 sets it only while the CD is open, so its WAV music never followed the
@@ -456,15 +453,6 @@ void __cdecl Sim_1001ee7c(int index, uint32_t value)
         } else if (G32(0x1015d1bc) != 0) {
             Sim_1001f367();
         }
-#else
-        if (old != G32(0x101321bc)) {
-            if (Sim_1009eb24() != 0)
-                fn = W7L_FN_10003102;
-            if (old == 0)
-                Sim_1001f26e();
-        }
-        Sim_1009e441();
-#endif
         break;
     case 3:
         old = G32(0x101321b0);

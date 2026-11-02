@@ -17,7 +17,7 @@ from unicorn import UC_HOOK_CODE
 from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EAX
 
 SOURCES = [
-    'sim/win/w4u_cdaudio.c', 'sim/win/w4u_gdi.c',
+    'sim/win/w4u_gdi.c',
     'sim/unsorted_1000/w4u_misc.c', 'sim/unsorted_1001/w4u_cd.c', 'sim/unsorted_1002/w4u_heap.c',
     'sim/unsorted_1003/w4u_heap.c', 'sim/unsorted_1003/w4u_refresh.c', 'sim/unsorted_1004/w4u_heap.c',
     'sim/unsorted_1005/w4u_record.c', 'sim/unsorted_1008/w4u_misc.c', 'sim/unsorted_100a/w4u_misc.c',
@@ -676,10 +676,14 @@ def sp(name, addr, gen, trials, void=False):
 
 SPECS = [
     sp('Sim_1000e62e', 0x1000e62e, g_1000e62e, 400, True),
-    sp('Sim_1001f335', 0x1001f335, g_cdflags, 400, True),
-    sp('Sim_1001f367', 0x1001f367, g_cdflags, 400, True),
-    sp('Sim_1001f399', 0x1001f399, g_cdflags, 400, True),
-    sp('Sim_1001f4d3', 0x1001f4d3, g_cdflags, 400, True),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # sp('Sim_1001f335', 0x1001f335, g_cdflags, 400, True),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # sp('Sim_1001f367', 0x1001f367, g_cdflags, 400, True),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # sp('Sim_1001f399', 0x1001f399, g_cdflags, 400, True),
+    # superseded: 1.0 drove the CD here; no CD audio (DECISIONS.md "dropped features")
+    # sp('Sim_1001f4d3', 0x1001f4d3, g_cdflags, 400, True),
     sp('Sim_10027f06', 0x10027f06, g_none, 300, True),
     sp('Heap_Free_100285a3', 0x100285a3, g_free, 300, True),
     sp('Sim_1002f9e0', 0x1002f9e0, g_alloc_only, 400),
@@ -696,31 +700,32 @@ SPECS = [
     sp('Sim_1005b112', 0x1005b112, g_5b112, 300, True),
     sp('Sim_1005b14e', 0x1005b14e, g_5b14e, 400),
     sp('Sim_100a87f0', 0x100a87f0, g_a87f0, 300, True),
-    sp('Sim_1008b900', 0x1008b900, g_cdflags, 400, True),
-    sp('Aux_FindCdDevice', 0x1009dec0, g_aux, 500),
-    sp('Cd_Close', 0x1009e11d, g_cd, 300),
-    sp('Cd_Pause', 0x1009e149, g_cd, 300),
-    sp('Cd_Resume', 0x1009e169, g_cd, 300),
-    sp('Cd_Stop', 0x1009e189, g_cd, 300),
-    sp('Cd_Play', 0x1009e1a9, g_play, 400),
-    sp('Cd_Shutdown', 0x1009e2b9, g_cd, 400, True),
-    sp('Cd_GetStatus', 0x1009e2e3, g_cd, 600),
-    sp('Cd_UpdateStatus', 0x1009e389, g_cd, 400),
-    sp('Cd_TogglePause', 0x1009e3cb, g_cd, 800, True),
-    sp('Sim_1009e441', 0x1009e441, g_cd, 800, True),
-    sp('Cd_StopWait', 0x1009e4ae, g_cd, 500, True),
-    sp('Cd_PrevTrack', 0x1009e4cb, g_cd, 800, True),
-    sp('Cd_NextTrack', 0x1009e4e8, g_cd, 800, True),
-    sp('Cd_GetPosition', 0x1009e505, g_out4, 600, True),
-    sp('Cd_Skip', 0x1009e680, g_skip, 1000, True),
-    sp('Cd_PlayTrack', 0x1009e768, g_playtrack, 1000, True),
-    sp('Cd_PlayRange', 0x1009e886, g_playrange, 800, True),
-    sp('Cd_LoadTracks', 0x1009e947, g_loadtracks, 600),
-    sp('Cd_FreeTracks', 0x1009ea75, g_freetracks, 300, True),
-    sp('Cd_ReadPosition', 0x1009eaa2, g_out4, 500, True),
-    sp('DisplayDibWindowEnd', 0x1007eda5, g_dibend, 400),
-    sp('DisplayDibWindowDraw', 0x1007ee9a, g_dibdraw, 400),
-    sp('DisplayDibWindowSetFmt', 0x1007f224, g_dibsetfmt, 400),
+    # superseded: 1.0 drove the CD here; no CD audio (DECISIONS.md "dropped features")
+    # sp('Sim_1008b900', 0x1008b900, g_cdflags, 400, True),
+    # sp('Aux_FindCdDevice', 0x1009dec0, g_aux, 500),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Close', 0x1009e11d, g_cd, 300),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Pause', 0x1009e149, g_cd, 300),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Resume', 0x1009e169, g_cd, 300),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Stop', 0x1009e189, g_cd, 300),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Play', 0x1009e1a9, g_play, 400),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Shutdown', 0x1009e2b9, g_cd, 400, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_GetStatus', 0x1009e2e3, g_cd, 600),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_UpdateStatus', 0x1009e389, g_cd, 400),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_TogglePause', 0x1009e3cb, g_cd, 800, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Sim_1009e441', 0x1009e441, g_cd, 800, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_StopWait', 0x1009e4ae, g_cd, 500, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_PrevTrack', 0x1009e4cb, g_cd, 800, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_NextTrack', 0x1009e4e8, g_cd, 800, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_GetPosition', 0x1009e505, g_out4, 600, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_Skip', 0x1009e680, g_skip, 1000, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_PlayTrack', 0x1009e768, g_playtrack, 1000, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_PlayRange', 0x1009e886, g_playrange, 800, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_LoadTracks', 0x1009e947, g_loadtracks, 600),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_FreeTracks', 0x1009ea75, g_freetracks, 300, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('Cd_ReadPosition', 0x1009eaa2, g_out4, 500, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # sp('DisplayDibWindowEnd', 0x1007eda5, g_dibend, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
+    # sp('DisplayDibWindowDraw', 0x1007ee9a, g_dibdraw, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
+    # sp('DisplayDibWindowSetFmt', 0x1007f224, g_dibsetfmt, 400),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     sp('Sim_1008375a', 0x1008375a, g_1008375a, 500),
     sp('Gdi_BitBltRect', 0x10083cd5, g_bltrect, 500),
     sp('Gdi_SetPalette', 0x10083ebb, g_setpal, 600),

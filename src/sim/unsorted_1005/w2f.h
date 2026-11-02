@@ -11,8 +11,6 @@
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-/* Returns 2. */
-int __cdecl Sim_100570e7(void);
 /* Returns 0. */
 int __cdecl Sim_10057a51(void);
 /* Stores v clamped to 0..0x80 (anything below 1 becomes 0) in the dword 0x10143fbc. */

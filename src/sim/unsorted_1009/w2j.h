@@ -26,7 +26,5 @@ void __cdecl Sim_1009b2fc(void);
  * then b = 5, else if a <= 2 and b <= 2 (signed) then b = 3.
  */
 void __cdecl Sim_1009b362(void);
-/* Returns dword 0x1017d064. */
-uint32_t __cdecl Sim_1009e5a2(void);
 
 #endif

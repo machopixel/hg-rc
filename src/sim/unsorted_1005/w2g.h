@@ -18,8 +18,6 @@
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-/* Returns 2. */
-int __cdecl Sim_100570f1(void);
 /* Clears the four dwords at 0x1015e650. */
 void __cdecl Sim_10057f53(void);
 /* Appends the entry at the end of the list (does nothing for null). */

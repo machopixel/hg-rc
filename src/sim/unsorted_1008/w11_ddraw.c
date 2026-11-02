@@ -14,39 +14,6 @@ typedef uint32_t(__stdcall *W11SurfMethod2Fn)(uint32_t self, uint32_t a, uint32_
 #define W11_SURF_METHOD(type, slot, off) ((type)(uintptr_t)U32(BYTES(U32(BYTES(G32(slot)), 0)), (off)))
 #define W11_RESULT G32(0x10372b94)
 
-// FUNCTION: HGSIM 0x10080471
-int __cdecl Sim_10080471(void)
-{
-    uint32_t r;
-
-    if (G32(0x1017b3ac) != 0) {
-        W11_RESULT = W11_SURF_METHOD(W11SurfMethod1Fn, 0x1017b39c, 0x80)(G32(0x1017b39c), G32(0x10372d44));
-        U32(BYTES(G32(0x1015e698)), 0) = 0;
-        G32(0x1017b3ac) = 0;
-        r = W11_RESULT;
-    } else {
-        r = 0;
-    }
-    W11_RESULT = r;
-    if (W11_RESULT != 0)
-        Sim_10083495();     /* the original passes a message and the code & 0xfff; the log ignores them */
-    if (W11_SURF_METHOD(W11SurfMethod0Fn, 0x1017b394, 0x60)(G32(0x1017b394)) == W11_DDERR_SURFACELOST) {
-        W11_RESULT = W11_SURF_METHOD(W11SurfMethod0Fn, 0x1017b394, 0x6c)(G32(0x1017b394));
-        if (W11_SURF_METHOD(W11SurfMethod0Fn, 0x1017b39c, 0x60)(G32(0x1017b39c)) == W11_DDERR_SURFACELOST)
-            W11_RESULT = W11_SURF_METHOD(W11SurfMethod0Fn, 0x1017b39c, 0x6c)(G32(0x1017b39c));
-        r = W11_RESULT;
-    } else {
-        r = 0;
-    }
-    W11_RESULT = r;
-    if (W11_RESULT != 0)
-        Sim_10083495();
-    W11_RESULT = W11_SURF_METHOD(W11SurfMethod2Fn, 0x1017b394, 0x2c)(G32(0x1017b394), 0, 1);
-    if (W11_RESULT != 0)
-        Sim_10083495();
-    return W11_RESULT != 0 ? -1 : 0;
-}
-
 typedef int(__stdcall *W11SetDIBitsToDeviceFn)(uint32_t dc, int x, int y, uint32_t w, uint32_t h, int sx, int sy,
                                                uint32_t start, uint32_t lines, const void *bits, const void *info,
                                                uint32_t usage);

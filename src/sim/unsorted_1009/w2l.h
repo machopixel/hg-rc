@@ -30,7 +30,5 @@ void *__cdecl Sim_10090513(int index);
 void __cdecl Sim_10090cc8(int index);
 /* Returns 0. */
 uint32_t __cdecl Sim_1009ca21(void);
-/* Returns the dword 0x1017d08c. */
-uint32_t __cdecl Sim_1009eb24(void);
 
 #endif

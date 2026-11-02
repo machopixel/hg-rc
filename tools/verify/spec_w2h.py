@@ -720,8 +720,8 @@ SPECS = [
     dict(name='Sim_1008d405', orig=0x1008d405, c='Sim_1008d405', gen=g_d405, void=True),
     dict(name='Sim_10098a80', orig=0x10098a80, c='Sim_10098a80', gen=g_98a80, void=True),
     dict(name='Sim_10098e54', orig=0x10098e54, c='Sim_10098e54', gen=g_u32_1),
-    dict(name='Sim_1009e5c3', orig=0x1009e5c3, c='Sim_1009e5c3', gen=g_u32_1, void=True),
-    dict(name='Sim_1009eb2e', orig=0x1009eb2e, c='Sim_1009eb2e', gen=g_9eb2e),
+    # dict(name='Sim_1009e5c3', orig=0x1009e5c3, c='Sim_1009e5c3', gen=g_u32_1, void=True),   # deleted: no CD audio (DECISIONS.md "dropped features")
+    # dict(name='Sim_1009eb2e', orig=0x1009eb2e, c='Sim_1009eb2e', gen=g_9eb2e),   # deleted: no CD audio (DECISIONS.md "dropped features")
     dict(name='Sim_100a774e', orig=0x100a774e, c='Sim_100a774e', gen=g_15bc9),
     dict(name='Sim_100a88ff', orig=0x100a88ff, c='Sim_100a88ff', gen=g_a88ff),
     dict(name='Sim_100aa270', orig=0x100aa270, c='Sim_100aa270', gen=g_aa270, void=True),

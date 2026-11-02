@@ -106,19 +106,6 @@ int32_t __cdecl Sim_10079feb(int32_t kind)
     return kind == 8 || kind == 5;
 }
 
-// FUNCTION: HGSIM 0x100819af
-int32_t __cdecl Bits_Count(uint32_t value)
-{
-    int32_t count = 0;
-
-    do {
-        if (value & 1)
-            count++;
-        value >>= 1;
-    } while (value != 0);
-    return count;
-}
-
 // FUNCTION: HGSIM 0x10087c86
 void __cdecl Sim_10087c86(void)
 {

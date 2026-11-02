@@ -264,7 +264,8 @@ def begin(ctx):
         for name, (addr, nargs) in DSTUBS.items():
             cb = _stub_cb(m, addr, nargs)
             m.raw.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
-            m.raw.hook_add(UC_HOOK_CODE, cb, None, m.syms[name], m.syms[name])
+            if name in m.syms:     # (a deleted function keeps only its original-side stub)
+                m.raw.hook_add(UC_HOOK_CODE, cb, None, m.syms[name], m.syms[name])
         m.raw.hook_add(UC_HOOK_CODE, _code_cb(m), None, CODE, CODE + 16 * 64 - 1)
         m.uc.mem_map(0xb0000, 0x10000)          # the text screen that Mono_PutText writes to
         m.wr.append((0xb0000, 0x10000))
@@ -1035,7 +1036,8 @@ SPECS = [
     dict(name='Sim_10019da0', orig=0x10019da0, c='Sim_10019da0', gen=g_9da0, trials=800, api=API),
     dict(name='Sim_1001bb9d', orig=0x1001bb9d, c='Sim_1001bb9d', gen=g_bb9d, trials=800),
     dict(name='Sim_1001cedf', orig=0x1001cedf, c='Sim_1001cedf', gen=g_cedf, trials=500, void=True),
-    dict(name='Sim_1001ee7c', orig=0x1001ee7c, c='Sim_1001ee7c', gen=g_ee7c, trials=500, void=True),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # dict(name='Sim_1001ee7c', orig=0x1001ee7c, c='Sim_1001ee7c', gen=g_ee7c, trials=500, void=True),
     dict(name='Sim_100200d1', orig=0x100200d1, c='Sim_100200d1', gen=g_00d1, trials=600, void=True),
     dict(name='Sim_1002597b', orig=0x1002597b, c='Sim_1002597b', gen=g_597b, trials=600, void=True),
     dict(name='Sim_10025c8c', orig=0x10025c8c, c='Sim_10025c8c', gen=g_5c8c, trials=400, void=True),

@@ -77,13 +77,6 @@ void __cdecl Sim_1009b99b(void);
 void __cdecl Sim_1009bc94(void);
 
 /*
- * CD poll: when the CD is in use ([0x1017d08c]) and Cd_GetStatus() differs from the last status [0x1017d078]:
- * status 1 frees the track table 0x1017d080, status 2 after 1 reloads it (up to three tries, Sim_1010d2f0(7)
- * between them, Proc_Exit(0) when all fail). Stores the status and returns 1; otherwise returns 0.
- */
-int __cdecl Cd_PollDisc(void);
-
-/*
  * Copies the text `src` to `dst`, letters ([0x1015965c] > 1: Crt_IsCType(c, 0x103), else the class table at
  * [0x10159450]) converted to upper case by 0x100ff280. Returns the address of the copied terminating zero.
  */

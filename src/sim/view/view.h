@@ -56,7 +56,6 @@ void __cdecl Sim_10077fd8(void *obj);
 void __cdecl Sim_10078177(void);
 int32_t __cdecl Sim_10079e3b(const uint8_t *id);
 int32_t __cdecl Sim_10079feb(int32_t kind);
-int32_t __cdecl Bits_Count(uint32_t value);
 void __cdecl Sim_10087c86(void);
 void __cdecl Sim_1008f630(void **pp);
 

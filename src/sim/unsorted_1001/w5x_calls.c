@@ -65,7 +65,7 @@ void __cdecl Sim_1001f454(void)
 void __cdecl Sim_1001f47d(void)
 {
     Sim_1001f399();
-    Cd_Shutdown();
+    /* (Cd_Shutdown here: nothing without a CD; no CD audio, DECISIONS.md "dropped features") */
     SIM_CALL_1003a052();
     SIM_CALL_1004724c(GBYTES(0x10132220), G32(0x1015d1b8));
     SIM_API(HeapFreeFn, IAT_HEAPFREE)((void *)(uintptr_t)G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015d1b8));

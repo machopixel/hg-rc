@@ -306,7 +306,8 @@ def begin(ctx, *active):
         for cname, (addr, nargs) in DSTUBS.items():
             cb = _stub_cb(m, addr, nargs)
             m.raw.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
-            m.raw.hook_add(UC_HOOK_CODE, cb, None, m.syms[cname], m.syms[cname])
+            if cname in m.syms:     # (a deleted function keeps only its original-side stub)
+                m.raw.hook_add(UC_HOOK_CODE, cb, None, m.syms[cname], m.syms[cname])
     m.uc.reg_write(UC_X86_REG_FPCW, 0x27f)
     m.uc.reg_write(UC_X86_REG_FPSW, 0)
     m.uc.reg_write(UC_X86_REG_FPTAG, 0xffff)
@@ -680,7 +681,8 @@ def spec(name, orig, gen, trials, **kw):
 SPECS = [
     spec('Sim_10016632', 0x10016632, g_6632, 1500, void=True),
     spec('Sim_10017b3e', 0x10017b3e, g_7b3e, 300, void=True),
-    spec('Sim_1001edd0', 0x1001edd0, g_edd0, 500),
+    # superseded: 1.0's CD version; the C is 1.2's music version, checked by spec_music_v12.py
+    # spec('Sim_1001edd0', 0x1001edd0, g_edd0, 500),
     spec('CmdLine_Parse', 0x1002ad50, g_ad50, 2500),
     spec('Sim_1003218b', 0x1003218b, g_218b, 500),
     spec('Sim_10047569', 0x10047569, g_7569, 400),

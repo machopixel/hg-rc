@@ -307,13 +307,11 @@ add_executable(HG WIN32
     ../sim/unsorted_1005/w4u_record.c
     ../sim/unsorted_1008/w4u_misc.c
     ../sim/unsorted_100a/w4u_misc.c
-    ../sim/win/w4u_cdaudio.c
     ../sim/win/w4u_gdi.c
     ../sim/unsorted_1000/w4v_misc.c
     ../sim/unsorted_1002/w4v_misc.c
     ../sim/unsorted_1003/w4v_misc.c
     ../sim/unsorted_1004/w4v_misc.c
-    ../sim/unsorted_1005/w4v_joystick.c
     ../sim/unsorted_1005/w4v_misc.c
     ../sim/unsorted_1007/w4v_misc.c
     ../sim/unsorted_1008/w4v_fade.c
@@ -441,7 +439,6 @@ add_executable(HG WIN32
     ../sim/unsorted_100a/w6g_records.c
     ../sim/unsorted_100b/w6g_misc.c
     ../sim/unsorted_100c/w6g_calls.c
-    ../sim/win/w6g_cd.c
     ../sim/unsorted_100c/w6h_calls.c
     ../sim/unsorted_100d/w6h_calls.c
     ../sim/unsorted_100e/w6h_calls.c
@@ -681,7 +678,6 @@ add_executable(HG WIN32
     ../sim/util/w10_interp.c
     ../sim/unsorted_1003/w11_sound.c
     ../sim/sound/sdl_sound.c
-    ../sim/unsorted_1007/w11_ddraw.c
     ../sim/unsorted_1005/w11_lang.c
     ../sim/unsorted_1008/w11_ddraw.c
     ../sim/unsorted_1005/w11_error.c
@@ -730,7 +726,6 @@ add_executable(HG WIN32
     ../sim/unsorted_1000/w24_sight.c
     ../sim/unsorted_1007/w24_menu.c
     ../sim/unsorted_1002/w26_beam.c
-    ../sim/unsorted_1005/w27_joystick.c
     ../sim/platform/w28_input.c
     ../sim/platform/w28_window.c
     ../sim/platform/w28_anim.c
@@ -798,9 +793,6 @@ target_link_libraries(HG PRIVATE user32 gdi32 ole32 winmm SDL3::SDL3-static)
 # C runtime replacement: OpenLibm (src/sim/libm wrappers); our shim headers before upstream's
 target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/openlibm/hg
                                      ${CMAKE_SOURCE_DIR}/third_party/openlibm/include)
-# The music from the game folder's MUSIC\TrackNN.ogg in place of the CD (platform/music.h). Only the game build
-# has it: the checker's test builds keep the converted functions' 1.0 CD code they are compared against.
-target_compile_definitions(HG PRIVATE HG_MUSIC_FILES)
 
 if(MSVC)
     # Look like the 1997 exe to Windows: fixed base 0x400000, no DEP, the

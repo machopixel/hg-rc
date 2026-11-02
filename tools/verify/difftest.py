@@ -51,6 +51,8 @@ def _defining_files(names):
 def build_c(sources, cflags=()):
     """Compiles the sources into one flat PE; returns (sections, symbols)."""
     # C runtime replacement (src/sim/crt, src/sim/libm): always linked, so specs with a fixed source list find it too
+    # Files a spec still lists but that were deleted (dropped features, DECISIONS.md) are left out.
+    sources = [f for f in sources if os.path.exists(f)]
     # A file with a checker stand-in (tools/verify/stand_in, same name: code that needs SDL3) is replaced by it.
     have = {os.path.normcase(os.path.abspath(f)) for f in sources}
     sources = list(sources) + [f for d in ('crt', 'libm') for f in sorted(glob.glob(os.path.join(SRC, 'sim', d, '*.c')))
@@ -80,6 +82,8 @@ def build_c(sources, cflags=()):
         add = _defining_files(missing)
         if any(n.startswith('Plat_') for n in missing):    # the platform layer's checker stand-in (round 32)
             add.append(os.path.join(HERE, 'plat_stub.c'))
+        if any(n.startswith('Music_') for n in missing):   # the music folder's stand-in (no CD audio)
+            add.append(os.path.join(HERE, 'music_stub.c'))
         add = [f for f in add if f not in cmd]
         if not add:
             break

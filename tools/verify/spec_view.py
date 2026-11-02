@@ -195,7 +195,7 @@ SPECS = [
     dict(name='Sim_10078177', orig=0x10078177, c='Sim_10078177', gen=g_snapshot, void=True),
     dict(name='Sim_10079e3b', orig=0x10079e3b, c='Sim_10079e3b', gen=g_kind, trials=600),
     dict(name='Sim_10079feb', orig=0x10079feb, c='Sim_10079feb', gen=g_kind5),
-    dict(name='Bits_Count', orig=0x100819af, c='Bits_Count', gen=g_bits),
+    # dict(name='Bits_Count', orig=0x100819af, c='Bits_Count', gen=g_bits),   # deleted: DirectDraw / DISPDIB driver (DECISIONS.md "dropped features")
     dict(name='Sim_10087c86', orig=0x10087c86, c='Sim_10087c86', gen=g_collect, void=True),
     dict(name='Sim_1008f630', orig=0x1008f630, c='Sim_1008f630', gen=g_pp, void=True),
 ]

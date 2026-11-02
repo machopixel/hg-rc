@@ -2741,3 +2741,50 @@ An independent audit of all of 1.2's HGSIM (tools/v12/audit.md) found two 1.2 ch
   unsorted_1010); they serve the DLL's own code through their hooks.
 - **Specs** (crt_rest_specs.txt, buildlogs/crt_rest): the 13 entries reaching hg_rest.c pass.
 - **Build:** the Release build compiles and links HG.exe and HGVK.dll; the game was not run.
+
+## Dropped features: CD audio, joystick, DirectDraw / DISPDIB (Diego, 2026-11-02: "we no longer have cd audio, joystick and should not have directdarw"; "Let's delete code first, and then we analyse again.")
+
+Deleted C conversions only. While HGSIM.DLL is loaded, an address whose conversion is gone runs the original code
+again, so the game is unchanged where nothing reaches it, and /D3D (option 3) still gets the original DirectDraw
+driver.
+
+- **CD audio.** Music comes from the MUSIC folder (round 33). `HG_MUSIC_FILES` is now always on: its `#if` branches
+  are resolved in w4u_cd.c, w5a_misc.c, w6d_calls.c, w7l_misc.c, w9d_misc.c, w5c_calls.c (the checker's
+  `W5C_MUTATE12` negative check stays) and w4w_win.c. The define is gone from src/launcher/CMakeLists.txt.
+  Deleted: src/sim/win/w4u_cdaudio.c, w6g_cd.c, w6g.h (the MCI wrappers Cd_* 0x1009dec0..0x1009eaa2,
+  Aux_FindCdDevice, Sim_1009e441) and Cd_PollDisc (w7o_modes.c). Also deleted: the thunks Sim_1009e5a2 / e5ac / e5b9
+  / e5c3 / eb24 / eb2e, which only called them.
+  - Sim_1001f415 now sets the "CD open" pair [0x1017d060] / [0x1017d064] to 0 itself.
+  - Sim_1001f47d no longer calls Cd_Shutdown.
+  - hooks_sim.c's HookedCdAudioInit stays: the original-reference (noconv) runs need it.
+- **Joystick** (Diego, 2026-11-02: "we don't support joystick"). Deleted the joystick driver's functions, which only
+  the joystick driver table 0x101426f0 points to: Sim_1005621b, Sim_100567cb, Sim_10056d04, Sim_10056df3,
+  Sim_10056dfa, Sim_100570e7, Sim_100570f1 and Joy_GetOemName. Deleted files: w27_joystick.c, w4v_joystick.c, w27.h
+  and conv_w27.inc. Win_JoyGetNumDevs stays and returns 0, so the game finds no device and never calls the driver.
+- **DirectDraw (display modes 0..3) and DISPDIB (mode 4).** Deleted the conversions that only those drivers' tables
+  (0x1014a138, 0x10149e58) or their own original code reach. I checked each one against the DLL's pointers and
+  direct calls, including the incremental-link jump stubs:
+  - DisplayDibWindowEnd / Draw / SetFmt (w4u_gdi.c);
+  - Sim_1007ef27, Sim_1007efb4, Sim_1007f0c8 (w4w_display.c, and its unused statics);
+  - Sim_1007f0b4;
+  - Sim_1007f950 and Sim_1007f9da (unsorted_1007/w11_ddraw.c and w11.h deleted);
+  - Sim_10080471;
+  - Bits_Count (view/objlist.c).
+  Sim_1003775f was deleted by mistake and is restored, because the kept Sim_1003772b calls it.
+- **Kept: the GDI window driver (mode 5).** SimMain always starts it first, before it switches to the renderer, so
+  the Vulkan build uses it.
+- **Not touched yet: the software-renderer branches.** The flag [0x1017b940] (renderer active) is tested in 178
+  places in 87 C files. It is only set partway through SimMain, so code that runs earlier takes the `== 0` path even
+  with Vulkan. Each site needs its own check before anything is deleted (next analysis).
+- **Checker.**
+  - difftest.py's build_c and w10_common.closure skip sources that no longer exist.
+  - build_c links music_stub.c when Music_* symbols are missing.
+  - spec_w7l / spec_w9d stub a symbol only if it exists.
+  - Entries for deleted functions are commented out with a "deleted:" note. The three spec_w11_* files are deleted.
+  - The 1.0 CD-version entries are superseded by spec_music_v12 (8 of 8 pass): Sim_1001f335 / f367 / f399 / f3ac /
+    f26e / ee7c / edd0, Win_AuxSetVolume and Sim_1009ebeb.
+  - The "no CD" entries of Sim_1001f4d3, Sim_1008b900 and Sim_1001f415 are retired.
+- **Results.** 53 spec files, 1541 entries, 39 failures. Every failure also fails the same way on commit 9bec9e2
+  (re-run there for the ones not already known: Sim_10047e1a, Sim_10041444, Sim_1004158c, Sim_100421b0,
+  Sim_1005874a, Sim_10041b2d), so none comes from the deletions. The Release build compiles and links HG.exe and
+  HGVK.dll. I did not run the game.

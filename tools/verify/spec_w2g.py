@@ -618,7 +618,7 @@ SPECS = [
     spec('Sim_1003cba3', 0x1003cba3, g_1003cba3),
     spec('Sim_10041e61', 0x10041e61, g_10041e61, 1000, True),
     spec('Sim_1004f1df', 0x1004f1df, g_1004f1df, 500),
-    spec('Sim_100570f1', 0x100570f1, g_100570f1, 300),
+    # spec('Sim_100570f1', 0x100570f1, g_100570f1, 300),   # deleted: no joystick (DECISIONS.md "dropped features")
     spec('Sim_10057f53', 0x10057f53, g_10057f53, 300, True),
     spec('Sim_100581a0', 0x100581a0, g_100581a0, 600, True),
     spec('Sim_1005820d', 0x1005820d, g_1005820d, 800, True),
@@ -644,7 +644,7 @@ SPECS = [
     spec('Sim_10098e74', 0x10098e74, g_none, 300),
     spec('Sim_1009b2b4', 0x1009b2b4, g_1009b2b4, 500, True),
     spec('Sim_1009c710', 0x1009c710, g_1009c710, 300, True),
-    spec('Sim_1009e5ac', 0x1009e5ac, g_1009e5ac, 300, True),
+    # spec('Sim_1009e5ac', 0x1009e5ac, g_1009e5ac, 300, True),   # deleted: no CD audio (DECISIONS.md "dropped features")
     spec('Sim_100a8943', 0x100a8943, g_100a8943, 500),
     spec('Sim_100aa807', 0x100aa807, g_100aa807),
     spec('Sim_100ab89a', 0x100ab89a, g_100ab89a, 600, True),

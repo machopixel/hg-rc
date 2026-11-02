@@ -23,9 +23,3 @@ int __cdecl Sim_1009ca28(void)
 {
     return 0x400;
 }
-
-// FUNCTION: HGSIM 0x1009e5b9
-uint32_t __cdecl Sim_1009e5b9(void)
-{
-    return G32(0x1017D060);
-}

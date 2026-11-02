@@ -21,9 +21,5 @@
 void __cdecl Sim_10098a80(void);
 /* Returns its argument. */
 int32_t __cdecl Sim_10098e54(int32_t value);
-/* Dword 0x1017d060 = value. */
-void __cdecl Sim_1009e5c3(uint32_t value);
-/* 1 when [0x1017d080] <= value <= [0x1017d084] (signed), else 0. */
-int __cdecl Sim_1009eb2e(int32_t value);
 
 #endif

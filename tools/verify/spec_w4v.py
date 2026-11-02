@@ -648,8 +648,8 @@ SPECS = [
     dict(name='Sim_10038fac', orig=0x10038fac, c='Sim_10038fac', gen=g_10038fac, trials=600, void=True, api=API),
     dict(name='Sim_10048112', orig=TRAMP, c='Sim_10048112', gen=g_10048112, trials=600, api=API),
     dict(name='Sim_10053132', orig=0x10053132, c='Sim_10053132', gen=g_10053132, trials=300, void=True, api=API),
-    dict(name='Sim_10056d04', orig=0x10056d04, c='Sim_10056d04', gen=g_10056d04, trials=400, api=API),
-    dict(name='Sim_10056dfa', orig=0x10056dfa, c='Sim_10056dfa', gen=g_10056dfa, trials=1000, api=API),
+    # dict(name='Sim_10056d04', orig=0x10056d04, c='Sim_10056d04', gen=g_10056d04, trials=400, api=API),   # deleted: no joystick (DECISIONS.md "dropped features")
+    # dict(name='Sim_10056dfa', orig=0x10056dfa, c='Sim_10056dfa', gen=g_10056dfa, trials=1000, api=API),   # deleted: no joystick (DECISIONS.md "dropped features")
     dict(name='Sim_1008c550', orig=0x1008c550, c='Sim_1008c550', gen=g_1008c550, trials=400, api=API),
     dict(name='Sim_1008c6f5', orig=0x1008c6f5, c='Sim_1008c6f5', gen=g_1008c6f5, trials=500, api=API),
     dict(name='Sim_1008c803', orig=0x1008c803, c='Sim_1008c803', gen=g_1008c803, trials=800, void=True, api=API),
