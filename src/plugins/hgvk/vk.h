@@ -6,7 +6,6 @@
 #define HGVK_VK_H
 
 #include <stdint.h>
-#include <windows.h>
 
 /* Same layout as the vertex input of the pipelines in vk.c. */
 typedef struct HgvkVertex {
@@ -34,7 +33,9 @@ void HgvkLog(const char *fmt, ...);
  * Returns 0 on success. On failure everything is released again.
  * depthBuffer: use a W-buffer (see hgvk.c, Render) when the GPU has one.
  */
-int Vk_Init(HWND hwnd, int depthBuffer);
+int Vk_Init(void *window, int depthBuffer);
+/* The window's size in pixels (SDL3); 0 when it has none. `window` is the game's window as the sim gave it. */
+int Vk_WindowSize(void *window, int *w, int *h);
 void Vk_Shutdown(void);
 int Vk_IsReady(void);
 

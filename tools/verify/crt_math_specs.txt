@@ -53,7 +53,6 @@ tools/verify/spec_w10_100d71b9_x87.py	Sim_100d71b9_x87
 tools/verify/spec_w10_blast_v12.py	Sim_100246b3_v12
 tools/verify/spec_w10_fireloop_v12.py	Sim_100d4590_v12
 tools/verify/spec_w10d.py	Sim_100cada2
-tools/verify/spec_w11_100397e7.py	Sim_100397e7
 tools/verify/spec_w12_1001a23e.py	Sim_1001a23e
 tools/verify/spec_w12_100a0063.py	Sim_100a0063
 tools/verify/spec_w12_100c2ae5.py	Sim_100c2ae5

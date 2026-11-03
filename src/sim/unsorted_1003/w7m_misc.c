@@ -6,9 +6,6 @@
 #include "../unsorted_100f/w2e.h"
 #include "../unsorted_100f/w6i.h"
 
-typedef uint32_t(__stdcall *W7mLoadLibraryFn)(const char *name);
-typedef void *(__stdcall *W7mGetProcAddressFn)(uint32_t module, const char *name);
-typedef int(__stdcall *W7mFreeLibraryFn)(uint32_t module);
 typedef uint32_t(__cdecl *W7mFuncDescFn)(char *kind, uint32_t *id, char *text);
 typedef uint32_t(__cdecl *W7mCheckFn)(uint32_t arg);
 typedef int32_t(__stdcall *W7mSetWindowLongFn)(uint32_t window, int32_t index, uint32_t value);
@@ -51,21 +48,22 @@ void __cdecl Sim_100361d8(char *name, uint8_t *list)
     char kind[0x100];
     uint32_t id;
     char text[0x110];
-    uint32_t module;
+    void *module;
     W7mFuncDescFn desc;
     W7mCheckFn check;
     uint32_t ok;
 
     if (G32(0x1015e56c) != 0)
         return;
-    module = SIM_API(W7mLoadLibraryFn, 0x10ac55e4)(name);
+    /* LoadLibraryA / GetProcAddress / FreeLibrary: the platform's, which also knows the built-in renderer */
+    module = Plat_LoadLibrary(name);
     if (module == 0)
         return;
-    desc = (W7mFuncDescFn)SIM_API(W7mGetProcAddressFn, 0x10ac55dc)(module, SIM_PTR(const char, 0x1013a0b4));
+    desc = (W7mFuncDescFn)Plat_LibraryFunction(module, SIM_PTR(const char, 0x1013a0b4));
     if (desc != 0) {
         ok = desc(kind, &id, text);
         if (Str_CompareNoCase(kind, SIM_PTR(const char, 0x1013a0c0)) == 0) {      /* "RASTER" */
-            check = (W7mCheckFn)SIM_API(W7mGetProcAddressFn, 0x10ac55dc)(module, SIM_PTR(const char, 0x1013a0c8));
+            check = (W7mCheckFn)Plat_LibraryFunction(module, SIM_PTR(const char, 0x1013a0c8));
             if (check != 0)
                 ok = check(0);
             if (ok != 0) {
@@ -77,7 +75,7 @@ void __cdecl Sim_100361d8(char *name, uint8_t *list)
             }
         }
     }
-    SIM_API(W7mFreeLibraryFn, 0x10ac55d8)(module);
+    Plat_FreeLibrary(module);
 }
 
 // FUNCTION: HGSIM 0x100381d0

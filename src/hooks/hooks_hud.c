@@ -10,6 +10,7 @@
  * Only active when the Vulkan renderer (first word "hgvk" or HG_RENDERER=hgvk) is in use.
  */
 #include <stdio.h>
+#include "../platform/plat.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -58,17 +59,17 @@ static uint16_t *Cells(uint32_t cells)
     return g_cells;
 }
 
-/* HGVK.DLL is loaded by the sim after the sim's load hooks ran: looked up on first use. */
+/* The renderer (built into the program: Plat_LoadLibrary("HGVK.DLL")) is looked up on first use. */
 static const HudApi *Api(void)
 {
     if (!g_apiLooked) {
-        HMODULE plugin = GetModuleHandleA("HGVK.DLL");
+        void *plugin = Plat_LoadLibrary("HGVK.DLL");
         const HudApi *(__cdecl * get)(void);
 
         if (plugin == NULL)
             return NULL;
         g_apiLooked = 1;
-        get = (const HudApi *(__cdecl *)(void))(void *)GetProcAddress(plugin, "HgvkHudApi");
+        get = (const HudApi *(__cdecl *)(void))Plat_LibraryFunction(plugin, "HgvkHudApi");
         g_api = get != NULL ? get() : NULL;
         if (g_api != NULL && g_api->version != HUD_API_VERSION) {
             DebugPrintf("HUD: HGVK.DLL has a different HUD interface, full-resolution HUD off\n");

@@ -3091,3 +3091,44 @@ call site:
     commented; spec_w7s skips stubs of symbols that no longer exist). Specs that build w6k_sbh.c / w7s still pass
     (Sim_10106960 400 / 0, Sim_10104970 600 / 0).
 - Release build compiles and links.
+
+## HGVK built into HG.EXE (Diego, 2026-11-03: "build vulkan inside hg.exe and drop directsound")
+
+- **What:** the Vulkan renderer's sources (src/plugins/hgvk: hgvk.c, vk.c, hud2d.c) are compiled into HG.EXE;
+  HGVK.DLL, its CMakeLists.txt and hgvk.def are gone, and tools/dev/dev.cmd no longer copies it (Diego allowed that
+  one edit).
+- **How the sim finds it:** unchanged on the sim's side. It still loads "plugin\HGVK.DLL" (DLLFILE.INI, or every
+  plugin\*.dll) through the platform layer (w28_plugin.c Sim_1003650d). The platform keeps a table of libraries built
+  into the program (Plat_AddBuiltinLibrary, plat_win32.c): a name whose file part is "HGVK.DLL" (letter case aside)
+  gives the built-in renderer, whose entry points Hgvk_Function answers by name; any other name still loads a real
+  DLL. HG.EXE registers it at start (Hgvk_RegisterBuiltin). The entry points are static functions of hgvk.c (no
+  exports, no name clash with the game's symbols).
+- **Through the platform now** (were LoadLibraryA / GetProcAddress / FreeLibrary / GetModuleHandleA): the two plugin
+  probes (Plugin_ProbeRaster 0x10036027, Sim_100361d8), the plugin release (Sim_1003693c), the HUD hand-over
+  (hooks_hud.c) and the loading screen (picture_hgvk.c, already).
+- **Vulkan through SDL3:** SDL3 loads the Vulkan loader and gives the instance extensions and the window surface
+  (SDL_Vulkan_GetVkGetInstanceProcAddr, SDL_Vulkan_GetInstanceExtensions, SDL_Vulkan_CreateSurface) and the window
+  size in pixels (SDL_GetWindowSizeInPixels, Vk_WindowSize) in place of vulkan-1.dll by LoadLibraryA, the Win32
+  surface and GetClientRect. SDL3's wrap of the game window (plat_window.c PlatSdl_Window) is made with SDL's Vulkan
+  flag; without a Vulkan loader it is made without it (input and the window still work) and the renderer reports why
+  in hgvk.log, then the game ends with its "could not start Vulkan" box.
+- **hgvk.log** is opened by its first line (the DLL opened it when loaded), so only the process that uses the
+  renderer writes it.
+- **Kept as they were (Windows-only, AFTER_DLL.md):** in hgvk.c the F12 dump key (GetAsyncKeyState), the texture
+  read checks (IsBadReadPtr), the 2D buffer's height from GetSystemMetrics(SM_CYVIRTUALSCREEN) and the GDI fallback
+  (PresentGdi) for a missing Vulkan.
+- **Checker:** plat_stub.c's library stand-ins now make the original's LoadLibraryA / GetProcAddress / FreeLibrary
+  (the round-28 specs hook these symbols). Plugin_ProbeRaster 500 / 0, Sim_100361d8 600 / 0, Sim_1003693c 300 / 0,
+  Sim_1003650d 8000 / 0, Sim_1003695b 3000 / 0 (219 trials end in the instruction limit on both sides, as before).
+- Release build compiles and links (HG.EXE only); the game was not run.
+
+## DirectSound dropped (Diego, 2026-11-03)
+
+- The hgrc.cfg word "dsound" (the converted game with the original DirectSound sound, for comparison) is gone:
+  sound is SDL3's in every converted run (HooksAudio_SdlSound: "sdlaudio", or anything but "noconv"). The original
+  DirectSound runs only inside the untouched original ("noconv").
+- **Deleted:** the converted DirectSound versions that only that path used: Sim_10039708 (pitch), Sim_1003a548
+  (shutdown, with CoUninitialize), Sim_10039931 (3D voice position), Sim_100397e7 (3D listener) in w11_sound.c, their
+  conv_w10.inc entries, hooks_conv.c's choice between them and the SDL3 versions, and their spec files
+  (spec_w11_10039708 / 100397e7 / 10039931 / 1003a548.py; the line in crt_math_specs.txt). sim/sound/sdl_sound.c is
+  unchanged. Release build compiles and links.

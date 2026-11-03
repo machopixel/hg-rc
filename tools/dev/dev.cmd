@@ -128,8 +128,6 @@ echo [4/5] Copying into %GAME%
 if not exist "%GAME%\plugin" mkdir "%GAME%\plugin"
 copy /y build\src\launcher\Release\HG.exe "%GAME%\HG.EXE" > "%LOGS%\4-copy.log" 2>&1
 if errorlevel 1 ( set "STEP=4-copy" & goto :fail )
-copy /y build\src\plugins\hgvk\Release\HGVK.dll "%GAME%\plugin\HGVK.DLL" >> "%LOGS%\4-copy.log" 2>&1
-if errorlevel 1 ( set "STEP=4-copy" & goto :fail )
 
 echo Build and deploy OK.
 if /i "%MODE%"=="build" goto :done

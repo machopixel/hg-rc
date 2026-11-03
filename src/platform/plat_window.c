@@ -36,7 +36,14 @@ SDL_Window *PlatSdl_Window(void *native)
     props = SDL_CreateProperties();
 #ifdef _WIN32
     SDL_SetPointerProperty(props, SDL_PROP_WINDOW_CREATE_WIN32_HWND_POINTER, native);
+    /* the built-in Vulkan renderer makes its surface on this window (SDL_Vulkan_CreateSurface); without a Vulkan
+       loader the wrap is made without it, so input and the window still work and the renderer reports why */
+    SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, true);
     g_wrap = SDL_CreateWindowWithProperties(props);
+    if (g_wrap == NULL) {
+        SDL_SetBooleanProperty(props, SDL_PROP_WINDOW_CREATE_VULKAN_BOOLEAN, false);
+        g_wrap = SDL_CreateWindowWithProperties(props);
+    }
 #else
     g_wrap = (SDL_Window *)native;     /* other systems: the game's window is an SDL3 window already */
 #endif

@@ -68,7 +68,7 @@ void HooksHud_OnSimLoaded(HMODULE sim);
 void HooksInput_OnSimLoaded(HMODULE sim);
 void HooksInput_OnSimExit(void);
 
-/* SDL3 sound (hooks_audio.c): the default; original DirectSound with the hgrc.cfg word "noconv" or "dsound"
+/* SDL3 sound (hooks_audio.c): the default; the original DirectSound only with the hgrc.cfg word "noconv"
  * ("sdlaudio" forces SDL3). HooksAudio_SdlSound says which, for every hook file. */
 int HooksAudio_SdlSound(void);
 /* The SDL3 platform (DECISIONS.md, round 28): SDL3 runs the window events, keyboard, mouse and the menus' screen.

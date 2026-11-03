@@ -28,9 +28,9 @@ def run(item, logroot):
 
 def main():
     args = sys.argv[1:]
-    jobs = 16           # Diego, 2026-11-02: at most 16 processes
+    jobs = 8            # Diego, 2026-11-03: at most 8 processes
     if args and args[0].startswith('-j'):
-        jobs = min(int(args.pop(0)[2:]), 16)
+        jobs = min(int(args.pop(0)[2:]), 8)
     lst, logroot = args
     items = []
     for line in open(lst):

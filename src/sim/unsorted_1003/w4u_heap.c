@@ -1,4 +1,5 @@
 #include "w4u.h"
+#include "../../platform/plat.h"
 #include "w2e.h"
 #include "../win/w4u_api.h"
 
@@ -77,7 +78,7 @@ void __cdecl Sim_100305f8(void *owner)
 int __cdecl Sim_1003693c(void)
 {
     if (G32(0x1015e570) != 0)
-        SIM_API(W4uFreeLibraryFn, W4U_IAT_FREELIBRARY)(*SIM_PTR(void *, 0x1015e568));
+        Plat_FreeLibrary(*SIM_PTR(void *, 0x1015e568));     /* FreeLibrary: the platform's (built-in renderer) */
     return 1;
 }
 

@@ -246,11 +246,11 @@ start (the checker needs the DLL to compare against).
   after the shell round): SDL3 creates the window, the window procedure becomes SDL event handling, and these go.
 - **Loading-screen marks** ([0x1017b3c0] "device context", [0x1017b3c4] "palette"): 1 instead of GDI handles, kept
   because the driver tests them. After: a plain "picture open" flag.
-- **HGVK's own Win32 bits** (vk.c GetClientRect and the Win32 Vulkan surface, hgvk.c GetSystemMetrics and
-  PresentGdi): with HGVK built into the program, the surface and the window size come from SDL3
-  (SDL_Vulkan_CreateSurface, SDL_GetWindowSizeInPixels).
 - **Callback addresses passed as data** (0x100020e5 in w9c_tree.c / w8y_objects.c; 0x10002513 / 0x10002964 in
   w6h_calls.c): jump-table addresses of converted functions handed to the list walks. After: the C functions' own
   pointers (Sim_1003b8e3, Sim_100c4323, Sim_100c4265).
 - **The debug heap check** (Heap_Check 0x101000d0, from w7n_misc.c): validates the DLL C runtime's heap
   ([0x10ac3714], HeapValidate). After: checks our heap (crt/hg_heap.c), or answers "OK".
+- **HGVK's own Windows bits** (built into HG.EXE): hgvk.c's F12 dump key (GetAsyncKeyState), texture read checks
+  (IsBadReadPtr), the 2D buffer height from GetSystemMetrics(SM_CYVIRTUALSCREEN) and the GDI fallback PresentGdi.
+  After: SDL3's key state, plain pointer checks, SDL3's display bounds, and no GDI fallback (Vulkan only).

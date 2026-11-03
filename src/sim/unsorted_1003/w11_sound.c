@@ -4,91 +4,9 @@
 #include "w7m.h"
 #include "../unsorted_1008/w8w.h"
 
-typedef uint32_t(__stdcall *W11SndMethod1Fn)(uint32_t *self, uint32_t a);
-typedef uint32_t(__stdcall *W11SndMethod0Fn)(uint32_t *self);
-typedef void(__stdcall *W11CoUninitializeFn)(void);
-
-/* method n (byte offset into the object's table) of the COM object obj */
-#define W11_METHOD(type, obj, off) ((type)(uintptr_t)U32(BYTES((obj)[0]), (off)))
-
-// FUNCTION: HGSIM 0x10039708
-void __cdecl Sim_10039708(uint32_t *obj, uint32_t value)
-{
-    if (obj != 0)
-        W11_METHOD(W11SndMethod1Fn, obj, 0x44)(obj, value);
-}
-
-// FUNCTION: HGSIM 0x1003a548
-int __cdecl Sim_1003a548(uint32_t **slot)
-{
-    if (*slot == 0)
-        return 1;
-    W11_METHOD(W11SndMethod0Fn, *slot, 8)(*slot);
-    *slot = 0;
-    SIM_API(W11CoUninitializeFn, 0x10ac58a4)();
-    return 1;
-}
-
-typedef int32_t(__stdcall *W11SndSetBlockFn)(uint32_t self, void *block, uint32_t apply);
-
-// FUNCTION: HGSIM 0x10039931
-void __cdecl Sim_10039931(int idx, const uint8_t *unit)
-{
-    const uint8_t *rec;
-    uint32_t obj;
-    int32_t hr;
-
-    if (G32(0x1015d0a4) == 0 || U32(BYTES(G32(0x1015d0a4)), 0xc) == 0 || unit == 0)
-        return;
-    rec = BYTES(U32(unit, 0x28));
-    G32(0x109e3724) = U32(unit, 0x58);
-    G32(0x109e3728) = U32(unit, 0x5c);
-    G32(0x109e372c) = U32(unit, 0x60);
-    G32(0x109e3730) = U32(rec, 0x548);
-    G32(0x109e3734) = U32(rec, 0x54c);
-    G32(0x109e3738) = U32(rec, 0x550);
-    obj = U32(BYTES(G32(0x1015d0a4)), 0x114 + (uint32_t)idx * 4);
-    hr = ((W11SndSetBlockFn)(uintptr_t)U32(BYTES(U32(BYTES(obj), 0)), 0x30))(obj, SIM_PTR(void, 0x109e3720), 1);
-    if (hr < 0)
-        Sound_ErrorName(hr);
-}
-
-typedef int32_t(__stdcall *W11SndCommitFn)(uint32_t self);
-
-// FUNCTION: HGSIM 0x100397e7
-void __cdecl Sim_100397e7(void)
-{
-    const uint8_t *rec = BYTES(U32(PTRTAB(G32(0x1017b8c8)), 0x28));
-    const uint8_t *cam;
-    uint32_t lis;
-    int32_t hr;
-
-    if (G32(0x1015d0a4) == 0 || U32(BYTES(G32(0x1015d0a4)), 0xc) == 0)
-        return;
-    cam = BYTES(G32(0x1014cae0));
-    G32(0x109e36e4) = U32(cam, 0);
-    G32(0x109e36e8) = U32(cam, 4);
-    G32(0x109e36ec) = U32(cam, 8);
-    G32(0x109e36f0) = U32(rec, 0x548);
-    G32(0x109e36f4) = U32(rec, 0x54c);
-    G32(0x109e36f8) = U32(rec, 0x550);
-    *SIM_PTR(float, 0x109e36fc) = Sim_10084766(*(const float *)(cam + 0xc));
-    G32(0x109e3700) = 0;
-    *SIM_PTR(float, 0x109e3704) =
-        Sim_10084766((float)((double)*(const float *)(BYTES(G32(0x1014cae0)) + 0xc) +
-                             (double)*SIM_PTR(const float, 0x10111498)));
-    G32(0x109e3708) = 0;
-    G32(0x109e370c) = 0x3f800000u;
-    G32(0x109e3710) = 0;
-    lis = U32(BYTES(G32(0x1015d0a4)), 0xc);
-    hr = ((W11SndSetBlockFn)(uintptr_t)U32(BYTES(U32(BYTES(lis), 0)), 0x28))(lis, SIM_PTR(void, 0x109e36e0), 1);
-    if (hr < 0)
-        Sound_ErrorName(hr);
-    lis = U32(BYTES(G32(0x1015d0a4)), 0xc);
-    hr = ((W11SndCommitFn)(uintptr_t)U32(BYTES(U32(BYTES(lis), 0)), 0x44))(lis);
-    if (hr < 0)
-        Sound_ErrorName(hr);
-}
+/* The DirectSound versions of 0x10039708 (pitch), 0x1003a548 (shutdown: Release and CoUninitialize), 0x10039931 (3D
+   voice position) and 0x100397e7 (3D listener) are deleted with the DirectSound path (hgrc.cfg "dsound"; DECISIONS.md,
+   "DirectSound dropped"): the game's sound is SDL3's (sim/sound/sdl_sound.c). */
 
 typedef uint32_t(__stdcall *W11GetProcAddressFn)(uint32_t module, const char *name);
 

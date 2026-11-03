@@ -4,7 +4,8 @@
  * HGSIM.DLL has its own mixer (11 voice slots) on top of DirectSound. The 10 HGSIM functions that call DirectSound
  * are replaced by their SDL3 versions (sim/sound/sdl_sound.c), which are the game's own code with every DirectSound
  * call swapped for the matching audio.h call. The original DirectSound code runs only in an original-reference run
- * (hgrc.cfg word "noconv") or with the word "dsound"; the word "sdlaudio" forces SDL3 sound in any case.
+ * (hgrc.cfg word "noconv"); the word "sdlaudio" forces SDL3 sound in any case. The DirectSound comparison path
+ * (word "dsound") is gone (DECISIONS.md, "DirectSound dropped").
  *
  * Not covered: DirectSound 3D (listener and 3D buffers). HGSND.CFG turns it off
  * (it is off in the shipped config), and then the game works the volume and pan
@@ -91,14 +92,14 @@ int Hooks_Renderer12(void)
 
 int HooksAudio_SdlSound(void)
 {
-    return ConfigHasWord("sdlaudio") || (!ConfigHasWord("noconv") && !ConfigHasWord("dsound"));
+    return ConfigHasWord("sdlaudio") || !ConfigHasWord("noconv");
 }
 
 /*
  * HGSIM's own sound functions with SDL3 in place of DirectSound (sim/sound/sdl_sound.c; DECISIONS.md, "HGSIM sound:
  * DirectSound replaced by SDL3"). These are what "sdlaudio" installs, the sound start 0x1003a0e4 among them.
- * hooks_conv.c leaves out its own CONV entries for 0x39708, 0x397E7, 0x39931 and 0x3A548 (and the sound trace /
- * FPU log taps on 0xE0D9 / 0x39C00) when "sdlaudio" is set, so each address is hooked once.
+ * (hooks_conv.c leaves out the sound trace / FPU log taps on 0xE0D9 / 0x39C00 when "sdlaudio" is set, so each
+ * address is hooked once; the DirectSound C versions of 0x39708, 0x397E7, 0x39931 and 0x3A548 are deleted.)
  */
 static const unsigned char kPro6_08[] = {0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x08};
 static const unsigned char kPro6_14[] = {0x55, 0x8B, 0xEC, 0x83, 0xEC, 0x14};

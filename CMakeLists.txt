@@ -44,4 +44,3 @@ FetchContent_Declare(SDL3
 FetchContent_MakeAvailable(SDL3)
 
 add_subdirectory(src/launcher)
-add_subdirectory(src/plugins/hgvk)

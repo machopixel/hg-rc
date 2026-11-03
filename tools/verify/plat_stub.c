@@ -1,6 +1,7 @@
 /* Link targets for platform/plat.h in the checker's flat test image; the round-28 specs hook every one of them by
  * symbol, so the bodies never run. */
 #include "../../src/platform/plat.h"
+#include "../../src/sim/simmem.h"
 
 void Plat_WindowPainted(void *window) { (void)window; }
 int32_t Plat_WindowDefault(void *window, uint32_t message, uint32_t wParam, uint32_t lParam)
@@ -23,9 +24,15 @@ uint32_t Plat_IniString(const char *path, const char *section, const char *key, 
     (void)path, (void)section, (void)key, (void)def, (void)out, (void)size;
     return 0;
 }
-void *Plat_LoadLibrary(const char *name) { (void)name; return 0; }
-void *Plat_LibraryFunction(void *library, const char *name) { (void)library, (void)name; return 0; }
-void Plat_FreeLibrary(void *library) { (void)library; }
+/* the libraries (HGVK built into HG.EXE, DECISIONS.md): the original's LoadLibraryA / GetProcAddress / FreeLibrary
+ * through the DLL's import slots (the round-28 specs hook these symbols, so this does not change them) */
+typedef void *(__stdcall *PsLoadLibFn)(const char *);
+typedef void *(__stdcall *PsProcFn)(void *, const char *);
+typedef int32_t(__stdcall *PsFreeLibFn)(void *);
+void *Plat_LoadLibrary(const char *name) { return SIM_API(PsLoadLibFn, 0x10ac55e4)(name); }
+void *Plat_LibraryFunction(void *library, const char *name) { return SIM_API(PsProcFn, 0x10ac55dc)(library, name); }
+void Plat_FreeLibrary(void *library) { SIM_API(PsFreeLibFn, 0x10ac55d8)(library); }
+void Plat_AddBuiltinLibrary(const char *name, void *(*function)(const char *name)) { (void)name, (void)function; }
 
 /* Files (C runtime replacement, files): the stand-ins call the Windows import the original called, through the
  * DLL's import slot, so the checker logs and answers them exactly as for the original's run. */

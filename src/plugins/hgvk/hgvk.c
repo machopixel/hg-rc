@@ -1,12 +1,14 @@
 /*
- * HGVK.DLL: Vulkan renderer plugin for Heavy Gear.
+ * HGVK: Vulkan renderer for Heavy Gear, built into HG.EXE (DECISIONS.md, "HGVK built into HG.EXE"; it was the
+ * plugin HGVK.DLL). The sim still loads it as "plugin\HGVK.DLL" through the platform layer, which answers that
+ * name from here (Hgvk_RegisterBuiltin, Hgvk_Function).
  *
  * Implements the plugin contract of 3DFXGEAR.DLL ("the plugin owns the
  * screen", type id 2). The sim hands over pre-projected polygons through
  * Render and draws its 2D HUD into the buffer LockDisplay returns; vk.c turns
  * both into a Vulkan frame. See docs/renderer.md and the notes in docs/renderer.
  *
- * All exports are cdecl. Set HGVK_LOG=2 to log every Render call. If Vulkan
+ * All entry points are cdecl. Set HGVK_LOG=2 to log every Render call. If Vulkan
  * cannot start, the HUD is still shown through GDI and the 3D view stays empty.
  */
 #include <stdarg.h>
@@ -18,8 +20,10 @@
 #include "hud2d.h"
 #include "picture_api.h"
 #include "vk.h"
+#include "../../platform/plat.h"
 
-#define EXPORT __declspec(dllexport)
+/* the plugin's entry points: reached by name through Hgvk_Function */
+#define EXPORT static
 
 #define SCREEN_W 640
 #define SCREEN_H 480
@@ -72,8 +76,15 @@ void HgvkLog(const char *fmt, ...)
 {
     va_list ap;
 
-    if (g_log == NULL)
-        return;
+    /* opened by the first line, in the process that uses the renderer (the DLL opened it when loaded) */
+    if (g_log == NULL) {
+        const char *v = getenv("HGVK_LOG");
+
+        g_verbose = v != NULL ? atoi(v) : 0;
+        g_log = fopen("hgvk.log", "w");
+        if (g_log == NULL)
+            return;
+    }
     va_start(ap, fmt);
     vfprintf(g_log, fmt, ap);
     va_end(ap);
@@ -81,23 +92,7 @@ void HgvkLog(const char *fmt, ...)
     fflush(g_log);
 }
 
-BOOL WINAPI DllMain(HINSTANCE inst, DWORD reason, LPVOID reserved)
-{
-    (void)inst;
-    (void)reserved;
-    if (reason == DLL_PROCESS_ATTACH) {
-        const char *v = getenv("HGVK_LOG");
-
-        g_verbose = v != NULL ? atoi(v) : 0;
-        g_log = fopen("hgvk.log", "w");
-        HgvkLog("HGVK loaded");
-    } else if (reason == DLL_PROCESS_DETACH && g_log != NULL) {
-        HgvkLog("HGVK unloaded");
-        fclose(g_log);
-        g_log = NULL;
-    }
-    return TRUE;
-}
+/* (the DLL's DllMain opened and closed hgvk.log; HgvkLog opens it now, and the C library closes it at exit) */
 
 EXPORT int GetFuncDesc(char *kind, int *id, char *extra)
 {
@@ -170,10 +165,10 @@ static int ConfigHasWord(const char *word)
 /* Starts the full-resolution HUD layer's next frame for the window's current size. */
 static void FrameHud(void)
 {
-    RECT rc;
+    int w, h;
 
-    if (g_hwnd != NULL && GetClientRect(g_hwnd, &rc))
-        Hud_Frame(rc.right, rc.bottom);
+    if (g_hwnd != NULL && Vk_WindowSize(g_hwnd, &w, &h))
+        Hud_Frame(w, h);
 }
 
 EXPORT int FirstDevice(FirstDeviceParams *p)
@@ -206,7 +201,7 @@ EXPORT int FirstDevice(FirstDeviceParams *p)
     /* the loading screen (HgvkPictureApi) may have started Vulkan on this window already: it is kept */
     if (Vk_IsReady())
         Hud_SetTarget(g_screen);
-    else if (Vk_Init(p->hwnd, g_depth) != 0)
+    else if (Vk_Init((void *)p->hwnd, g_depth) != 0)
         HgvkLog("FirstDevice: Vulkan unavailable, falling back to GDI for the HUD");
     else
         Hud_SetTarget(g_screen); /* the HUD hooks may now draw at full resolution */
@@ -777,7 +772,7 @@ static int PictureOpen(void *window)
     if (Vk_IsReady())
         return 0;
     HgvkLog("Picture: starting Vulkan for the loading screen, hwnd=%p", window);
-    return Vk_Init((HWND)window, !ConfigHasWord("nozbuf")) != 0;
+    return Vk_Init(window, !ConfigHasWord("nozbuf")) != 0;
 }
 
 static void PictureClose(void)
@@ -824,4 +819,40 @@ EXPORT void RefreshDisplay(void)
     FrameHud();
     /* Clear for the next frame, like 3DFXGEAR clears its buffer after the swap. */
     memset(g_screen, 0, SCREEN_W * SCREEN_H * sizeof(unsigned short));
+}
+
+/* ---- built into HG.EXE ------------------------------------------------------------------------------------ */
+
+/* The plugin's entry points by the names the sim (w28_plugin.c), the HUD hand-over (hooks_hud.c) and the
+   loading screen (picture_hgvk.c) ask for. */
+static void *Hgvk_Function(const char *name)
+{
+    static const struct {
+        const char *name;
+        void *fn;
+    } kFunctions[] = {
+        {"CheckFunc", (void *)CheckFunc},         {"FirstDevice", (void *)FirstDevice},
+        {"GetFuncDesc", (void *)GetFuncDesc},     {"GetNumDevice", (void *)GetNumDevice},
+        {"GetSocketCaps", (void *)GetSocketCaps}, {"LastDevice", (void *)LastDevice},
+        {"LostDeviceDisplay", (void *)LostDeviceDisplay},
+        {"PreloadTexture", (void *)PreloadTexture}, {"Render", (void *)Render},
+        {"RenderNoClip", (void *)RenderNoClip},   {"RenderRefresh", (void *)RenderRefresh},
+        {"RestoreDevice", (void *)RestoreDevice}, {"SetLumaTable", (void *)SetLumaTable},
+        {"SetState", (void *)SetState},           {"SetTexturePalette", (void *)SetTexturePalette},
+        {"UpdateTexture", (void *)UpdateTexture}, {"LockDisplay", (void *)LockDisplay},
+        {"UnlockDisplay", (void *)UnlockDisplay}, {"RefreshDisplay", (void *)RefreshDisplay},
+        {"HgvkHudApi", (void *)HgvkHudApi},       {"HgvkPictureApi", (void *)HgvkPictureApi},
+    };
+    size_t i;
+
+    for (i = 0; i < sizeof(kFunctions) / sizeof(kFunctions[0]); i++) {
+        if (strcmp(kFunctions[i].name, name) == 0)
+            return kFunctions[i].fn;
+    }
+    return NULL;
+}
+
+void Hgvk_RegisterBuiltin(void)
+{
+    Plat_AddBuiltinLibrary("HGVK.DLL", Hgvk_Function);
 }

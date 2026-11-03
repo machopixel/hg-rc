@@ -798,6 +798,9 @@ add_executable(HG WIN32
     ../platform/plat_ini.c
     ../platform/plat_dialog.c
     ../platform/plat_window.c
+    ../plugins/hgvk/hgvk.c
+    ../plugins/hgvk/vk.c
+    ../plugins/hgvk/hud2d.c
     ../platform/plat_system.c
     ../platform/picture_hgvk.c
     ../platform/plat_win32.c
@@ -810,6 +813,9 @@ target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/openlibm/h
                                      ${CMAKE_SOURCE_DIR}/third_party/openlibm/include)
 # Archive decompressors: zlib + its contrib/blast, decompression parts only (third_party/zlib/HG_VENDOR.md)
 target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/zlib)
+# The Vulkan renderer, built in (src/plugins/hgvk; it was HGVK.DLL): the vendored Vulkan headers; SDL3 loads the
+# Vulkan loader at run time
+target_include_directories(HG PRIVATE ${CMAKE_SOURCE_DIR}/third_party/vulkan/include)
 
 if(MSVC)
     # Look like the 1997 exe to Windows: fixed base 0x400000, no DEP, the

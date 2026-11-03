@@ -19,6 +19,9 @@
 
 #define APP_NAME "Heavy Gear"
 
+/* src/plugins/hgvk/hgvk.c: the built-in Vulkan renderer's registration (DECISIONS.md, "HGVK built into HG.EXE") */
+void Hgvk_RegisterBuiltin(void);
+
 /* Messages the DLLs send to pick who handles the shared window. */
 #define WM_HG_ROUTE_DEFAULT (WM_USER + 30)
 #define WM_HG_ROUTE_SIM     (WM_USER + 31)
@@ -716,6 +719,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     if (RelaunchWith256Color())
         return 0;
     SetUnhandledExceptionFilter(CrashFilter);
+    /* the Vulkan renderer is part of the program; the sim loads it as "plugin\HGVK.DLL" (platform/plat.h) */
+    Hgvk_RegisterBuiltin();
 
     /* The isolated sim child (RunSimIsolated) must not undo the parent's state. */
     isChild = getenv("HG_CHILD") != NULL;

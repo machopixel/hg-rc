@@ -931,8 +931,7 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     const size_t total = sizeof(g_convHooks) / sizeof(g_convHooks[0]);
     FILE *fp;
     char word[64], off[MAX_OFF][56];
-    static const DWORD kSdlSoundRvas[] = {0x39708, 0x397E7, 0x39931, 0x3A548};
-    int nOff = 0, noconv = 0, trace = 0, sdlaudio = 0, nSdl = 0, nPlat = 0, sdlplat, count;
+    int nOff = 0, noconv = 0, trace = 0, sdlaudio = 0, nPlat = 0, sdlplat, count;
     HookDesc *use;
     size_t i, n = 0, f;
     int k;
@@ -980,11 +979,6 @@ void HooksConv_OnSimLoaded(HMODULE sim)
 
         for (k = 0; k < nOff && !skip; k++)
             skip = strstr(g_convFiles[i], off[k]) != NULL;
-        for (k = 0; sdlaudio && !skip && k < (int)(sizeof(kSdlSoundRvas) / sizeof(kSdlSoundRvas[0])); k++)
-            if (g_convHooks[i].rva == kSdlSoundRvas[k]) {
-                skip = 1;
-                nSdl++;
-            }
         if (!skip && !sdlplat && strstr(g_convFiles[i], "conv_w28.inc") != NULL) {
             skip = 1;
             nPlat++;
@@ -997,12 +991,10 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     count = Hook_InstallModule(sim, "HGSIM.DLL", use, n);
     g_simLiveBrightness = 1;   /* round 25: the brightness slider also rebuilds the 3D texture palette */
     DebugPrintf("HGSIM.DLL: %d of %d converted helper function(s) installed\n", count, (int)n);
-    if (nSdl != 0)
-        DebugPrintf("HGSIM.DLL: %d converted helper function(s) left to the SDL3 sound (sdlaudio)\n", nSdl);
     if (nPlat != 0)
         DebugPrintf("HGSIM.DLL: %d platform function(s) left to the original Windows code (no SDL3 platform)\n", nPlat);
-    if (n + (size_t)nSdl + (size_t)nPlat != total)
+    if (n + (size_t)nPlat != total)
         DebugPrintf("HGSIM.DLL: %d converted helper function(s) left out by convoff\n",
-                    (int)(total - n - (size_t)nSdl - (size_t)nPlat));
+                    (int)(total - n - (size_t)nPlat));
     free(use);
 }

@@ -649,7 +649,7 @@ def main():
         os.environ['DIFFTEST_VERBOSE'] = '1'
     jobs = 1
     if args and args[0].startswith('-j'):
-        jobs = min(int(args[0][2:] or 16), 16)   # Diego, 2026-11-02: at most 16 processes
+        jobs = min(int(args[0][2:] or 8), 8)     # Diego, 2026-11-03: at most 8 processes
         args = args[1:]
     dll, specfile = args[0], args[1]
     want = set(args[2:])

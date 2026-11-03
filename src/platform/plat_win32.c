@@ -107,17 +107,63 @@ uint32_t Plat_ProgramPath(char *out, uint32_t size)
     return n < size ? (uint32_t)n : 0;
 }
 
+/* the libraries built into the program (the Vulkan renderer); a handle of ours is the address of its entry */
+typedef struct {
+    const char *name;
+    void *(*function)(const char *name);
+} PlatBuiltin;
+
+static PlatBuiltin g_builtins[4];
+static int g_builtinCount;
+
+void Plat_AddBuiltinLibrary(const char *name, void *(*function)(const char *name))
+{
+    if (g_builtinCount < (int)(sizeof(g_builtins) / sizeof(g_builtins[0]))) {
+        g_builtins[g_builtinCount].name = name;
+        g_builtins[g_builtinCount].function = function;
+        g_builtinCount++;
+    }
+}
+
+static PlatBuiltin *Builtin(const void *handle)
+{
+    int i;
+
+    for (i = 0; i < g_builtinCount; i++) {
+        if (handle == &g_builtins[i])
+            return &g_builtins[i];
+    }
+    return NULL;
+}
+
 void *Plat_LoadLibrary(const char *name)
 {
+    const char *file = name;
+    const char *p;
+    int i;
+
+    for (p = name; *p != '\0'; p++) {
+        if (*p == '\\' || *p == '/' || *p == ':')
+            file = p + 1;
+    }
+    for (i = 0; i < g_builtinCount; i++) {
+        if (_stricmp(file, g_builtins[i].name) == 0)
+            return &g_builtins[i];
+    }
     return (void *)LoadLibraryA(name);
 }
 
 void *Plat_LibraryFunction(void *library, const char *name)
 {
+    PlatBuiltin *b = Builtin(library);
+
+    if (b != NULL)
+        return b->function(name);
     return (void *)GetProcAddress((HMODULE)library, name);
 }
 
 void Plat_FreeLibrary(void *library)
 {
-    FreeLibrary((HMODULE)library);
+    if (Builtin(library) == NULL)
+        FreeLibrary((HMODULE)library);
 }

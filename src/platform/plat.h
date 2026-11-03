@@ -174,9 +174,13 @@ int16_t Plat_KeyState(int key);
 
 /* ---- libraries (the renderer plugins) ---------------------------------------------------------------------- */
 
-/* Loads a library by its file name; 0 when it does not load. Windows: LoadLibraryA. Linux: the plugin's shared
- * object (name mapping still to do). */
+/* Loads a library by its file name; 0 when it does not load. A name whose file part is a built-in library's
+ * (Plat_AddBuiltinLibrary: the Vulkan renderer "HGVK.DLL") gives that one, from the program itself. Otherwise
+ * Windows: LoadLibraryA. Linux: the plugin's shared object (name mapping still to do). */
 void *Plat_LoadLibrary(const char *name);
+/* A library built into the program, under its file name (letter case aside): `function` answers its functions
+ * by name (NULL for none). */
+void Plat_AddBuiltinLibrary(const char *name, void *(*function)(const char *name));
 /* A function of a loaded library by name, or 0. */
 void *Plat_LibraryFunction(void *library, const char *name);
 void Plat_FreeLibrary(void *library);

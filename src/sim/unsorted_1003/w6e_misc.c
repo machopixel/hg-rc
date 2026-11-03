@@ -1,4 +1,5 @@
 #include <string.h>
+#include "../../platform/plat.h"
 
 #include "w6e.h"
 #include "../unsorted_100d/w5b.h"
@@ -40,21 +41,22 @@ void __cdecl Plugin_ProbeRaster(const char *path, uint32_t arg)
 
     if (G32(0x1015e56c) != 0)
         return;
-    module = SIM_API(W6eLoadLibraryFn, 0x10ac55e4)(path);
+    /* LoadLibraryA / GetProcAddress / FreeLibrary: the platform's, which also knows the built-in renderer */
+    module = Plat_LoadLibrary(path);
     if (module == 0)
         return;
-    desc = (W6eDescFn)SIM_API(W6eGetProcAddressFn, 0x10ac55dc)(module, SIM_PTR(char, 0x1013a078));
+    desc = (W6eDescFn)Plat_LibraryFunction(module, SIM_PTR(char, 0x1013a078));
     if (desc != 0) {
         desc(kind, &id, 0);
         if (W6E_CALL_100ff1e0(kind, SIM_PTR(char, 0x1013a084)) == 0) {
-            count = (W6eNumDeviceFn)SIM_API(W6eGetProcAddressFn, 0x10ac55dc)(module, SIM_PTR(char, 0x1013a08c));
+            count = (W6eNumDeviceFn)Plat_LibraryFunction(module, SIM_PTR(char, 0x1013a08c));
             if (count != 0)
                 G32(0x1015e56c) = count(arg);
             if (G32(0x1015e56c) != 0)
                 Str_Copy(SIM_PTR(char, 0x1015e57c), path);
         }
     }
-    SIM_API(W6eFreeLibraryFn, 0x10ac55d8)(module);
+    Plat_FreeLibrary(module);
 }
 
 // FUNCTION: HGSIM 0x10038eea

@@ -1,19 +1,21 @@
 /*
- * Vulkan back end of HGVK.DLL: swapchain, one render pass, pipelines for the
+ * Vulkan back end of HGVK: swapchain, one render pass, pipelines for the
  * game's handful of render states, a texture cache and the 2D overlay.
- * vulkan-1.dll is loaded at run time, so the SDK is not needed to build.
+ * SDL3 loads the Vulkan loader at run time and makes the window's surface
+ * (DECISIONS.md, "HGVK built into HG.EXE"), so the SDK is not needed to build.
  */
-#define VK_USE_PLATFORM_WIN32_KHR
 #define VK_NO_PROTOTYPES
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <windows.h>
 #include <vulkan/vulkan.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_vulkan.h>
 
 #include "vk.h"
+#include "../../platform/plat_sdl3.h"
 
 #include "hgvk_frag.spv.h"
 #include "hgvk_vert.spv.h"
@@ -32,7 +34,7 @@
     X(vkCreateDevice) X(vkEnumerateDeviceExtensionProperties) X(vkDestroySurfaceKHR) \
     X(vkGetPhysicalDeviceSurfaceSupportKHR) X(vkGetPhysicalDeviceSurfaceCapabilitiesKHR) \
     X(vkGetPhysicalDeviceSurfaceFormatsKHR) X(vkGetPhysicalDeviceSurfacePresentModesKHR) \
-    X(vkCreateWin32SurfaceKHR) X(vkDestroyDevice) X(vkGetDeviceQueue) \
+    X(vkDestroyDevice) X(vkGetDeviceQueue) \
     X(vkCreateSwapchainKHR) X(vkDestroySwapchainKHR) X(vkGetSwapchainImagesKHR) \
     X(vkAcquireNextImageKHR) X(vkQueuePresentKHR) X(vkCreateImageView) X(vkDestroyImageView) \
     X(vkCreateRenderPass) X(vkDestroyRenderPass) X(vkCreateFramebuffer) \
@@ -99,9 +101,9 @@ typedef struct FrameResources {
 } FrameResources;
 
 static struct {
-    HMODULE lib;
     PFN_vkGetInstanceProcAddr getProc;
-    HWND hwnd;
+    void *native;       /* the game's window as the sim gave it */
+    SDL_Window *window; /* SDL3's wrap of it, made with SDL's Vulkan flag (plat_window.c) */
     VkInstance instance;
     VkSurfaceKHR surface;
     VkPhysicalDevice gpu;
@@ -113,7 +115,7 @@ static struct {
     VkSwapchainKHR swapchain;
     VkFormat format;
     VkExtent2D extent;
-    LONG clientW, clientH; /* window size the swapchain was made for */
+    int clientW, clientH;  /* window size the swapchain was made for */
     uint32_t imageCount;
     VkImage *images;
     VkImageView *views;
@@ -608,12 +610,9 @@ static int CreateSwapchain(void)
     uint32_t formatCount = 32, i, wantImages;
     VkSwapchainCreateInfoKHR sci = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR};
     VkSwapchainKHR old = g.swapchain;
-    RECT rc;
     VkSurfaceFormatKHR chosen;
 
-    GetClientRect(g.hwnd, &rc);
-    g.clientW = rc.right;
-    g.clientH = rc.bottom;
+    Vk_WindowSize(g.native, &g.clientW, &g.clientH);
     TRY(vk.vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g.gpu, g.surface, &caps));
     TRY(vk.vkGetPhysicalDeviceSurfaceFormatsKHR(g.gpu, g.surface, &formatCount, formats));
     chosen = formats[0];
@@ -627,8 +626,8 @@ static int CreateSwapchain(void)
     if (caps.currentExtent.width != 0xffffffffu) {
         g.extent = caps.currentExtent;
     } else {
-        g.extent.width = (uint32_t)rc.right;
-        g.extent.height = (uint32_t)rc.bottom;
+        g.extent.width = (uint32_t)g.clientW;
+        g.extent.height = (uint32_t)g.clientH;
     }
     if (g.extent.width == 0 || g.extent.height == 0)
         return 2; /* minimised: try again next frame */
@@ -1019,8 +1018,6 @@ void Vk_Shutdown(void)
     }
     free(g.verts);
     free(g.draws);
-    if (g.lib != NULL)
-        FreeLibrary(g.lib);
     memset(&g, 0, sizeof(g));
 }
 
@@ -1029,13 +1026,21 @@ int Vk_IsReady(void)
     return g.ready;
 }
 
-int Vk_Init(HWND hwnd, int depthBuffer)
+int Vk_WindowSize(void *window, int *w, int *h)
+{
+    SDL_Window *wnd = PlatSdl_Window(window);
+
+    *w = *h = 0;
+    return wnd != NULL && SDL_GetWindowSizeInPixels(wnd, w, h);
+}
+
+int Vk_Init(void *window, int depthBuffer)
 {
     VkApplicationInfo app = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
     VkInstanceCreateInfo ici = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
-    const char *instExts[2] = {VK_KHR_SURFACE_EXTENSION_NAME, VK_KHR_WIN32_SURFACE_EXTENSION_NAME};
+    const char *const *instExts;
+    Uint32 instExtCount = 0;
     PFN_vkCreateInstance createInstance;
-    VkWin32SurfaceCreateInfoKHR wsi = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
     float priority = 1.0f;
     VkDeviceQueueCreateInfo qci = {VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO};
     const char *devExts[1] = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -1049,14 +1054,19 @@ int Vk_Init(HWND hwnd, int depthBuffer)
     int rc;
 
     memset(&g, 0, sizeof(g));
-    g.hwnd = hwnd;
-    g.lib = LoadLibraryA("vulkan-1.dll");
-    if (g.lib == NULL) {
-        HgvkLog("Vulkan: vulkan-1.dll not found");
+    g.native = window;
+    g.window = PlatSdl_Window(window);
+    if (g.window == NULL || (SDL_GetWindowFlags(g.window) & SDL_WINDOW_VULKAN) == 0) {
+        HgvkLog("Vulkan: no Vulkan window from SDL3 (%s)", SDL_GetError());
         return 1;
     }
-    g.getProc = (PFN_vkGetInstanceProcAddr)GetProcAddress(g.lib, "vkGetInstanceProcAddr");
-    createInstance = g.getProc ? (PFN_vkCreateInstance)g.getProc(NULL, "vkCreateInstance") : NULL;
+    g.getProc = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+    instExts = SDL_Vulkan_GetInstanceExtensions(&instExtCount);
+    if (g.getProc == NULL || instExts == NULL) {
+        HgvkLog("Vulkan: the Vulkan loader is not available (%s)", SDL_GetError());
+        return 1;
+    }
+    createInstance = (PFN_vkCreateInstance)g.getProc(NULL, "vkCreateInstance");
     if (createInstance == NULL) {
         HgvkLog("Vulkan: vkCreateInstance not available");
         goto fail;
@@ -1064,7 +1074,7 @@ int Vk_Init(HWND hwnd, int depthBuffer)
     app.pApplicationName = "Heavy Gear";
     app.apiVersion = VK_API_VERSION_1_0;
     ici.pApplicationInfo = &app;
-    ici.enabledExtensionCount = 2;
+    ici.enabledExtensionCount = instExtCount;
     ici.ppEnabledExtensionNames = instExts;
     HgvkLog("Vulkan: creating instance");
     TRY(createInstance(&ici, NULL, &g.instance));
@@ -1072,9 +1082,10 @@ int Vk_Init(HWND hwnd, int depthBuffer)
         goto fail;
 
     HgvkLog("Vulkan: creating surface");
-    wsi.hinstance = GetModuleHandleA(NULL);
-    wsi.hwnd = hwnd;
-    TRY(vk.vkCreateWin32SurfaceKHR(g.instance, &wsi, NULL, &g.surface));
+    if (!SDL_Vulkan_CreateSurface(g.window, g.instance, NULL, &g.surface)) {
+        HgvkLog("Vulkan: SDL_Vulkan_CreateSurface: %s", SDL_GetError());
+        goto fail;
+    }
     if (PickDevice())
         goto fail;
     if (depthBuffer) {
@@ -1400,7 +1411,7 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
     VkPipeline bound = VK_NULL_HANDLE;
     HgvkTexture *boundTex = NULL;
     int boundSampler = -1;
-    RECT rc;
+    int cw, ch;
     uint32_t drawVerts = g.vertCount;
     VkSubmitInfo si = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
     VkPipelineStageFlags waitStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -1414,8 +1425,8 @@ void Vk_Present(const uint16_t *hud, int hudStrideBytes, const uint32_t *hud2, i
         return;
 
     /* Follow window size changes. */
-    GetClientRect(g.hwnd, &rc);
-    if (g.swapchain == VK_NULL_HANDLE || rc.right != g.clientW || rc.bottom != g.clientH) {
+    Vk_WindowSize(g.native, &cw, &ch);
+    if (g.swapchain == VK_NULL_HANDLE || cw != g.clientW || ch != g.clientH) {
         if (g.swapchain != VK_NULL_HANDLE) {
             int rcs = RecreateSwapchain();
 
