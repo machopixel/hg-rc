@@ -31,6 +31,6 @@ void __cdecl Sim_100284df(int key, const void *name);
 /* 0x10031ce0([obj+0x98], [obj+0x2c], x) & 1. */
 uint32_t __cdecl Sim_1002d3a5(void *obj, uint32_t x);
 /* 0x10031f95([obj+0x98], [obj+0x2c], a, b, c, d). */
-void __cdecl Sim_1002d3ca(void *obj, uint32_t a, uint32_t b, uint32_t c, uint32_t d);
+int __cdecl Sim_1002d3ca(void *obj, float x, float y, float z, float *out);
 
 #endif

@@ -120,3 +120,24 @@ def g_shape_map(ctx):
 
 SPECS += [dict(name='Sim_100e9b9e', orig=0x100e9b9e, c='Sim_100e9b9e', gen=g_shape_raw_map, trials=5000),
           dict(name='Sim_100e96c6', orig=0x100e96c6, c='Sim_100e96c6', gen=g_shape_map, trials=20000)]
+
+
+# Windows calls round, step 1: the dissolve (0x100eda16) and the colour-remap copy (0x100e96a7)
+def g_dissolve(ctx):
+    r = start(ctx)
+    ws, cs, rs = window(ctx, r, cells=r.choice([16, 33, 64]), rows=r.choice([13, 16, 40]))
+    wd, cd, rd = window(ctx, r, cells=r.choice([16, 33, 64]), rows=r.choice([13, 16, 40]))
+    src = pane(ctx, r, ws, cs, rs)
+    dst = pane(ctx, r, wd, cd, rd)
+    count = r.choice([-1, 0, 1, 5, 60, cs * rs, 4 * cs * rs]) & 0xffffffff
+    state = r.choice([0, 0, 1, r.randrange(2, 1 << 12), r.getrandbits(32)])
+    return [src, dst, count, state]
+
+
+def g_remap(ctx):
+    r = start(ctx)
+    return [put(ctx, bytes(r.getrandbits(8) for _ in range(256)))]
+
+
+SPECS += [dict(name='Sim_100eda16', orig=0x100eda16, c='Sim_100eda16', gen=g_dissolve, trials=3000),
+          dict(name='Sim_100e96a7', orig=0x100e96a7, c='Sim_100e96a7', gen=g_remap, trials=500, void=True)]

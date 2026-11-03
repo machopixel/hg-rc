@@ -162,3 +162,25 @@ int Plat_DropEvent(void)
 
     return PS_API(PsPeekFn, 0x10ac5780)(msg, 0, 0, 0, 1) != 0;
 }
+
+/* Memory and time (DECISIONS.md, "The last original code", step 2): the original's GlobalAlloc / GlobalSize /
+ * GlobalFree, GlobalMemoryStatus and GetSystemTime through the DLL's import slots. */
+typedef uint32_t(__stdcall *PsGAllocFn)(uint32_t, uint32_t);
+typedef uint32_t(__stdcall *PsGSizeFn)(uint32_t);
+typedef void(__stdcall *PsFillFn)(void *);
+
+void *Plat_BlockAlloc(uint32_t size) { return (void *)(uintptr_t)PS_API(PsGAllocFn, 0x10ac5624)(0, size); }
+uint32_t Plat_BlockSize(const void *block) { return PS_API(PsGSizeFn, 0x10ac5620)((uint32_t)(uintptr_t)block); }
+void Plat_BlockFree(void *block) { PS_API(PsGSizeFn, 0x10ac560c)((uint32_t)(uintptr_t)block); }
+void Plat_MemoryStatus(void *status) { PS_API(PsFillFn, 0x10ac5618)(status); }
+void Plat_SystemTime(void *systemTime) { PS_API(PsFillFn, 0x10ac561c)(systemTime); }
+/* FileTimeToLocalFileTime, then FileTimeToSystemTime (step 3) */
+typedef int32_t(__stdcall *PsFileTimeFn)(const void *, void *);
+int Plat_FileTimeToLocal(const uint32_t *fileTime, void *systemTime)
+{
+    uint32_t local[2];
+
+    if (PS_API(PsFileTimeFn, 0x10ac563c)(fileTime, local) == 0)
+        return 0;
+    return PS_API(PsFileTimeFn, 0x10ac5630)(local, systemTime) != 0;
+}

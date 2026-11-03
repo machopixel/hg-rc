@@ -737,7 +737,8 @@ SPECS = [
     spec('Sim_1006535f', 0x1006535f, g_1006535f, 300),
     spec('Sim_10074c3d', 0x10074c3d, g_10074c3d, 500),
     spec('Sim_100788ba', 0x100788ba, g_100788ba, 400, void=True),
-    spec('Sim_1008663f', 0x1008663f, g_1008663f, 300, void=True),
+    # deleted: only the original SimMain reaches it (DECISIONS.md, "The last original code")
+    # spec('Sim_1008663f', 0x1008663f, g_1008663f, 300, void=True),
     spec('Sim_10098710', 0x10098710, g_none, 300),
     spec('Sim_10098a5d', 0x10098a5d, g_10098a5d, 300, void=True),
     spec('Sim_100a773b', 0x100a773b, g_100a773b, 300),

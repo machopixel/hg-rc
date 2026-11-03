@@ -19,58 +19,8 @@ typedef int (__stdcall *W6kVirtualFreeFn)(uint32_t addr, uint32_t size, uint32_t
 #define CUR_REGION G32(0x1015be58)
 #define FREE_PAGES G32(0x1017e970)
 
-// FUNCTION: HGSIM 0x10106660
-uint32_t __cdecl Sim_10106660(void)
-{
-    uint32_t reg;
-    uint32_t pages;
-    uint32_t p;
-    int i;
-
-    if (G32(0x10159e48) == 0xffffffffu) {
-        reg = REGION0;
-    } else {
-        reg = ADDR(SIM_API(W6kHeapAllocFn, IAT_HEAPALLOC)(CRT_HEAP, 0, 0x2020));
-        if (reg == 0)
-            return 0;
-    }
-    pages = SIM_API(W6kVirtualAllocFn, IAT_VIRTUALALLOC)(0, 0x400000, 0x2000, 4);
-    if (pages != 0) {
-        if (SIM_API(W6kVirtualAllocFn, IAT_VIRTUALALLOC)(pages, 0x10000, 0x1000, 4) != 0) {
-            if (reg == REGION0) {
-                if (U32(REGION0, 0) == 0)
-                    U32(REGION0, 0) = REGION0;
-                if (U32(REGION0, 4) == 0)
-                    U32(REGION0, 4) = REGION0;
-            } else {
-                U32(reg, 0) = REGION0;
-                U32(reg, 4) = LAST_REGION;
-                LAST_REGION = reg;
-                U32(U32(reg, 4), 0) = reg;
-            }
-            U32(reg, 0x14) = pages + 0x400000;
-            U32(reg, 0x10) = pages;
-            U32(reg, 8) = reg + 0x18;
-            U32(reg, 0xc) = reg + 0x98;
-            /* the first 16 pages are committed: 0xf0 free bytes each; the others are marked -1 */
-            for (i = 0; i < 0x400; i++) {
-                U32(reg, 0x18 + 8 * i) = i < 0x10 ? 0xf0u : 0xffffffffu;
-                U32(reg, 0x1c + 8 * i) = 0xf1;
-            }
-            memset(BYTES(pages), 0, 0x10000);
-            for (p = pages; p < U32(reg, 0x10) + 0x10000; p += 0x1000) {
-                U32(p, 4) = 0xf0;
-                U32(p, 0) = p + 8;
-                U8(p, 0xf8) = 0xff;
-            }
-            return reg;
-        }
-        SIM_API(W6kVirtualFreeFn, IAT_VIRTUALFREE)(pages, 0, 0x8000);
-    }
-    if (reg != REGION0)
-        SIM_API(W6kHeapFreeFn, IAT_HEAPFREE)(CRT_HEAP, 0, reg);
-    return 0;
-}
+/* Sim_10106660 (0x10106660, a new small-block region) is deleted: not hooked and called from no C (the C runtime
+   start-up calls the original; DECISIONS.md, "The last original code", step 3). */
 
 // FUNCTION: HGSIM 0x101067d0
 uint32_t __cdecl Sim_101067d0(uint32_t region)

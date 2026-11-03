@@ -1,4 +1,5 @@
 #include "w5c.h"
+#include "../util/w3o.h"
 #include "../unsorted_100f/w2e.h"
 #include "../util/access.h"
 #include "../crt/hg_winheap.h"
@@ -22,15 +23,16 @@ void __cdecl Sim_10029ab3(uint32_t key, uint32_t value)
 }
 
 // FUNCTION: HGSIM 0x1002cde1
-int __cdecl Sim_1002cde1(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t *out)
+int __cdecl Sim_1002cde1(void *obj, float x, float y, float z, float *out)
 {
     uint32_t first;
     uint32_t ok = 0;
     uint32_t third;
 
-    SIM_CALL_1002ce45(a, b, c, d, &first, &ok, &third);
+    SIM_CALL_1002ce45((uint32_t)(uintptr_t)obj, Bits_OfFloat(x), Bits_OfFloat(y), Bits_OfFloat(z), &first, &ok,
+                      &third);
     if (ok != 0) {
-        *out = third;
+        *out = Float_OfBits(third);
         G32(0x1015dd48) = 0;
         G32(0x1015dd40) = G32(0x1015dd48);
         G32(0x1015dd44) = 0x3f800000;

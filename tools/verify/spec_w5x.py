@@ -50,6 +50,8 @@ STUBS = {
     0x100a9ba7: 1, 0x10060681: 4, 0x10060d2e: 2, 0x100aaf32: 1, 0x100feb20: 3, 0x100fe970: 1,
     0x100aab03: 2, 0x100fd760: 1, 0x100fefe0: 1, 0x1002c8cb: 4, 0x100ca670: 3, 0x100fef30: 1,
     0x100fdc80: 2, 0x100ba7d5: 3, 0x100d3510: 3,
+    # Sim_100a8816 (Windows calls round, step 1): the allocation, its fill, SystemError and the two table set-ups
+    0x10028559: 1, 0x1002858a: 3, 0x100bc280: 2, 0x100846e0: 0, 0x10084a17: 0,
 }
 # Sim_10013dbd: the original pushes the low word of its argument with the top half of a pointer; the callee
 # 0x100be0f0 reads only the low word (every one of its 19 reads of that argument is 16 bits wide).
@@ -512,6 +514,13 @@ def g_a6009(ctx):
     return [ctx.u32(), ctx.u32()]
 
 
+def g_a8816(ctx):
+    r = ctx.rng
+    begin(ctx)
+    rets(0x10028559, r.choice([0, 0x00a01000, r.getrandbits(32)]))
+    return [r.choice([1024, 16384, 1, 0, r.getrandbits(12)]), r.choice([3000, 32000, 0, 1, r.getrandbits(16)])]
+
+
 def g_a9ca3(ctx):
     begin(ctx)
     return [newbuf(ctx, 0x100), ctx.u32(), ctx.u32(), ctx.u32()]
@@ -663,7 +672,7 @@ SPECS = [
     dict(name='Sim_10027a8f', orig=0x10027a8f, c='Sim_10027a8f', gen=g_27a8f, trials=400, void=True),
     dict(name='Sim_100284df', orig=0x100284df, c='Sim_100284df', gen=g_284df, trials=500, void=True),
     dict(name='Sim_1002d3a5', orig=0x1002d3a5, c='Sim_1002d3a5', gen=g_2d3a5, trials=300),
-    dict(name='Sim_1002d3ca', orig=0x1002d3ca, c='Sim_1002d3ca', gen=g_2d3ca, trials=300, void=True),
+    dict(name='Sim_1002d3ca', orig=0x1002d3ca, c='Sim_1002d3ca', gen=g_2d3ca, trials=300),   # returns 0x10031f95's answer
     dict(name='Sim_10034777', orig=0x10034777, c='Sim_10034777', gen=g_34777, trials=400, void=True),
     dict(name='Sim_100347b9', orig=0x100347b9, c='Sim_100347b9', gen=g_347b9, trials=300, void=True),
     dict(name='Sim_1004c362', orig=0x1004c362, c='Sim_1004c362', gen=g_4c362, trials=500),
@@ -678,6 +687,7 @@ SPECS = [
     dict(name='Sim_10098811', orig=0x10098811, c='Sim_10098811', gen=g_98811, trials=300, void=True),
     dict(name='Sim_100989a1', orig=0x100989a1, c='Sim_100989a1', gen=g_989a1, trials=300, void=True),
     dict(name='Sim_100a6009', orig=0x100a6009, c='Sim_100a6009', gen=g_a6009, trials=300, void=True),
+    dict(name='Sim_100a8816', orig=0x100a8816, c='Sim_100a8816', gen=g_a8816, trials=500),
     dict(name='Sim_100a9ca3', orig=0x100a9ca3, c='Sim_100a9ca3', gen=g_a9ca3, trials=300, void=True),
     dict(name='Sim_100aa351', orig=0x100aa351, c='Sim_100aa351', gen=g_aa351, trials=500, void=True),
     dict(name='Sim_100aa454', orig=0x100aa454, c='Sim_100aa454', gen=g_aa351, trials=500, void=True),

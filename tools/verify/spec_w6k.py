@@ -755,7 +755,8 @@ API['WriteConsoleA'] = _dyn('WriteConsoleA')
 API['WideCharToMultiByte'] = _dyn('WideCharToMultiByte')
 
 SPECS = [
-    dict(name='Sim_10106660', orig=0x10106660, c='Sim_10106660', gen=g_new_region, trials=300, api=API),
+    # deleted: not hooked, no C caller (DECISIONS.md, "The last original code", step 3)
+    # dict(name='Sim_10106660', orig=0x10106660, c='Sim_10106660', gen=g_new_region, trials=300, api=API),
     dict(name='Sim_101067d0', orig=0x101067d0, c='Sim_101067d0', gen=g_release, trials=300, api=API),
     dict(name='Sim_10106830', orig=0x10106830, c='Sim_10106830', gen=g_decommit, trials=400, api=API, void=True),
     dict(name='Sim_10106960', orig=0x10106960, c='Sim_10106960', gen=g_free_block, trials=400, api=API, void=True),

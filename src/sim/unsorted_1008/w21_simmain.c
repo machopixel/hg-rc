@@ -117,18 +117,20 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         G32(0x1015e9c4) = (uint32_t)sw;
         G32(0x1015e9c8) = (uint32_t)sh;
     }
-    G32(0x1017b958) = SimPlat_GlobalAlloc(0, 0x249f0);
-    G32(0x1017b95c) = SimPlat_GlobalSize(G32(0x1017b958));
-    SimPlat_GetSystemTime(systemTime);
+    /* GlobalAlloc / GlobalSize / GetSystemTime / GlobalMemoryStatus: the platform's (DECISIONS.md, "The last
+       original code", step 2) */
+    G32(0x1017b958) = (uint32_t)(uintptr_t)Plat_BlockAlloc(0x249f0);
+    G32(0x1017b95c) = Plat_BlockSize(BYTES(G32(0x1017b958)));
+    Plat_SystemTime(systemTime);
     C3(0x100fcab0, P(memStatus), 0, 0x20);
     U32(memStatus, 0) = 0x20;
-    SimPlat_GlobalMemoryStatus(memStatus);
+    Plat_MemoryStatus(memStatus);
     W21_Heaps(memStatus);
     opts[1] = 1;
     opts[0] = 0;
     if (C1(0x10100130, S(0x1014b188)) != 0)
         C2(0x100fc690, S(0x1015f050), C1(0x10100130, S(0x1014b198)));
-    SimPlat_SetEnvironmentVariable(SIM_PTR(const char, 0x1014b1ac), SIM_PTR(const char, 0x1014b1a8));
+    /* SetEnvironmentVariableA("FX_GLIDE_NO_SPLASH", "1"): only 3dfx's Glide read it; deleted (Vulkan only) */
     if ((int32_t)C2(0x1004712a, S(0x1014b1c0), S(0x1015d1b8)) == -1) {
         if (G32(0x1015d1b8) == 0)
             C3(0x100bc280, 0x11, S(0x1014b1d8), S(0x1014b1cc));
@@ -171,7 +173,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         if ((int8_t)C0(0x10099510) == 0)
             C3(0x100bc280, 0x53, G32(0x101c5148), 0);
         else
-            SimPlat_GetSystemTime(systemTime);
+            Plat_SystemTime(systemTime);
     }
     C1(0x10086d8d, S(0x109e89e4));
     if (G32(0x101668f4) != 0)
@@ -450,7 +452,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         }
         G32(0x1017b924) = 1;
         if (G32(0x1017b958) != 0)
-            SimPlat_GlobalFree(G32(0x1017b958));
+            Plat_BlockFree(BYTES(G32(0x1017b958)));
         G32(0x1017b958) = 0;
         G32(0x1017b95c) = 0;
         if (G32(0x1017b910) != 0)

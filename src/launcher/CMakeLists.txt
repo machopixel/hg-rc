@@ -798,6 +798,7 @@ add_executable(HG WIN32
     ../platform/plat_ini.c
     ../platform/plat_dialog.c
     ../platform/plat_window.c
+    ../platform/plat_system.c
     ../platform/picture_hgvk.c
     ../platform/plat_win32.c
     ../platform/force_none.c

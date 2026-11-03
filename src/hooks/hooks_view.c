@@ -18,6 +18,18 @@
 #include "../launcher/debug.h"
 #include "../sim/fx/w32.h"
 
+/*
+ * The converted functions these hooks wrap (Windows calls round, step 1): the hooks call them, not the DLL's
+ * original code behind a trampoline (DECISIONS.md, "The last original code").
+ */
+void __cdecl Sim_100d1f90(void *camera);                       /* render/w3s_camera.c */
+void __cdecl Sim_100d2306(uint8_t *cam);                        /* view/w3r_camera.c */
+void *__cdecl Render_ProjectVertex(unsigned char *vertex);      /* render/w2n_project.c */
+void __cdecl Sim_100988fc(uint32_t unused, uint32_t value);     /* unsorted_1009/w5c_calls.c */
+void __cdecl Sim_100989a1(int unused, int value);               /* unsorted_1009/w5x_calls.c */
+int __cdecl Sim_100585c4(int v);                                /* unsorted_1005/w2f_globals.c */
+int __cdecl Sim_100ac603(int value);                            /* unsorted_100a/w2g_misc.c */
+
 /* Polygon buffers. The original asks for a 1 MiB arena and 3000 sort entries. */
 #define POLY_ARENA_KIB 16384
 #define POLY_SORT_ENTRIES 32000
@@ -93,8 +105,7 @@ static int ConfigHasWord(const char *word)
  * AllocPolyBuffers(arenaKiB, sortEntries): called once by RenderInit with
  * (1024, 3000). Larger buffers so a whole-map view does not drop polygons.
  */
-typedef int(__cdecl *AllocPolyBuffersFn)(int arenaKiB, int sortEntries);
-static AllocPolyBuffersFn g_allocPolyBuffers;
+int __cdecl Sim_100a8816(int arenaKiB, int sortEntries);   /* unsorted_100a/w5x_calls.c */
 
 // FUNCTION: HGSIM 0x100a8816
 static int __cdecl HookedAllocPolyBuffers(int arenaKiB, int sortEntries)
@@ -103,7 +114,7 @@ static int __cdecl HookedAllocPolyBuffers(int arenaKiB, int sortEntries)
         arenaKiB = POLY_ARENA_KIB;
     if (sortEntries < POLY_SORT_ENTRIES)
         sortEntries = POLY_SORT_ENTRIES;
-    return g_allocPolyBuffers(arenaKiB, sortEntries);
+    return Sim_100a8816(arenaKiB, sortEntries);
 }
 
 /*
@@ -217,8 +228,6 @@ static void __cdecl HookedVisibleCells(const float *camera)
  * drawn at any distance; the polygon soft limit follows the bigger buffers
  * (RenderInit writes 2900 there after allocating them).
  */
-typedef void(__cdecl *SetCurrentCameraFn)(void *camera);
-static SetCurrentCameraFn g_setCurrentCamera;
 
 // FUNCTION: HGSIM 0x100d1f90
 static void __cdecl HookedSetCurrentCamera(void *camera)
@@ -229,7 +238,7 @@ static void __cdecl HookedSetCurrentCamera(void *camera)
         if (*farPlane < VIEW_FAR)
             *farPlane = VIEW_FAR;
     }
-    g_setCurrentCamera(camera);
+    Sim_100d1f90(camera);
     WrapPluginRender();
     *(float *)SIM(RVA_CHILD_RANGE) = FLT_MAX;
     *(int *)SIM(RVA_POLY_SOFT_LIMIT) = POLY_SOFT_LIMIT;
@@ -262,14 +271,12 @@ static unsigned SubpixelIndex(int ix, int iy, DWORD zBits)
     return (h ^ (h >> 15)) & (SUBPIXEL_SLOTS - 1);
 }
 
-typedef void *(__cdecl *ProjectVertexFn)(unsigned char *vertex);
-static ProjectVertexFn g_projectVertex;
 
 // FUNCTION: HGSIM 0x100a62c4
 static void *__cdecl HookedProjectVertex(unsigned char *vertex)
 {
     int done = vertex[0x29] & 1; /* projected already this frame */
-    void *result = g_projectVertex(vertex);
+    void *result = Render_ProjectVertex(vertex);
 
     if (!done && g_subpixel != NULL) {
         const float *p = (const float *)vertex;
@@ -344,13 +351,11 @@ static void WrapPluginRender(void)
  * CameraViewport(camera): works out the camera's projection, including the
  * LOD scale at +0xb8 that model LOD switch distances are multiplied by.
  */
-typedef void(__cdecl *CameraViewportFn)(void *camera);
-static CameraViewportFn g_cameraViewport;
 
 // FUNCTION: HGSIM 0x100d2306
 static void __cdecl HookedCameraViewport(void *camera)
 {
-    g_cameraViewport(camera);
+    Sim_100d2306((uint8_t *)camera);
     *(float *)((unsigned char *)camera + 0xB8) = LOD_SCALE_FINEST;
 }
 
@@ -382,26 +387,24 @@ static void __cdecl UpdateGearLods(void)
 }
 
 /* Option setters, value 0 off / 1 on (-1 asks for the current value). */
-typedef int(__cdecl *OptionFn)(int value);
-static OptionFn g_setParticles, g_setLights, g_setShadows;
 
 /* The two texture setters take (unused, value): the value is the second argument
  * and is stored at +0x14 / +0x18 of the settings saved to HGSND.CFG. */
-typedef int(__cdecl *OptionFn2)(int unused, int value);
-static OptionFn2 g_setTextures, g_setTerrainTextures;
 
 // FUNCTION: HGSIM 0x100988fc
 static int __cdecl HookedSetTextures(int unused, int value)
 {
     (void)value;
-    return g_setTextures(unused, 1);
+    Sim_100988fc((uint32_t)unused, 1);
+    return 1;       /* the original leaves the value it was given in eax */
 }
 
 // FUNCTION: HGSIM 0x100989a1
 static int __cdecl HookedSetTerrainTextures(int unused, int value)
 {
     (void)value;
-    return g_setTerrainTextures(unused, 1);
+    Sim_100989a1(unused, 1);
+    return 1;       /* the original leaves the value it was given in eax */
 }
 
 // FUNCTION: HGSIM 0x10090d15
@@ -414,13 +417,13 @@ static int __cdecl HookedSetParticles(int value)
 // FUNCTION: HGSIM 0x100585c4
 static int __cdecl HookedSetLights(int value)
 {
-    return g_setLights(value == -1 ? -1 : 1);
+    return Sim_100585c4(value == -1 ? -1 : 1);
 }
 
 // FUNCTION: HGSIM 0x100ac603
 static int __cdecl HookedSetShadows(int value)
 {
-    return g_setShadows(value == -1 ? -1 : 1);
+    return Sim_100ac603(value == -1 ? -1 : 1);
 }
 
 static const unsigned char kPrologueAllocPolyBuffers[] = {0x55, 0x8B, 0xEC, 0x51,
@@ -441,27 +444,18 @@ static const unsigned char kPrologueQueryOption[] = {0x55, 0x8B, 0xEC, 0x83, 0x7
      .stolen = sizeof(prologue_), .replacement = (void *)(fn_), .original = (original_)}
 
 static const HookDesc g_viewHooks[] = {
-    VIEW_HOOK(0xA8816, "AllocPolyBuffers", kPrologueAllocPolyBuffers, HookedAllocPolyBuffers,
-              (void **)&g_allocPolyBuffers),
+    VIEW_HOOK(0xA8816, "AllocPolyBuffers", kPrologueAllocPolyBuffers, HookedAllocPolyBuffers, NULL),
     VIEW_HOOK(0xA4700, "SortByDepth", kPrologueSortByDepth, SortByDepth, NULL),
     VIEW_HOOK(0x87D83, "VisibleCells", kPrologueVisibleCells, HookedVisibleCells, NULL),
-    VIEW_HOOK(0xD1F90, "SetCurrentCamera", kPrologueSetCurrentCamera, HookedSetCurrentCamera,
-              (void **)&g_setCurrentCamera),
-    VIEW_HOOK(0xA62C4, "ProjectVertex", kPrologueProjectVertex, HookedProjectVertex,
-              (void **)&g_projectVertex),
-    VIEW_HOOK(0xD2306, "CameraViewport", kPrologueCameraViewport, HookedCameraViewport,
-              (void **)&g_cameraViewport),
+    VIEW_HOOK(0xD1F90, "SetCurrentCamera", kPrologueSetCurrentCamera, HookedSetCurrentCamera, NULL),
+    VIEW_HOOK(0xA62C4, "ProjectVertex", kPrologueProjectVertex, HookedProjectVertex, NULL),
+    VIEW_HOOK(0xD2306, "CameraViewport", kPrologueCameraViewport, HookedCameraViewport, NULL),
     VIEW_HOOK(0x3B534, "UpdateGearLods", kPrologueUpdateGearLods, UpdateGearLods, NULL),
-    VIEW_HOOK(0x988FC, "SetTexturesOption", kPrologueTextureOption, HookedSetTextures,
-              (void **)&g_setTextures),
-    VIEW_HOOK(0x989A1, "SetTerrainTexturesOption", kPrologueTextureOption,
-              HookedSetTerrainTextures, (void **)&g_setTerrainTextures),
-    VIEW_HOOK(0x90D15, "SetParticles", kPrologueSetParticles, HookedSetParticles,
-              (void **)&g_setParticles),
-    VIEW_HOOK(0x585C4, "SetMultipleLights", kPrologueQueryOption, HookedSetLights,
-              (void **)&g_setLights),
-    VIEW_HOOK(0xAC603, "SetShadows", kPrologueQueryOption, HookedSetShadows,
-              (void **)&g_setShadows),
+    VIEW_HOOK(0x988FC, "SetTexturesOption", kPrologueTextureOption, HookedSetTextures, NULL),
+    VIEW_HOOK(0x989A1, "SetTerrainTexturesOption", kPrologueTextureOption, HookedSetTerrainTextures, NULL),
+    VIEW_HOOK(0x90D15, "SetParticles", kPrologueSetParticles, HookedSetParticles, NULL),
+    VIEW_HOOK(0x585C4, "SetMultipleLights", kPrologueQueryOption, HookedSetLights, NULL),
+    VIEW_HOOK(0xAC603, "SetShadows", kPrologueQueryOption, HookedSetShadows, NULL),
 };
 
 void HooksView_OnSimLoaded(HMODULE sim)
@@ -471,6 +465,11 @@ void HooksView_OnSimLoaded(HMODULE sim)
 
     if (ConfigHasWord("nodetail")) {
         DebugPrintf("HGSIM.DLL: detail and view-distance hooks off (nodetail)\n");
+        return;
+    }
+    /* the hooks run converted functions now (no trampolines to the original): left out of the untouched run */
+    if (ConfigHasWord("noconv")) {
+        DebugPrintf("HGSIM.DLL: detail and view-distance hooks off (noconv)\n");
         return;
     }
     g_sim = (unsigned char *)sim;

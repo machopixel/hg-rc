@@ -1,12 +1,16 @@
 #include "w3s.h"
+#include "w3q.h"
+#include "w5c.h"
+#include "w5x.h"
 #include "../render/w3s_fp.h"
 #include "../unsorted_1008/w3s.h"
 
 /* Per-type tests of an object: f(object, x, y, z, &result), non-zero when they produced a result. */
 typedef int(__cdecl *ObjectTest)(void *, float, float, float, float *);
-#define TEST_TYPE_5 SIM_FN(ObjectTest, 0x100035df)
-#define TEST_TYPE_8 SIM_FN(ObjectTest, 0x10001e1f)
-#define TEST_TYPE_0 SIM_FN(ObjectTest, 0x10002775)
+/* the original calls them through the DLL's jump table (0x100035df, 0x10001e1f, 0x10002775) */
+#define TEST_TYPE_5 Sim_1002d3ca
+#define TEST_TYPE_8 ((ObjectTest)Sim_1002d479)
+#define TEST_TYPE_0 Sim_1002cde1
 
 // FUNCTION: HGSIM 0x1002db2d
 float __cdecl Sim_1002db2d(float x, float y, float z)

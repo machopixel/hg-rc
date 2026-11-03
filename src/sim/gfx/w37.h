@@ -72,6 +72,14 @@ uint32_t __cdecl Sim_100ecedd(const uint8_t *pane, int32_t y, const uint8_t *lin
 uint32_t __cdecl Sim_100ed491(const uint8_t *pane, const uint8_t *gif, uint8_t *st);
 
 /* ---- w37_draw.c: pixels, lines, fills ---- */
+/*
+ * The dissolve: copies the source pane's pixels onto the destination pane's in the order of a shift register (state:
+ * its value, 0 to start; count: pixels to do, counted also for pixels outside the panes; the register reaching 1 ends
+ * the pass). The row starts go to [0x10153695] / [0x10154295]. Returns the register (-1 / -2 as the pane cut).
+ */
+uint32_t __cdecl Sim_100eda16(const uint8_t *src, const uint8_t *dst, int32_t count, uint32_t state);
+/* Copies 0x40 dwords from table to the library's table at 0x10154eac (the 256 bytes of a colour remap). */
+void __cdecl Sim_100e96a7(const uint32_t *table);
 /* Pixel set (pane, x, y, colour) at pane-relative (x, y): the old byte; -1 / -2 as the character draw, -3 outside
    the pane. */
 int32_t __cdecl Sim_100e84f0(const uint8_t *pane, int32_t x, int32_t y, uint32_t colour);

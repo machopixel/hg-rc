@@ -145,7 +145,9 @@ def install(m):
     for a in STUBS:
         m.raw.hook_add(UC_HOOK_CODE, make(a), None, a, a)
     for sym, a in SYM_STUBS.items():
-        addr = m.syms[sym]
+        addr = m.syms.get(sym)
+        if addr is None:            # deleted since (Sim_10106660: DECISIONS.md, "The last original code")
+            continue
         m.raw.hook_add(UC_HOOK_CODE, make(a), None, addr, addr)
 
 

@@ -18,7 +18,8 @@
 /* Not converted. */
 #define W6G_CALL_1010d180 SIM_FN(void(__cdecl *)(const void *), 0x1010d180)
 #define W6G_CALL_100fefe0 SIM_FN(void(__cdecl *)(uint32_t), 0x100fefe0)
-#define W6G_CALL_100ff3b0 SIM_FN(void(__cdecl *)(int), 0x100ff3b0)
+/* exit (0x100ff3b0): the converted Proc_Exit (unsorted_100f/w6i_exit.c) */
+#define W6G_CALL_100ff3b0(code) Proc_Exit((uint32_t)(code))
 /* The string comparison 0x100b971d, handed to Sim_100bda9f by its original address like the original does. */
 #define W6G_CMP_100b971d SIM_FN(int(__cdecl *)(uint32_t, uint32_t), 0x100b971d)
 

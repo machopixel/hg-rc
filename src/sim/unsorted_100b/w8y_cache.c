@@ -18,8 +18,6 @@
 #include "../unsorted_1010/w7s.h"
 #include "../crt/hg_winheap.h"
 
-typedef uint32_t(__stdcall *W8yTimeKillEventFn)(uint32_t id);
-typedef uint32_t(__stdcall *W8yTimeEndPeriodFn)(uint32_t period);
 typedef int(__cdecl *W8yDriverAskFn)(void);
 typedef void(__cdecl *W8yDriverRectFn)(uint32_t, uint32_t, uint32_t, uint32_t);
 typedef uint64_t(__cdecl *W8yTimeFn)(void);
@@ -33,11 +31,9 @@ void __cdecl Sim_100b8938(void)
 {
     int answer;
 
-    if (G32(0x1017d5cc) != 0) {
-        SIM_API(W8yTimeKillEventFn, 0x10ac5834)(G32(0x1017d5cc));
-        G32(0x1017d5cc) = 0;
-        SIM_API(W8yTimeEndPeriodFn, 0x10ac5838)(G32(0x10199448));
-    }
+    /* the original first kills the loading animation's multimedia timer when [0x1017d5cc] holds one
+       (timeKillEvent, then timeEndPeriod([0x10199448])); only the original Windows loading animation started it, and
+       ours (w28_anim.c) never does: deleted (DECISIONS.md, "The last original code", step 2) */
     if (G32(0x1017d5d0) != 0) {
         Hg_HeapFree(G32(0x1017b8f8), 1, BYTES(G32(0x1017d5d0)));
         G32(0x1017d5d0) = 0;

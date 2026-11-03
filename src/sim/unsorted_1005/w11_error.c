@@ -1,4 +1,5 @@
 #include "w11.h"
+#include "../unsorted_100f/w6i.h"
 #include "../../platform/plat.h"
 #include "../simmem.h"
 #include "../util/access.h"
@@ -8,7 +9,6 @@
 
 typedef int(__cdecl *W11StrcmpFn)(const char *a, const char *b);
 typedef int(__cdecl *W11SprintfFn)(char *out, const char *fmt, ...);
-typedef void(__cdecl *W11ExitFn)(int code);
 typedef int(__stdcall *W11ShowCursorFn)(int show);
 typedef uint32_t(__stdcall *W11GetFocusFn)(void);
 typedef int(__stdcall *W11MessageBoxFn)(uint32_t window, const char *text, const char *caption, uint32_t flags);
@@ -60,7 +60,7 @@ void __cdecl Sim_1005573d(int code, uint32_t value, const char *key)
     }
     if (Plat_MessageBox((void *)(uintptr_t)G32(0x1017b8f0), W11_BUF, (const char *)(uintptr_t)G32(0x101c4be0), 0x12041) == 2) {
         Sim_100bc451();
-        SIM_FN(W11ExitFn, 0x100ff3b0)(code);
+        Proc_Exit((uint32_t)code);      /* exit, 0x100ff3b0 (converted) */
     }
     if (hidden != 0)
         Plat_CursorVisible(0);

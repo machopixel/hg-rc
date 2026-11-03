@@ -1,4 +1,7 @@
 #include <string.h>
+#include "w3q.h"
+#include "w7o.h"
+#include "../unsorted_100a/w5x.h"
 #include "w2n.h"
 
 #define F32(addr) (*SIM_PTR(float, addr))
@@ -18,9 +21,10 @@
 typedef void *(__cdecl *VertexFn)(void *);
 typedef void *(__cdecl *EdgeFn)(void *, void *);
 #define PROJECT_VERTEX SIM_FN(VertexFn, 0x1000318e)
-#define CLIP_NEAR_EDGE SIM_FN(EdgeFn, 0x1000110e)
-#define CLIP_FAR_EDGE SIM_FN(EdgeFn, 0x10001a64)
-#define TRANSFORM_VERTEX SIM_FN(VertexFn, 0x1000222f)
+/* the original reaches these three through the DLL's jump table (0x1000110e, 0x10001a64, 0x1000222f) */
+#define CLIP_NEAR_EDGE(a, b) Sim_100a6009((uint32_t)(uintptr_t)(a), (uint32_t)(uintptr_t)(b))
+#define CLIP_FAR_EDGE Render_ClipEdgeFar
+#define TRANSFORM_VERTEX Sim_100a5d25
 
 // FUNCTION: HGSIM 0x100a62c4
 void *__cdecl Render_ProjectVertex(unsigned char *vertex)

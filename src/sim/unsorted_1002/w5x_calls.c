@@ -1,4 +1,5 @@
 #include "w5x.h"
+#include "../util/w3o.h"
 #include "w2j.h"
 #include "../util/access.h"
 #include "../crt/hg_winheap.h"
@@ -39,7 +40,9 @@ uint32_t __cdecl Sim_1002d3a5(void *obj, uint32_t x)
 }
 
 // FUNCTION: HGSIM 0x1002d3ca
-void __cdecl Sim_1002d3ca(void *obj, uint32_t a, uint32_t b, uint32_t c, uint32_t d)
+int __cdecl Sim_1002d3ca(void *obj, float x, float y, float z, float *out)
 {
-    SIM_CALL_10031f95(U32(obj, 0x98), U32(obj, 0x2c), a, b, c, d);
+    /* the original returns what 0x10031f95 returns (eax left by the call): the callers test it */
+    return (int)SIM_CALL_10031f95(U32(obj, 0x98), U32(obj, 0x2c), Bits_OfFloat(x), Bits_OfFloat(y), Bits_OfFloat(z),
+                                  (uint32_t)(uintptr_t)out);
 }

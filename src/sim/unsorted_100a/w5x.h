@@ -24,6 +24,14 @@
 
 /* Returns 0x100a5d38(a, 0, b, 0) (round 10: the result was lost before). */
 void *__cdecl Sim_100a6009(uint32_t a, uint32_t b);
+/*
+ * The polygon buffers (RenderInit's AllocPolyBuffers): [0x1017d17c] = sortEntries, [0x1014d1a4] = arenaKiB KB, one
+ * zeroed block of the arena plus 16 bytes per sort entry ([0x1017d180]; SystemError 0x18 when it fails) laid out as
+ * the arena ([0x1017d170] = [0x1017d178], its end less 0x30 at [0x1017d174]) followed by the sort entries
+ * ([0x1017d168], [0x1017d16c] = 8 bytes per entry further); then 0x100846e0 and 0x10084a17, whose answer it returns.
+ * The view-detail hook (hooks_view.c) calls it with larger buffers.
+ */
+int __cdecl Sim_100a8816(int arenaKiB, int sortEntries);
 /* 0x100a9ba7(obj), then 0x10060681(obj + 0x4c, a, b, c). */
 void __cdecl Sim_100a9ca3(void *obj, uint32_t a, uint32_t b, uint32_t c);
 /*

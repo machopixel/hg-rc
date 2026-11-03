@@ -13,14 +13,8 @@
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-uint32_t __cdecl SimPlat_GlobalAlloc(uint32_t flags, uint32_t bytes);
-uint32_t __cdecl SimPlat_GlobalSize(uint32_t mem);
-uint32_t __cdecl SimPlat_GlobalFree(uint32_t mem);
-void __cdecl SimPlat_GetSystemTime(void *systemTime);
-void __cdecl SimPlat_GlobalMemoryStatus(void *status);
 uint32_t __cdecl SimPlat_HeapCreate(uint32_t options, uint32_t initial, uint32_t maximum);
 uint32_t __cdecl SimPlat_HeapAlloc(uint32_t heap, uint32_t flags, uint32_t bytes);
 int32_t __cdecl SimPlat_HeapDestroy(uint32_t heap);
-int32_t __cdecl SimPlat_SetEnvironmentVariable(const char *name, const char *value);
 
 #endif

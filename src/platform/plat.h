@@ -137,6 +137,20 @@ uint32_t Plat_FileFindFirst(const char *pattern, void *data);
 int32_t Plat_FileFindNext(uint32_t find, void *data);
 int32_t Plat_FileFindClose(uint32_t find);
 
+/* ---- memory and time (plat_system.c, standard C and SDL3) -------------------------------------------------- */
+
+/* A memory block that knows its size (GlobalAlloc(GMEM_FIXED) / GlobalSize / GlobalFree): NULL when out of memory. */
+void *Plat_BlockAlloc(uint32_t size);
+uint32_t Plat_BlockSize(const void *block);
+void Plat_BlockFree(void *block);
+/* Fills a MEMORYSTATUS (0x20 bytes, its length already set) as GlobalMemoryStatus: the RAM, capped at 4 GB - 1. */
+void Plat_MemoryStatus(void *status);
+/* Fills a SYSTEMTIME (8 words) with the time in UTC, as GetSystemTime. */
+void Plat_SystemTime(void *systemTime);
+/* A file time (FILETIME: 100 ns steps since 1601, UTC) as local time in a SYSTEMTIME (8 words), as
+ * FileTimeToLocalFileTime followed by FileTimeToSystemTime; 0 when it cannot be converted. */
+int Plat_FileTimeToLocal(const uint32_t *fileTime, void *systemTime);
+
 /* ---- program ---------------------------------------------------------------------------------------------- */
 
 /* The program's own file name (full path) into out (size bytes, with the end zero); its length, 0 when unknown.

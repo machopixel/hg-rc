@@ -22,7 +22,7 @@
 /* For a non-zero key: copies the 5 dwords at 0x1015dc48 over the first of the 0x80 entries (20 bytes at 0x109f09e0) whose dword +4 equals the key; then calls 0x10028fb0(key, value). */
 void __cdecl Sim_10029ab3(uint32_t key, uint32_t value);
 /* Calls 0x1002ce45; when it reports success stores its third result in *out and resets the dwords 0x1015dd40..0x1015dd48 (0, 1.0f, 0); returns the success flag. */
-int __cdecl Sim_1002cde1(uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t *out);
+int __cdecl Sim_1002cde1(void *obj, float x, float y, float z, float *out);
 /* Allocates and clears 0x78 bytes from the game heap and passes them to 0x1002fba5; returns the block (NULL when the allocation failed). */
 void *__cdecl Sim_1002fad6(void *arg);
 /* Unless bit 9 of the word at obj+0 is set: makes sure obj+0x98 holds a block from Sim_1002fad6 and, if it does, sets that bit. */

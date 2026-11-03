@@ -2984,3 +2984,110 @@ The Vulkan questions (HGVK built in, the loading screen through Vulkan, group 4)
   Sim_1008404b, Sim_10083530, Sim_10083692, Sim_10083801, Sim_10083de1); the native check stands for them.
   tools/verify/picture_stub.c links the picture calls in the checker's image.
 - Release build compiles and links (HG.exe, HGVK.dll); the game was not run.
+
+## The last original code (Diego, 2026-11-02: "okay, do that": steps 1-3 of the plan toward dropping HGSIM.DLL)
+
+### Step 1: original code still called from the C
+
+The count of "about 50 original functions" was of addresses the C calls through; checked one by one, most were
+converted already (jump-table addresses of converted functions, or addresses our C takes over through other hook
+files). What ran as original 1.0 code, and what changed:
+
+- **Jump-table addresses of converted functions, now direct calls:** the three collision cell tests (0x100035df,
+  0x10001e1f, 0x10002775 = Sim_1002d3ca, Sim_1002d479, Sim_1002cde1; in w3o_ray.c and w3s_cell.c) and the
+  projector's clip-edge and vertex callbacks (0x1000110e, 0x10001a64, 0x1000222f = Sim_100a6009, Render_ClipEdgeFar,
+  Sim_100a5d25; w2n_project.c). Sim_1002d3ca and Sim_1002cde1 now take the callers' shape (object, x, y, z, &out).
+  - **Bug fixed on the way:** Sim_1002d3ca was declared as returning nothing; the original returns 0x10031f95's
+    answer (its eax), which the callers test. It now returns it (spec_w5x compares the result).
+  - **Left as they are:** 0x100020e5, 0x10002513 and 0x10002964 are not calls but callback addresses handed to the
+    list walks (stored and compared as data, logged by the specs); they become plain C function pointers at the
+    switch-over (AFTER_DLL.md).
+- **The view-detail hooks (hooks_view.c) call our C:** the camera (0x100d1f90, 0x100d2306), the vertex projection
+  (0x100a62c4), the texture options (0x100988fc, 0x100989a1), multiple lights (0x100585c4) and shadows (0x100ac603)
+  ran the original 1.0 code behind trampolines although converted versions existed; the hooks now call those (no
+  trampolines left). The texture-option wrappers return 1, the value the original leaves in eax. With "noconv" the
+  detail hooks are now off (they would run converted code in the untouched run).
+- **Converted:** AllocPolyBuffers 0x100a8816 (Sim_100a8816; the view hook calls it with its larger buffers, and
+  conv_w5x.inc hooks it when the view hooks are off), the dissolve 0x100eda16 (Sim_100eda16, a hand-written assembly
+  transition copying pixels in shift-register order) and the colour-remap copy 0x100e96a7 (Sim_100e96a7), both in
+  src/sim/gfx/w37_draw.c with conv_w37.inc.
+- **Exit:** the error boxes' exit (0x100ff3b0) calls the converted Proc_Exit directly.
+- **Deleted:** Sim_1008663f (the original SimMain's __finally block, the only user of AbnormalTermination
+  0x1010026a): only the original SimMain reaches it; the converted SimMain has its own W21_FINALLY.
+- **Already ours, nothing to do:** the empty debug print 0x10083495 (the damage log's hook owns its address).
+- **Not done here, recorded:**
+  - 0x1008181e (DirectDraw: Unlock / IsLost / Restore / colour-fill Blt of the back buffer) and the software
+    renderer's polygon routines 0x100e4780 / 0x100e5477: reached only without the Vulkan renderer (SimMain's two
+    calls need [0x1017b940] set with [0x1017b944] clear or the DirectDraw display class; w22_poly.c's under
+    [0x1017b940] == 0). There is nothing to convert them to (DirectDraw and the software renderer are dropped);
+    removing their branches goes with the software-renderer branch clean-up (above: "Not touched yet: the
+    software-renderer branches", each site checked on its own).
+  - 0x10103ad0 (the C runtime's x87 control word) and 0x101069c0 (its small-block allocator): inside the 1997 C
+    runtime's math-error and realloc paths, with step 3.
+- **Checked:** Sim_1002d3ca 300 / 0, Sim_1002cde1 400 / 0, Sim_1002db2d 1500 / 0, Sim_1002d961 500 / 0,
+  Render_ClipPolygon 1500 / 0, Render_ProjectVertex 1500 / 0, Sim_100d1f90 1500 / 0, Sim_100d2306 800 / 0 and
+  3000 / 0, Sim_100988fc 400 / 0, Sim_100989a1 300 / 0, Sim_100585c4 400 / 0, Sim_100ac603 400 / 0, Sim_100a8816
+  500 / 0 (new), Sim_100eda16 3000 / 0 (new; 177 trials end in the instruction limit on both sides: the original
+  loops for ever when no pixel lands inside both panes), Sim_100e96a7 500 / 0 (new). spec_w3s / spec_w3o stub the
+  three cell tests at their C entries as at the jump addresses. Release build compiles and links.
+
+### Step 2: the small Windows calls
+
+- **New platform functions** (src/platform/plat_system.c, standard C and SDL3, every system; plat.h):
+  Plat_BlockAlloc / Plat_BlockSize / Plat_BlockFree for SimMain's GlobalAlloc(GMEM_FIXED, 0x249f0) / GlobalSize /
+  GlobalFree (the pack reader's read buffer [0x1017b958], its size [0x1017b95c]; a malloc block with its size in
+  front), Plat_MemoryStatus for GlobalMemoryStatus (the RAM that sizes the first game heap; SDL_GetSystemRAM, capped
+  at 4 GB - 1 as Windows caps it for a 32-bit program; the other fields, which the game does not read, filled
+  plainly) and Plat_SystemTime for GetSystemTime (UTC, SDL3's calendar). sim_platform_iat.c keeps only the game
+  heaps.
+- **Deleted:**
+  - SimMain's SetEnvironmentVariableA("FX_GLIDE_NO_SPLASH", "1"): only 3dfx's Glide library read it (Vulkan only).
+  - The display shutdown's (Sim_100b8938) timeKillEvent / timeEndPeriod of [0x1017d5cc]: only the original Windows
+    loading animation started that timer; ours (w28_anim.c) never does.
+- **Not done, a question for Diego:** CoUninitialize (0x10ac58a4) is in the converted DirectSound shutdown
+  (w11_sound.c Sim_1003a548), which runs only with the hgrc.cfg word "dsound" (the DirectSound sound kept for
+  comparison; the game's sound is SDL3's SndSdl_1003a548). Deleting it alone would leave that path's COM
+  initialisation open; it goes with the DirectSound path when that is dropped.
+- **Checker:** tools/verify/plat_stub.c stands in with the original's calls (GlobalAlloc / GlobalSize / GlobalFree /
+  GlobalMemoryStatus / GetSystemTime through the import slots); spec_w21_simmain.py takes the original's
+  SetEnvironmentVariableA out of its call log as it happens (as GetDC); spec_w8y.py gives Sim_100b8938 no timer.
+  SimMain 4000 / 0, Sim_100b8938 300 / 0. Release build compiles and links.
+
+### Step 3: the C runtime's Windows calls (checked, nothing to port before the switch-over)
+
+The 51 Windows imports still called through the DLL after steps 1 and 2 (49 after them), read again call site by
+call site:
+
+- **The 1997 C runtime's insides (about 40):** CompareString / LCMapString / GetStringType / MultiByteToWideChar /
+  WideCharToMultiByte / GetCPInfo / GetACP / GetOEMCP (locale and multibyte tables), Get / FreeEnvironmentStrings,
+  SetEnvironmentVariableA (putenv), GetModuleFileNameA (argv), GetStdHandle / SetStdHandle / GetFileType /
+  GetStartupInfoA / SetHandleCount / WriteFile / WriteConsoleA (start-up stdio and the runtime-error text), its own
+  heap (HeapCreate / HeapAlloc / HeapReAlloc / HeapFree / HeapValidate / HeapDestroy, VirtualAlloc / VirtualFree for
+  the small-block heap, with the small-block allocator 0x101069c0), GetTimeZoneInformation, FileTimeToSystemTime /
+  FileTimeToLocalFileTime, RaiseException and the x87 control word 0x10103ad0 (the maths error path),
+  GetModuleHandleA / GetProcAddress (the FDIV check), LoadLibraryA / GetProcAddress (the runtime-error box's
+  user32), GetLastError. As round 37 found ("The rest", above), none of these is reachable from the game's C: they
+  serve only the DLL's own C runtime start-up and the original code's library calls, and the game's C uses our C
+  runtime (src/sim/crt, OpenLibm, plat_*.c). They need no port: they go with the DLL at the switch-over. Earlier
+  wording of the plan ("about 40 Windows calls go to our C runtime") was wrong; corrected to Diego.
+- **The plugins and the network library (6 call sites):** LoadLibraryA / GetProcAddress / FreeLibrary /
+  GetModuleHandleA for the renderer plugin (w6e_misc.c, w7m_misc.c, w4u_heap.c) and ANET2.DLL (w5y_misc.c,
+  w4a_heap.c, w4w_records.c, the 55 names of w11_sound.c): Diego's decisions 4 (HGVK built in) and 5 (network).
+- **Render set-up** (Sim_10034cca): GetVersion and VirtualProtect make a range of the DLL's own code writable for the
+  original code's run-time patches; it goes with the DLL.
+- **The DirectSound comparison path:** CoUninitialize (step 2, question to Diego).
+- **Checked again function by function** (Diego: "you deleted what was not needed in step 3?"): every C function of
+  ours that still makes one of these calls, its hook and its C callers. Most are hooked over the DLL's own C runtime
+  routines and called only by the DLL's code (they stay until the switch-over, AFTER_DLL.md). Three were not as
+  stated above:
+  - **Time_FromFileTime** (0x100fe6e0) is reached from the game's C (Crt_FindFirst / FindNext, the file times):
+    ported. Its FileTimeToLocalFileTime + FileTimeToSystemTime are Plat_FileTimeToLocal (plat_system.c, standard
+    C localtime: the system's own local-time rules for each date, where Windows applied the current bias to every
+    date). Spec 600 / 0 (plat_stub.c makes the original's two calls).
+  - **Heap_Check** (0x101000d0, _heapchk: HeapValidate / GetLastError of the DLL C runtime's heap) is reached from
+    the game's debug heap check (w7n_misc.c). That heap holds only the DLL's start-up blocks (the game's go to
+    crt/hg_heap.c), so it stays until the switch-over, when it checks our heap instead (AFTER_DLL.md).
+  - **Sim_10106660** (a new small-block region) was neither hooked nor called from C: deleted (spec entry
+    commented; spec_w7s skips stubs of symbols that no longer exist). Specs that build w6k_sbh.c / w7s still pass
+    (Sim_10106960 400 / 0, Sim_10104970 600 / 0).
+- Release build compiles and links.

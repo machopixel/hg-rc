@@ -44,9 +44,6 @@
  * (0x10159e3c) is the last region. A page has +0 a pointer into its map,
  * +4 a count, the map of 0xf0 bytes at +8 and the byte 0xff at +0xf8.
  */
-/* Creates a region (the static one when it is unused, else a 0x2020-byte heap block): reserves 4 MB, commits the
- * first 64 KB, links it and fills the entry table and the 16 page headers. Returns it, or 0. */
-uint32_t __cdecl Sim_10106660(void);
 /* Frees the address range of a region and unlinks and frees the header (the static region is marked unused
  * instead). Returns the result of the last Windows call. */
 uint32_t __cdecl Sim_101067d0(uint32_t region);

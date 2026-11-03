@@ -131,6 +131,7 @@ API = {'ShowCursor': _countdown('ShowCursor', 'cursor', 0, 0xffffffff),
        'PeekMessageA': _countdown('PeekMessageA', 'peek', 1, 0),
        'GlobalMemoryStatus': _memstatus, 'HeapAlloc': _heapalloc, 'GetDeviceCaps': _unseen(_devcaps),
        'GetDC': _unseen(lambda n, args: 1), 'ReleaseDC': _unseen(lambda n, args: 1),
+       'SetEnvironmentVariableA': _unseen(lambda n, args: 1),     # deleted (DECISIONS.md, "The last original code")
        'HeapCreate': lambda n, args: ST['hc'][n % len(ST['hc'])]}
 
 

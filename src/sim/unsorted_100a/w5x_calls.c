@@ -10,6 +10,34 @@ void *__cdecl Sim_100a6009(uint32_t a, uint32_t b)
     return SIM_CALL_100a5d38(a, 0, b, 0);
 }
 
+/* the helpers of Sim_100a8816, through their addresses as the original calls them */
+#define W5XA_ALLOC_ZERO SIM_FN(uint32_t(__cdecl *)(uint32_t), 0x10028559)
+#define W5XA_FILL SIM_FN(void *(__cdecl *)(uint32_t, int, uint32_t), 0x1002858a)
+#define W5XA_SYSTEM_ERROR SIM_FN(void(__cdecl *)(uint32_t, uint32_t), 0x100bc280)
+#define W5XA_TRIG_TABLES SIM_FN(int(__cdecl *)(void), 0x100846e0)
+#define W5XA_10084A17 SIM_FN(int(__cdecl *)(void), 0x10084a17)
+
+// FUNCTION: HGSIM 0x100a8816
+int __cdecl Sim_100a8816(int arenaKiB, int sortEntries)
+{
+    uint32_t size;
+
+    G32(0x1017d17c) = (uint32_t)sortEntries;
+    G32(0x1014d1a4) = (uint32_t)arenaKiB << 10;
+    size = ((uint32_t)arenaKiB << 10) + (G32(0x1017d17c) << 1) * 8u;
+    G32(0x1017d180) = W5XA_ALLOC_ZERO(size);
+    if (G32(0x1017d180) == 0)
+        W5XA_SYSTEM_ERROR(0x18, 0);
+    W5XA_FILL(G32(0x1017d180), 0, size);
+    G32(0x1017d170) = G32(0x1017d180);
+    G32(0x1017d168) = G32(0x1017d180) + G32(0x1014d1a4);
+    G32(0x1017d16c) = G32(0x1017d168) + G32(0x1017d17c) * 8u;
+    G32(0x1017d178) = G32(0x1017d170);
+    G32(0x1017d174) = G32(0x1017d170) + G32(0x1014d1a4) - 0x30u;
+    W5XA_TRIG_TABLES();
+    return W5XA_10084A17();     /* the original returns what 0x10084a17 leaves in eax */
+}
+
 // FUNCTION: HGSIM 0x100a9ca3
 void __cdecl Sim_100a9ca3(void *obj, uint32_t a, uint32_t b, uint32_t c)
 {

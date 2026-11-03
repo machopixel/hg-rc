@@ -958,7 +958,9 @@ def g_b69d0(ctx):
 
 def g_b8938(ctx):
     r = begin(ctx, 0x100eb070)
-    for a in (0x1017d5cc, 0x1017d5d0, 0x1017d5d4):
+    # [0x1017d5cc], the original loading animation's timer, is never set now (its timeKillEvent branch is deleted)
+    w32(ctx, 0x1017d5cc, 0)
+    for a in (0x1017d5d0, 0x1017d5d4):
         w32(ctx, a, r.choice([0, ctx.u32()]))
     for a in (0x10199448, 0x1017b8f8, 0x109e3e20, 0x109e3e24, 0x10199440, 0x10199444, 0x1017d5d8, 0x1017d5b8):
         w32(ctx, a, ctx.u32())

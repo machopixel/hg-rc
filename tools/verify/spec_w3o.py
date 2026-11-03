@@ -134,6 +134,11 @@ def _hook(m):
                 ret = pool[k] if k < len(pool) else 0
             emit(uc, rec)
             uc.reg_write(UC_X86_REG_EAX, ret & 0xffffffff)
+            from unicorn import x86_const
+            if address >= 0x40000000:       # a C entry (its code is restored between trials): return from here
+                sp = uc.reg_read(UC_X86_REG_ESP)
+                uc.reg_write(x86_const.UC_X86_REG_EIP, struct.unpack('<I', bytes(uc.mem_read(sp, 4)))[0])
+                uc.reg_write(UC_X86_REG_ESP, sp + 4)
         except Exception as e:
             ST['err'] = repr(e)
             raise
@@ -144,6 +149,11 @@ def _hook(m):
     for name, (addr, k) in STUBS.items():
         uc.hook_add(UC_HOOK_CODE, cb, None, addr, addr)
         uc.mem_write(addr, b'\xc3')
+    # the C calls the three tests directly (Windows calls round, step 1): the same stubs at their C entries
+    for t, csym in ((0x100035df, 'Sim_1002d3ca'), (0x10001e1f, 'Sim_1002d479'), (0x10002775, 'Sim_1002cde1')):
+        c = m.syms[csym]
+        BYADDR[c] = 'col%x' % t
+        uc.hook_add(UC_HOOK_CODE, cb, None, c, c)
     m._reset_cb = reset
     m._armed = set()
 

@@ -7,7 +7,6 @@
 #include "../unsorted_1010/w7r.h"
 #include "../crt/hg_format.h"
 
-typedef int(__stdcall *W6iFileTimeFn)(const void *in, void *out);
 
 // FUNCTION: HGSIM 0x100fe310
 int __cdecl Sim_100fe310(int mode)
@@ -80,14 +79,13 @@ int __cdecl File_FindClose(uint32_t handle)
 // FUNCTION: HGSIM 0x100fe6e0
 int __cdecl Time_FromFileTime(const uint32_t *fileTime)
 {
-    uint32_t local[2];
     uint16_t st[8]; /* SYSTEMTIME: year, month, weekday, day, hour, minute, second, milliseconds */
 
     if (fileTime[0] == 0 && fileTime[1] == 0)
         return -1;
-    if (SIM_API(W6iFileTimeFn, 0x10ac563c)(fileTime, local) == 0)
-        return -1;
-    if (SIM_API(W6iFileTimeFn, 0x10ac5630)(local, st) == 0)
+    /* the original's FileTimeToLocalFileTime and FileTimeToSystemTime: the platform's (DECISIONS.md, "The last
+       original code", step 3) */
+    if (Plat_FileTimeToLocal(fileTime, st) == 0)
         return -1;
     return W6I_FN_10105970(st[0], st[1], st[3], st[4], st[5], st[6], -1);
 }

@@ -1,4 +1,7 @@
 #include "w3o.h"
+#include "w3q.h"
+#include "w5c.h"
+#include "w5x.h"
 #include "../unsorted_1000/w3o.h"
 #include "../unsorted_1008/w3o.h"
 #include "../unsorted_1009/w3o.h"
@@ -40,12 +43,13 @@ double __cdecl Sim_1002d961(float x, float y, float z)
             float out;
             uint32_t type = U32(node, 0x34);
 
+            /* the original calls them through the DLL's jump table (0x100035df, 0x10001e1f, 0x10002775) */
             if (type == 5)
-                test = SIM_FN(CellTest, 0x100035df);
+                test = Sim_1002d3ca;
             else if (type == 8)
-                test = SIM_FN(CellTest, 0x10001e1f);
+                test = (CellTest)Sim_1002d479;
             else if (type == 0)
-                test = SIM_FN(CellTest, 0x10002775);
+                test = Sim_1002cde1;
             else
                 continue;
             if (test((void *)(uintptr_t)node, x, y, z, &out) == 0)

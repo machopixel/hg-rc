@@ -249,3 +249,8 @@ start (the checker needs the DLL to compare against).
 - **HGVK's own Win32 bits** (vk.c GetClientRect and the Win32 Vulkan surface, hgvk.c GetSystemMetrics and
   PresentGdi): with HGVK built into the program, the surface and the window size come from SDL3
   (SDL_Vulkan_CreateSurface, SDL_GetWindowSizeInPixels).
+- **Callback addresses passed as data** (0x100020e5 in w9c_tree.c / w8y_objects.c; 0x10002513 / 0x10002964 in
+  w6h_calls.c): jump-table addresses of converted functions handed to the list walks. After: the C functions' own
+  pointers (Sim_1003b8e3, Sim_100c4323, Sim_100c4265).
+- **The debug heap check** (Heap_Check 0x101000d0, from w7n_misc.c): validates the DLL C runtime's heap
+  ([0x10ac3714], HeapValidate). After: checks our heap (crt/hg_heap.c), or answers "OK".

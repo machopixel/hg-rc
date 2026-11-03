@@ -355,3 +355,86 @@ int32_t __cdecl Sim_100e85cb(const uint8_t *pane, int32_t x, int32_t y)
         return -3;
     return c.buffer[(uint32_t)y * (uint32_t)c.pitch + (uint32_t)x];
 }
+
+// FUNCTION: HGSIM 0x100eda16
+uint32_t __cdecl Sim_100eda16(const uint8_t *src, const uint8_t *dst, int32_t count, uint32_t state)
+{
+    W37Clip s, d;
+    int32_t r, widthS, heightS, widthD, heightD, rows, cols;
+    uint32_t edi, k, n, rowBits, bits, rowMask, taps, x, y;
+
+    r = W37_Clip(src, &s);
+    if (r != 0)
+        return (uint32_t)r;
+    widthS = ADD(DIFF(S32(src, 0xc), s.x0), 1);
+    heightS = ADD(DIFF(S32(src, 0x10), s.y0), 1);
+    /* the start of each source row from the pane's (unclipped) corner, [0x10153695] */
+    edi = (uint32_t)s.y0 * (uint32_t)s.pitch + (uint32_t)(uintptr_t)s.buffer + (uint32_t)s.x0;
+    for (k = 0, n = (uint32_t)heightS; k < n; k++, edi += (uint32_t)s.pitch)
+        G32(0x10153695u + 4u * k) = edi;
+    r = W37_Clip(dst, &d);
+    if (r != 0)
+        return (uint32_t)r;
+    widthD = ADD(DIFF(S32(dst, 0xc), d.x0), 1);
+    heightD = ADD(DIFF(S32(dst, 0x10), d.y0), 1);
+    edi = (uint32_t)d.y0 * (uint32_t)d.pitch + (uint32_t)(uintptr_t)d.buffer + (uint32_t)d.x0;
+    for (k = 0, n = (uint32_t)heightD; k < n; k++, edi += (uint32_t)d.pitch)
+        G32(0x10154295u + 4u * k) = edi;
+    rows = heightS < heightD ? heightS : heightD;
+    cols = widthD > widthS ? widthS : widthD;
+    /* the bits of the row number (low) and of the column (above them); the shift register's taps for that many
+       bits come from the table in the library's code (0x100ed992) */
+    bits = 0;
+    rowMask = 0;
+    n = (uint32_t)rows;
+    do {
+        bits++;
+        rowMask = rowMask << 1 | 1u;
+        n >>= 1;
+    } while (n != 0);
+    rowBits = bits;
+    n = (uint32_t)cols;
+    do {
+        bits++;
+        n >>= 1;
+    } while (n != 0);
+    taps = G32(0x100ed992u + 4u * bits);
+    if (state == 0) {
+        state = 1;
+        y = 0;
+        x = 0;
+        goto copy;
+    }
+    for (;;) {
+        x = state >> 1;
+        if ((state & 1) != 0)
+            x ^= taps;
+        state = x;
+        if (x == 1)
+            count = 0;
+        x >>= rowBits & 31;
+        if (x >= (uint32_t)cols)
+            continue;
+        y = state & rowMask;
+        if (y >= (uint32_t)rows)
+            continue;
+copy:
+        count--;
+        if (ADD(x, d.x0) < d.cx0 || ADD(x, d.x0) > d.cx1 || ADD(x, s.x0) < s.cx0 || ADD(x, s.x0) > s.cx1 ||
+            ADD(y, d.y0) < d.cy0 || ADD(y, d.y0) > d.cy1 || ADD(y, s.y0) < s.cy0 || ADD(y, s.y0) > s.cy1)
+            continue;
+        *BYTES(G32(0x10154295u + 4u * y) + x) = *BYTES(G32(0x10153695u + 4u * y) + x);
+        if (count < 0)
+            return state;
+    }
+}
+
+// FUNCTION: HGSIM 0x100e96a7
+void __cdecl Sim_100e96a7(const uint32_t *table)
+{
+    int i;
+
+    /* rep movsd of 0x40 dwords into the library's table at 0x10154eac */
+    for (i = 0; i < 0x40; i++)
+        G32(0x10154eacu + 4u * (uint32_t)i) = table[i];
+}
