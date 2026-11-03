@@ -24,7 +24,7 @@
 
 /*
  * 256 calls in a 16 x 16 grid, two per entry (rows y and y + 1): 0x100ef727(0x109e3e00, x, y + j, x + 3, y + j, 0,
- * the word i of the table 0x101659e0) when the dword [0x1017b940] is set, else 0x100e86a1(the same, i). x starts
+ * the word i of the table 0x101659e0). x starts
  * at 10 and grows by 4, y starts at 10 and grows by 2 after every 16 entries.
  */
 void __cdecl Sim_1000799a(void);

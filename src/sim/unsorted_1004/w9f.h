@@ -13,10 +13,9 @@
 
 /* ---- w9f_screenshot.c ---- */
 /*
- * Saves screenshot number [0x1015f150] (nothing from 1000 on; the counter goes up by one): with [0x1017b940]
- * set "hg%04d.tga" through Screenshot_WriteTga ([0x109e3e14] + 1 by [0x109e3de0] + 1 pixels, stride
- * [0x109e3e24] + 1, pixels [0x109e3e20]), otherwise "hg%04d.gif" through Sim_1004ec60(name), Sim_1004ecb8,
- * Sim_1004ed37(record {0x109e3e20, 0, 0, [0x109e3e14], [0x109e3de0]}) and Sim_1004edb6.
+ * Saves screenshot number [0x1015f150] (nothing from 1000 on; the counter goes up by one): "hg%04d.tga" through
+ * Screenshot_WriteTga ([0x109e3e14] + 1 by [0x109e3de0] + 1 pixels, stride [0x109e3e24] + 1, pixels [0x109e3e20]).
+ * (The original's GIF without the renderer is gone, round 42.)
  */
 void __cdecl Screenshot_Save(void);
 

@@ -31,7 +31,7 @@ int __cdecl Sim_10090099(float *v);
 
 /*
  * Passes a polygon with raw 8-bit pixels (width, height clamped to 0x100 and to
- * width) to the plugin's Render (slot 0x109e3d30; op 6 when [0x1017b940] else 2,
+ * width) to the plugin's Render (slot 0x109e3d30; op 6,
  * second argument `surface`). First loads the luma table of the cached file at
  * [0x1015cff0] into 0x10185c60 (rows reversed, like Render_LoadLumaTable but without
  * loading) and passes it to SetLumaTable the first time ([0x1017e610]). The colour-key

@@ -55,13 +55,12 @@
  */
 void __cdecl Sim_100a4f03(void *list);
 /*
- * The same for a scene node tree (Sim_100a526b). With 0x1017b940 set the entries are only collected and sorted
- * (from the list base, 0x101c9ea4 left as it is) and their number goes to 0x1017d134 (cleared first); otherwise
- * they are sorted and drawn as in Sim_100a4f03.
+ * The same for a scene node tree (Sim_100a526b), but the entries are only collected and sorted (from the list base,
+ * 0x101c9ea4 left as it is) and their number goes to 0x1017d134 (cleared first).
  */
 void __cdecl Sim_100a4ff0(void *node);
 /*
- * As Sim_100a4ff0, but with 0x1017b940 set the entries are collected from index [0x101c9ea0] of the list (no
+ * As Sim_100a4ff0, but the entries are collected from index [0x101c9ea0] of the list (no
  * Sim_100a88db), their number goes to 0x1017d130 (cleared first) and is added to 0x101c9ea0.
  */
 void __cdecl Sim_100a512a(void *node);

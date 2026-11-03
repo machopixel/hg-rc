@@ -40,13 +40,13 @@ typedef void(__cdecl *W9dDrawTextFn)(uint32_t target, int32_t y, int32_t x, uint
  * Sim_10052c02(index)); kind 0x100 takes the next text of the ring at 0x109e857c (counter 0x10176954, modulo 7
  * with sign, then incremented), projects the point +0x104..+0x10c with Sim_100d2669 and, when visible, draws
  * the text there with Sim_10065216 and palette 7 (unit word 0x109a8664 + index * 0x54 is 0x20) or 5 of the
- * palettes at 0x10176960 (0x200 bytes, mode [0x1017b940]) or 0x10178b60 (0x100 bytes).
+ * palettes at 0x10176960 (0x200 bytes each).
  */
 void __cdecl Sim_10063037(void *holder);
 /*
  * Draws the message text 0x101658d8 with the font named by the pointer [0x109b9900] (loaded through 0x100ba7d5
  * with the key [0x1014cec4]): byte 0x109b992e = 7, x = [0x109e3e10] - 3 * height, y = trunc((double)[0x109e3e18]
- * - width (Sim_100ccb0d) * double [0x1012b5e0]), one of the three text routines by [0x101668e8] / [0x1017b940],
+ * - width (Sim_100ccb0d) * double [0x1012b5e0]), 0x100f2f01 with [0x101668e8], else 0x100f1e10,
  * byte 0x109b992e = 9 and Sim_100bb2b0([0x109b9900], key) releases the font. Nothing when there is no font.
  */
 void __cdecl Sim_10065384(void);

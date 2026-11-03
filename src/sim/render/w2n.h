@@ -75,7 +75,7 @@ void *__cdecl Render_GetTextureImage(int index, int16_t *width, int16_t *height)
  * 0x10143fdc/e0/e4, light value) and pass them to Render with the texture of
  * `index` (+0x100 for the first one). They return 1, or 0 when there are
  * fewer than 3 vertices or no texture. Render ops: ..._10006609: 2;
- * ..._10006744: 1 if `flag`, else 6 when [0x1017b940] (else 2); ..._100068d9: 6/2.
+ * ..._10006744: 1 if `flag`, else 6; ..._100068d9: 6.
  */
 int __cdecl Render_SubmitVerts_10006609(int index, int count, unsigned char *verts);
 int __cdecl Render_SubmitVerts_10006744(int index, int count, unsigned char *verts, int flag);
@@ -84,7 +84,7 @@ int __cdecl Render_SubmitVerts_100068d9(int index, int count, unsigned char *ver
 /*
  * Builds plugin vertices from `count` pointers to projected vertices and
  * passes them to Render (op 2 when [0x1017d0ac], else 6) with `texture`;
- * returns 0 without doing anything when texture is NULL or [0x1017b940] is 0.
+ * returns 0 without doing anything when texture is NULL.
  * The last two vertices get fog dword 0xff000000, the others 0 (kept as is).
  */
 int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, int count);
@@ -92,8 +92,7 @@ int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, in
 /*
  * Clips `count` scene vertices (Render_ClipPolygon, near/far from the camera
  * at [0x1014cae0] +0x3c/+0x40) and hands the result to the plugin (op 0xf,
- * vertices in reverse order, fog from Render_FogLevel) when [0x1017b940] is
- * set, else to the software polygon routine 0x100f9fd4.
+ * vertices in reverse order, fog from Render_FogLevel).
  */
 void __cdecl Render_SubmitClipped_100ac738(unsigned char *verts, unsigned count);
 

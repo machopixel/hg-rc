@@ -13,8 +13,7 @@
 #define __cdecl /* the default convention on other targets, for the test builds */
 #endif
 
-/* Patched by another hook file (0x100ef727) / not converted (0x100e86a1): seven-argument drawing helpers
-   (bitmap, x0, y0, x1, y1, 0, colour) for the 16-bit and the 8-bit display. */
+/* Patched by another hook file (0x100ef727): the seven-argument line helper (bitmap, x0, y0, x1, y1, 0, colour). */
 #define W7O_CALL_100ef727 \
     SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, int32_t, int32_t, int32_t, uint32_t), 0x100ef727)
 #define W7O_CALL_100e86a1 \
@@ -30,8 +29,7 @@ void __cdecl Sim_10088a2d(uint16_t *obj);
 
 /*
  * With w = bmp[3] - bmp[1] and h = bmp[4] - bmp[2] (dwords): the four sides (0,0)-(w,0), (w,0)-(w,h),
- * (w,h)-(0,h), (0,h)-(0,0) through 0x100ef727 with the 16-bit colour word [0x101659e0 + 2 * colour] when
- * [0x1017b940] is set, else through 0x100e86a1 with the colour itself.
+ * (w,h)-(0,h), (0,h)-(0,0) through 0x100ef727 with the 16-bit colour word [0x101659e0 + 2 * colour].
  */
 void __cdecl Sim_1008d4f1(int32_t *bmp, int32_t colour);
 

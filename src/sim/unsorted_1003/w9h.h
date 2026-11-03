@@ -33,7 +33,7 @@
  */
 uint32_t __cdecl Sim_10032a10(uint8_t *obj, uint32_t b, uint32_t colour, uint32_t d);
 /*
- * When [0x1017b940] is set: 0x100d2306(camera) once after a viewport change ([0x1013a014], cleared), Sim_100d255e
+ * 0x100d2306(camera) once after a viewport change ([0x1013a014], cleared), Sim_100d255e
  * and 0x100d1f90 on the camera [0x1014cae0]; in the sensor views ([0x1014cb18] or [0x1014cb1c] set, or view
  * [0x1015d1ac] 4) draws a full-screen quad (0,0)-(639,479), +0x10 = 7, +0x18 = 0xff000000 through the display slot
  * 0x1014cb4c with flags [0x10138c70], else runs 0x100a0def(camera) when [0x1014cb04] or [0x1014cb08] is set; then

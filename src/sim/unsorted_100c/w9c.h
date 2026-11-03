@@ -31,7 +31,7 @@ int __cdecl Sim_100c4f6c(void);
  * ([pane+0xc] - [pane+4] less its width Sim_100ccb0d): [0x101c49a0] in colour 0x17 for byte +0 = 5, [0x101c499c]
  * in 7 for 6, [0x101c4980] in 0xc otherwise. The colour byte 0x109b992e ends at 9; pos (x, y) moves down one
  * line per entry (two for a cut text). The texts go through 0x100f2f01 while [0x101668e8] is set, else
- * 0x100f1e10 / 0x100ecea6 by [0x1017b940], on the pane [panel+0xec].
+ * 0x100f1e10, on the pane [panel+0xec].
  */
 void __cdecl Sim_100ccc60(void *panel, int32_t *pos, uint32_t font, uint32_t kind);
 

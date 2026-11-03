@@ -31,8 +31,8 @@
  * 0x109b992e back to 9 and releases the font.
  *
  * The original leaves the colour uninitialised for +8 = 1 with +0xc above 4 (no case in its switch); it is 0
- * here. The shape blit goes through 0x100f0205 while [0x1017b940] is set, else 0x100e91dc; the texts through
- * 0x100f2f01 while [0x101668e8] is set, else 0x100f1e10 / 0x100ecea6 by [0x1017b940].
+ * here. The shape blit goes through 0x100f0205; the texts through 0x100f2f01 while [0x101668e8] is set, else
+ * 0x100f1e10.
  */
 void __cdecl Sim_100d3d10(void *panel);
 

@@ -42,8 +42,8 @@ void __cdecl Sim_100cfe48(uint8_t *pane);
 void __cdecl Sim_100cf96c(uint8_t *pane);
 
 /* HUD rate arrows at (x, y): rate below [0x1012bc18] (or unordered) a chevron opening up, above it one opening down, in
- * the colour 0x101659f4 / code 0xa, with the opposite chevron in 0x101659e8 / code 4 every other frame ([0x1017e578]);
- * equal: both chevrons in the second colour. Lines through 0x100ef727 / 0x100e86a1 by [0x1017b940]. */
+ * the colour 0x101659f4, with the opposite chevron in 0x101659e8 every other frame ([0x1017e578]);
+ * equal: both chevrons in the second colour. Lines through 0x100ef727. */
 void __cdecl Sim_100c83ed(float rate, int32_t x, int32_t y);
 
 /* The weapon gauge of the HUD at (x, y) for obj's selected target (+0xf0: kind 2 or 4, not 0x1000) and weapon (shown when

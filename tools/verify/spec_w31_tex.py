@@ -22,7 +22,7 @@ exec(open('tools/verify/w31_map.py').read())
 
 SOURCES = ['sim/render/w31_tex.c', 'sim/render/w2m_texture.c', 'sim/render/w2n_texture.c',
            'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2h_reset.c', 'sim/unsorted_100f/w2e_string.c',
-           '../tools/verify/plat_stub.c', 'sim/render/w33_dx12.c']
+           '../tools/verify/plat_stub.c', 'sim/render/w33_mode.c']
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 if os.environ.get('W31_NEG'):
     CFLAGS.append('-DW31T_MUTATE')

@@ -21,7 +21,7 @@ from unicorn import UC_HOOK_CODE
 from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EAX, UC_X86_REG_FPCW
 
 SOURCES = ['sim/render/w2m_texture.c', 'sim/render/w2n_texture.c', 'sim/render/w2n_project.c',
-           'sim/render/w2n_polygon.c', '../tools/verify/w2n_test.c', 'sim/render/w33_dx12.c']
+           'sim/render/w2n_polygon.c', '../tools/verify/w2n_test.c', 'sim/render/w33_mode.c']
 CFLAGS = ['-msse2', '-mfpmath=sse', '-mno-stack-arg-probe']
 
 STUB = 0x00F00400

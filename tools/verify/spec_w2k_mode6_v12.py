@@ -6,7 +6,7 @@
 import os
 exec(open('tools/verify/w32_common.py').read())
 
-SOURCES = closure(['sim/unsorted_1008/w2k_misc.c', 'sim/render/w33_dx12.c'])
+SOURCES = closure(['sim/unsorted_1008/w2k_misc.c', 'sim/render/w33_mode.c'])
 if os.environ.get('W2K_NEG'):
     CFLAGS = list(CFLAGS) + ['-DW2KV_MUTATE']
 stub12(0x1003772b, 'Sim_1003772b', 5, 0x1002bd5b)

@@ -72,14 +72,12 @@ void HooksInput_OnSimExit(void);
  * ("sdlaudio" forces SDL3). HooksAudio_SdlSound says which, for every hook file. */
 int HooksAudio_SdlSound(void);
 /* The SDL3 platform (DECISIONS.md, round 28): SDL3 runs the window events, keyboard, mouse and the menus' screen.
- * The default in converted runs; the original Windows code with "noconv", with the Direct3D reference ("d3d") or
- * with "winplat". "sdlinput" forces it on. Reads hgrc.cfg and hgrc_extra.cfg. */
+ * The default in converted runs; the original Windows code with "noconv" or with "winplat". "sdlinput" forces it on. Reads hgrc.cfg and hgrc_extra.cfg. */
 int Hooks_SdlPlatform(void);
 /* Whether a word is in hgrc.cfg or hgrc_extra.cfg. */
 int Hooks_ConfigWord(const char *word);
 /* Whether the Vulkan renderer is in use: HG_RENDERER=hgvk, or (without HG_RENDERER) the first word of hgrc.cfg. */
 int Hooks_VulkanRenderer(void);
-int Hooks_Renderer12(void);
 void HooksAudio_OnSimLoaded(HMODULE sim);
 void HooksAudio_OnSimExit(void);
 

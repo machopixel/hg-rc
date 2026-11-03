@@ -149,19 +149,15 @@ start (the checker needs the DLL to compare against).
   HGVK adds it, as D3D does with specular enabled.
 - **Mode numbers:** our renderers keep 1.0's 19 render modes; 1.2's code numbers them differently (1.0's 5..18 are
   1.2's 7..20) and ported 1.2 code is mapped back. After: one numbering of our own.
-- **1.2's Direct3D renderer behind a translation** (round 33, src/sim/render/w33_dx12.c): the D3D plugin's Render,
-  RenderNoClip and SetState slots are wrapped (modes +2 from 5, states -1, our painter state dropped). After: gone
-  with one numbering of our own, or with the D3D path itself.
 - **SetState codes:** 1.2's are 1.0's minus 1 (and 1.2 has more states); ported 1.2 calls are sent in 1.0's
   numbering. After: named render states of our own.
 - **Texture descriptions** keep the plugin layout {w, h, pixels, palette, key, +0x14, flag +0x18}; HGVK remembers
   alpha textures by pixel pointer. After: a texture object of the renderer's own.
-- **Renderer only** (round 42, DECISIONS.md): the converted code has no software or D3D side left, so these are
-  unreached by converted runs and go with the DLL or in a clean-up: the original 8-bit routines 0x100e4780,
-  0x100e5477, 0x100f9fd4, 0x1008181e (never converted); w33_dx12.c (1.2's D3D translation, used only when the D3D
-  plugin is loaded); the hgrc.cfg words d3d / glide / soft (only with "noconv" now; hooks_audio.c still reads "d3d");
-  the flag [0x1017b940] itself (always 1) and [0x1017b944]; the header comments that describe both sides of the
-  original's tests.
+- **Renderer only** (round 42 and its clean-up, DECISIONS.md): left for the DLL's end: the original 8-bit routines
+  0x100e4780, 0x100e5477, 0x100f9fd4, 0x1008181e (never converted, unreached); the renderer flags [0x1017b940] /
+  [0x1017b944], which no C reads but the command line and SimMain still set (the DLL's original code refers to them
+  250 / 5 times; HGSHELL not at all); the hgrc.cfg words d3d / glide / soft, used only by the launcher's "noconv"
+  reference runs (dev.cmd's dx5noconv and ref12). After: the flags and those words go with the original code.
 
 ## Graphics library, Vulkan only (DLL removal step 1, DECISIONS.md)
 

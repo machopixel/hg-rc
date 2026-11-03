@@ -12,7 +12,7 @@ from unicorn.x86_const import UC_X86_REG_ESP, UC_X86_REG_EAX, UC_X86_REG_EIP
 
 SOURCES = ['sim/fx/w32_partspec.c', 'sim/render/w31_tex.c', '../tools/verify/plat_stub.c',
            'sim/render/w3q_texture.c', 'sim/unsorted_1000/w2f_records.c', 'sim/unsorted_100f/w2e_string.c',
-           'sim/unsorted_1000/w2h_reset.c', 'sim/render/w33_dx12.c']     # (round 33: g_w33Voodoo)
+           'sim/unsorted_1000/w2h_reset.c', 'sim/render/w33_mode.c']     # (round 33: g_w33Voodoo)
 CFLAGS = []
 if os.environ.get('W32_NEG'):
     CFLAGS.append('-DW32C_MUTATE')

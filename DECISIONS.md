@@ -3213,3 +3213,23 @@ call site:
   layout (loaded for the test only, unloaded after), 2 Spanish dead keys; GetKeyState against the new state for
   nothing / Shift / Ctrl / Alt held and the locks toggled. No game file changed (the checker stands in for the
   platform layer), so no game spec was re-run. Release build compiles clean.
+
+## Renderer-only clean-up (Diego, 2026-11-03: "Do the small clean up")
+
+- **The renderer flag** [0x1017b940]: no C code reads it any more (round 42). The command line ("/3dfx") and SimMain
+  still set it, with [0x1017b944], because the DLL's original code refers to them (250 and 5 times; HGSHELL.DLL not
+  at all) and unconverted routines may still read them.
+- **1.2's Direct3D translation removed** (src/sim/render/w33_dx12.c, W33_WrapD3D12: the D3D plugin's mode and state
+  numbers): converted runs never load the D3D plugin since round 42. Its variable g_w33Voodoo (1.2's 3DFX / PowerVR
+  mode) moved to src/sim/render/w33_mode.c; the six specs that linked w33_dx12.c for it name w33_mode.c. The plugin
+  loader Sim_1003650d (w28_plugin.c) no longer calls the wrap.
+- **Config words:** in converted runs "d3d" no longer turns the SDL3 platform off (Hooks_SdlPlatform) or the 1.2
+  game off; Hooks_Renderer12 is gone (every converted run is 1.2's game on Vulkan: g_w8yPatch = !noconv). The words
+  d3d / glide / soft stay for the launcher's "noconv" reference runs (dev.cmd's dx5noconv and ref12 write
+  "d3d noconv"), so dev.cmd is unchanged.
+- **Header comments:** 28 headers' descriptions of the original's [0x1017b940] tests now describe the code as it is
+  (the renderer side), noting where the software side went (round 42).
+- **Checks** (16 processes): the plugin loader Sim_1003650d 8000 / 0; one entry of each spec that now links
+  w33_mode.c: Sim_100877bc (1.2) 300 / 0, Render_Ftol 1500 / 0, W31_GetTexImage 3000 / 0, Sim_10029421 (1.2)
+  3000 / 0, Sim12_10078e34 3000 / 0, Debug_LogText 300 / 0. Release build: no new warnings (the header edits rebuild
+  everything; the 14 warnings shown are old ones in files not changed here).

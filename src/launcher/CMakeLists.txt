@@ -772,7 +772,7 @@ add_executable(HG WIN32
     ../sim/libm/olm_s_copysign.c
     ../sim/libm/olm_s_floor.c
     ../sim/render/w31_tex.c
-    ../sim/render/w33_dx12.c
+    ../sim/render/w33_mode.c
     ../sim/fx/w32_partspec.c
     ../sim/fx/w32_pool.c
     ../sim/fx/w32_draw.c

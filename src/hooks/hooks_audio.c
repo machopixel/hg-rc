@@ -49,7 +49,7 @@ int Hooks_SdlPlatform(void)
 {
     if (ConfigHasWord("sdlinput"))
         return 1;
-    return !ConfigHasWord("noconv") && !ConfigHasWord("d3d") && !ConfigHasWord("winplat");
+    return !ConfigHasWord("noconv") && !ConfigHasWord("winplat");
 }
 
 int Hooks_VulkanRenderer(void)
@@ -66,26 +66,6 @@ int Hooks_VulkanRenderer(void)
         return 0;
     if (fscanf(fp, "%31s", word) == 1)
         found = _stricmp(word, "hgvk") == 0;
-    fclose(fp);
-    return found;
-}
-
-/* round 33: the renderers that run 1.2's game (Patch folder, .TEX textures, particles): Vulkan, and Direct3D with
-   1.2's dx5draw.dll; the whole game is 1.2 (Diego) */
-int Hooks_Renderer12(void)
-{
-    const char *env = getenv("HG_RENDERER");
-    char word[32];
-    FILE *fp;
-    int found = 0;
-
-    if (env != NULL)
-        return _stricmp(env, "hgvk") == 0 || _stricmp(env, "d3d") == 0;
-    fp = fopen("hgrc.cfg", "r");
-    if (fp == NULL)
-        return 0;
-    if (fscanf(fp, "%31s", word) == 1)
-        found = _stricmp(word, "hgvk") == 0 || _stricmp(word, "d3d") == 0;
     fclose(fp);
     return found;
 }

@@ -19,7 +19,7 @@ int __cdecl Sim_100b9dde(void);
 
 /*
  * HUD damage display of the player's unit (record PTRTAB([0x1017b8c8]) +0x28): the frame shape (0x100ba7d5 of
- * [0x109e8498], [0x1014cec0]) drawn at 0x109e8674 (0x100f0205 with [0x1017b940], else 0x100e91dc) and released
+ * [0x109e8498], [0x1014cec0]) drawn at 0x109e8674 (0x100f0205) and released
  * (Sim_100bb2b0); then for the 7 parts of the table 0x101508a0 (segment index - 1, shape slot): while the last
  * segment's divisor (+0x38) is non-zero, level = 15 - trunc((+8 * k + +0 * k) * k2 / divisor) (k, k2 at
  * 0x1012bae0 / 0x1012bae4), clamped to 0..15 (14 instead of 15 when +8 > [0x1012bae8]); style 8 / 5 / 7 / 4 for

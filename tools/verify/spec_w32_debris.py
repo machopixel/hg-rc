@@ -13,7 +13,7 @@ if os.environ.get('W32_NEG'):
 F10, F12 = 0x10029421, 0x1001ef21
 SMOKE12 = A12(0x1007f8a9)
 DSTUBS['Sim12_1007f8a9'] = (SMOKE12, 6, 'i')
-SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', 'sim/render/w33_dx12.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]
+SOURCES = SOURCES + [x for x in ['sim/render/w31_tex.c', 'sim/render/w33_mode.c', '../tools/verify/w32_smoke_stub.c'] if x not in SOURCES]
 
 
 def _hooks(m, pairs):

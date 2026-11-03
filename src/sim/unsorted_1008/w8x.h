@@ -64,7 +64,7 @@ void __cdecl Sim_10089e91(uint8_t *obj);
 /*
  * The shape named by [0x109e85c4] (0x100ba7d5 with [0x1014cec0]): the first time ([0x1014b94c] set) the
  * rectangle 0x1014b938 is fitted to 0x109e3e20 (View_ScaleRect, Sim_1008d2d0); then drawn at (0, 0) in it
- * (0x100f0205 when [0x1017b940] is set, else 0x100e91dc). Returns the draw routine's answer (0 without shape).
+ * (0x100f0205). Returns the draw routine's answer (0 without shape).
  */
 int __cdecl Sim_1008b6a0(void);
 /*

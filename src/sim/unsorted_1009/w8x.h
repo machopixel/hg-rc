@@ -72,8 +72,7 @@ void __cdecl Sim_100908b3(void);
  */
 int __cdecl Sim_10091223(uint8_t *obj);
 /*
- * Quads of size trunc(+0x56a * 2000 / depth) (at least 1); with size below 1 and not in the high-colour mode
- * ([0x1017b940] = 0) a pixel (0x100e84f0 on 0x109e3e00) instead. The node position is projected once first.
+ * Quads of size trunc(+0x56a * 2000 / depth) (at least 1). The node position is projected once first.
  */
 int __cdecl Sim_10092bbb(uint8_t *obj);
 /* As Sim_10092bbb without the first projection, each particle's own colour +0x1e and no depth in the vertices. */

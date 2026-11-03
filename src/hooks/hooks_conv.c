@@ -953,7 +953,7 @@ void HooksConv_OnSimLoaded(HMODULE sim)
     }
     sdlaudio = HooksAudio_SdlSound();   /* the one decision hooks_audio.c uses too */
     sdlplat = Hooks_SdlPlatform();      /* round 28: conv_w28.inc only with the SDL3 platform */
-    g_w8yPatch = !noconv && Hooks_Renderer12(); /* 1.2's game: Vulkan, and Direct3D on 1.2's dx5draw (round 33) */
+    g_w8yPatch = !noconv;       /* 1.2's game (round 33): every converted run, all Vulkan since round 42 */
     g_w31Tex = g_w8yPatch;              /* round 31: 1.2's .TEX textures (in 3D mode), particles and the rest */
     g_w31TexLoaded = g_w31TexFallback = g_w31TexMissing = 0;
     DebugPrintf("HGSIM.DLL: 1.2 game (Patch folder, .TEX textures, particles) %s\n", g_w8yPatch ? "on" : "off");

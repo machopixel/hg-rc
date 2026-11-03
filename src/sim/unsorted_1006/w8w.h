@@ -56,9 +56,8 @@
 #define W8W6_CALL_100c2ae5 SIM_FN(int(__cdecl *)(uint32_t), 0x100c2ae5)
 
 /*
- * When [0x1017692c] is set: with [0x1017b940] the 8 x 4 words at 0x10176960.. (0x200 bytes apart) get
- * 0x100f01ea of the indices 0..31 in the rotated order of the code; without it the bytes at 0x10178b60.. get the
- * indices themselves (0 in the column 0x10179360).
+ * When [0x1017692c] is set: the 8 x 4 words at 0x10176960.. (0x200 bytes apart) get 0x100f01ea of the indices
+ * 0..31 in the rotated order of the code.
  */
 void __cdecl Sim_10062386(void);
 
@@ -78,7 +77,7 @@ void __cdecl Sim_10062abd(uint8_t *obj);
 void __cdecl Sim_10063f00(uint8_t *obj, uint32_t unused, uint32_t unused2, float a, float b, float c);
 
 /*
- * With [0x1017b940] zero: 0x100e9cd1 with the ten arguments. Otherwise (and a non-null image) clears the
+ * For a non-null image: clears the
  * 0xfe01-byte image, sets its first byte to 0xf, draws into it as a 0xb2 x 0xb2 surface with 0x100e9cd1 and
  * 0x100ea9f5 (palette 0x10166910) and blits it with 0x100f0205 to (x - 0x59, y - 0x59) on dest.
  */
@@ -99,7 +98,7 @@ void __cdecl Sim_10065131(void);
 
 /*
  * Loads the resource `name` (0x100ba7d5 with the kind [0x1014cec0]) and, when it loaded, blits it to the surface
- * 0x109e3e00 at (x, y) (0x100f0205 with [0x1017b940] set, else 0x100e91dc) and releases it (Sim_100bb2b0).
+ * 0x109e3e00 at (x, y) (0x100f0205) and releases it (Sim_100bb2b0).
  * Returns 0 when it did not load, else the release's result.
  */
 uint32_t __cdecl Sim_1006519d(uint32_t x, uint32_t y, char *name);

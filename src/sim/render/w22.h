@@ -41,9 +41,8 @@ void __cdecl Sim_100a539e(void *rec);
  * (each axis: _ftol of max + min, halved). Two of its vertices, from [0x1017d110] modulo count, each give four
  * sparks: white or blue (0x1009c929(100) < 50), +0x10 = 0xff, +0x18 = 0xff000000, z / rhw / u / v from the vertex,
  * and the position the centre plus 0x1009c929(2) for the first, the vertex plus 0x1009c929(5) for the others.
- * Accelerated ([0x1017b940]): the eight go to the renderer [0x109e3d30] as lines (mode 0x10, surface 0x109e3dc0).
- * Otherwise they are drawn as a line strip through 0x100a2b8c (colour 0x17 or 0xfe by 0x1009c929(100)), from vertex 0
- * ([0x101cc2bc] / [0x101ccc6c]) round to vertex 0. [0x1017d110] then counts up.
+ * The eight go to the renderer [0x109e3d30] as lines (mode 0x10, surface 0x109e3dc0); [0x1017d110] then counts
+ * up. (The original's line strip without the renderer is gone, round 42.)
  *
  * Deviation (DECISIONS.md round 22): the texture record handed with the lines is {0, 0x40}; the original never writes
  * its second dword (0x40 in every watched call), and the vertex alpha bytes +0x17, which it never writes either, are 0.
@@ -54,11 +53,9 @@ void __cdecl Sim_1009fada(int32_t count, void *verts);
 /*
  * The display driver's polygon routine (the slot [0x1014cb4c]): count plugin vertices (0x24 bytes) drawn by the kind
  * flags & 0xf000:
- * - 0 (flat colour flags & 0xff) and 0x1000 (Gouraud, colour +0x10 of each vertex plus flags & 0xf0): accelerated
- *   ([0x1017b940]), the colour bytes +0x14..+0x16 from the palette 0x10185760 scaled by [0x10143fdc..fe4] >> 8, +0x10
- *   0xff (and +0x18 0xff000000 for kind 0), then the renderer [0x109e3d30] in mode 0xd; otherwise the 0x18-byte
- *   software vertices at 0x101ce4a0 (x, y truncated, colour << 16, the clip bits of x / y beyond +-0x2000), clipped
- *   by 0x100a2d91 into 0x101ccca0 when needed, and drawn by the graphics library 0x100e4780 / 0x100e5477 (3 or more);
+ * - 0 (flat colour flags & 0xff) and 0x1000 (Gouraud, colour +0x10 of each vertex plus flags & 0xf0): the colour
+ *   bytes +0x14..+0x16 from the palette 0x10185760 scaled by [0x10143fdc..fe4] >> 8, +0x10 0xff (and +0x18
+ *   0xff000000 for kind 0), then the renderer [0x109e3d30] in mode 0xd (the software side is gone, round 42);
  * - 0x4000: fog in +0x10 ((u32)+0x10 / [0x1012ba14] * [0x1012ba18] + [0x1012ba20], truncated; 0xff minus that unless
  *   [0x1017d108]), then mode 0xd;
  * - 0xa000: lines, accelerated with [0x1017b948] (mode 0x10) or through 0x100a2b8c round the polygon;
@@ -87,8 +84,7 @@ void __cdecl Sim_100ac9ab(void *item);
  * camera height +4; u / v from the position past the cell [0x1014c9e8] boundary below the nearest corner plus the
  * scroll [0x1017d104] (advanced, as [0x1014c9f4], by [0x1015dc80] * [0x1014c9f8] / [0x1012ba40] and reset at
  * [0x1012ba44]); then the camera position is added, the band clipped by Render_ClipPolygon with [0x1014cb34] cleared
- * and drawn by 0x100a0339 with the sky texture (loaded once by 0x100ba7d5 into [0x1017d100]). Without the renderer
- * plugin ([0x1017b940] clear) Sim_100a88db runs first.
+ * and drawn by 0x100a0339 with the sky texture (loaded once by 0x100ba7d5 into [0x1017d100]).
  * The original never writes the clip vertices' +0..+8 (nothing reads them): 0 here (DECISIONS.md round 22).
  */
 void __cdecl Sim_100a0880(void);
@@ -100,11 +96,9 @@ void __cdecl Sim_100a0880(void);
  * (0x100a291d / 0x100a29da / 0x100a2823) split where the horizon crosses the edges (0x10052f3a / 0x10052edc). With
  * [0x1014cb0c] some cases also give a haze band (its width and depth from the view matrix through 0x1005fbb0),
  * drawn with [0x1014caec] (unless [0x1017d0ac]) through the renderer in mode 2 with the haze texture (loaded once
- * into [0x1017d0fc]), the driver's polygon slot [0x1014cb4c], or the graphics library 0x100e5477 (software,
- * [0x1014cb38]). With the renderer plugin and the sky flag +0x38 of [0x1015d1b8] it then draws the sky band
- * (Sim_100a0880).
- * The original never writes the haze vertices' alpha bytes nor the software vertices' +0xc..+0x14: 0 here
- * (DECISIONS.md round 22; unread in modes 2 / 0xd, and by the library).
+ * into [0x1017d0fc]) or the driver's polygon slot [0x1014cb4c]. With the sky flag +0x38 of [0x1015d1b8] it then
+ * draws the sky band (Sim_100a0880).
+ * The original never writes the haze vertices' alpha bytes: 0 here (DECISIONS.md round 22; unread in modes 2 / 0xd).
  */
 void __cdecl Sim_100a0def(void *view);
 

@@ -21,9 +21,8 @@
 #define W5A_CALL_100aa64a SIM_FN(int(__cdecl *)(void *), 0x100aa64a)
 
 /*
- * Calls 0x100ef727 (when [0x1017b940] is not 0, with the word table 0x101659e0 [c] as the last argument) or
- * 0x100e86a1 (with c) as f(0x109e3e00, a, b, [0x101cc2bc], [0x101ccc6c], 0, last). Then [0x101cc2bc] = a and
- * [0x101ccc6c] = b.
+ * Calls 0x100ef727(0x109e3e00, a, b, [0x101cc2bc], [0x101ccc6c], 0, the word table 0x101659e0 [c]). Then [0x101cc2bc] =
+ * a and [0x101ccc6c] = b.
  */
 void __cdecl Sim_100a2b8c(uint32_t a, uint32_t b, uint32_t c);
 /*

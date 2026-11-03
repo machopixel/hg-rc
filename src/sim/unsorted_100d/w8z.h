@@ -72,8 +72,7 @@ int __cdecl Sim_100d2669(float *x, float *y, float *z);
 /*
  * For the two points at obj+0x12 and obj+0x3c (three floats each) moved by the position of the object
  * [obj+0x552]: when the point is on screen, draws a line from it along the vector obj+0x56e / [0x1012bd6c] with a
- * colour next to the one 0x100e85cb finds under it (through the patched 0x100ef727 while [0x1017b940] is set,
- * else 0x100e86a1). 0 for no object, else 1.
+ * colour next to the one 0x100e85cb finds under it (through the patched 0x100ef727). 0 for no object, else 1.
  */
 int __cdecl Sim_100d8e43(void *obj);
 /* The same for the first point only, vector and colour table from the record [obj+0x57a] (colour by depth). */
@@ -96,7 +95,7 @@ void __cdecl Sim_100d82f6(void);
 
 /* ---- w8z_palette.c: palettes (names of 16 bytes at 0x10185620, extension [0x1014ced4]) ---- */
 /*
- * While [0x1017b940] is set: loads palette 0 (0x100ba7d5), hands it to the driver ([0x1015e688] + 0x14), stores
+ * Loads palette 0 (0x100ba7d5), hands it to the driver ([0x1015e688] + 0x14), stores
  * the 256 colours (bytes through Sim_1004b804, times 4; colour 255 is 0x808080) at 0x10185760 and the matching
  * words (0x100f01ea of the index) at 0x101659e0, then gives the table to the plugin slot 0x109e3d44 and calls
  * 0x10062386. The argument is not used.
@@ -112,9 +111,7 @@ void __cdecl Sim_100d3427(int32_t index);
 int __cdecl Sim_100d3510(int32_t index, int32_t time, int mode);
 /*
  * Loads the palette 0x10185720 and runs Sim_100d3000; flag 0: hands it to the driver (+0x1c with 60, then
- * +0x18). Otherwise (while [0x1017b940] is 0) copies it through a heap block and the records 0x109e3e00 /
- * 0x109e3e20 with 0x100eda16 once per timer tick until the timer reaches 0x10f. Sets 0x10152420 and
- * 0x10152424 to 0x10.
+ * +0x18); otherwise nothing more (the software fade is gone, round 42). Sets 0x10152420 and 0x10152424 to 0x10.
  */
 void __cdecl Sim_100d3877(int flag);
 

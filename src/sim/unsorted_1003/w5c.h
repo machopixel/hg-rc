@@ -33,9 +33,8 @@ int __cdecl Sim_1003a052(void);
 void __cdecl Sim_10041247(const uint8_t *msg);
 
 /*
- * Shutdown sequence: 0x1008a5e3(), Sim_100a87f0(), the function stored at 0x109e3d2c (a renderer plugin slot) when set; unless
- * [0x1017b940] is set, with [0x1015e534] and [0x109e3e00] both set it calls 0x100eb070(0x109e3e00, 0xf0) and, when [0x1017b920] is
- * set, the function at +0x18 of the structure that [0x1015e68c] points to; then frees the block [0x1015e534] with HeapFree
+ * Shutdown sequence: 0x1008a5e3(), Sim_100a87f0(), the function stored at 0x109e3d2c (a renderer plugin slot) when set;
+ * then frees the block [0x1015e534] with HeapFree
  * (if set), clears [0x1015e538] and calls Sim_10037c6c().
  */
 void __cdecl Sim_100354ff(void);

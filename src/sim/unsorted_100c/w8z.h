@@ -186,7 +186,7 @@ void __cdecl Sim_100c7deb(void *obj);
 /*
  * For an object with a non-zero word +4 while [0x10179cc4] is set: calls its routine +0x114(obj, [0x101c4c54]),
  * loads the resource [0x109b9900] (0x100ba7d5) and hands it with the object's text +0x10 and its dwords to
- * 0x100f2f01 ([0x101668e8] set), 0x100f1e10 ([0x1017b940] set) or 0x100ecea6, then releases it.
+ * 0x100f2f01 ([0x101668e8] set) or 0x100f1e10, then releases it.
  */
 void __cdecl Sim_100cfd28(void *obj);
 

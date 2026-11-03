@@ -20,8 +20,8 @@
 /*
  * For each of the two 0x3c-byte records at 0x10149d28 whose dword +0xc is set: while the timer Sim_1002ab9d() is
  * below the record's +0x34, loads the font +0x14 (extension [0x1014cec4]) and the shape +0x24 ([0x1014cec0]),
- * blits the shape at the pane +0x38 (0x100f0205 while [0x1017b940] is set, else 0x100e91dc) and writes the text
- * +0 at (+4, +8) with colour 0xfe (0x100f2f01 while [0x101668e8], else 0x100f1e10 / 0x100ecea6 by [0x1017b940]),
+ * blits the shape at the pane +0x38 (0x100f0205) and writes the text
+ * +0 at (+4, +8) with colour 0xfe (0x100f2f01 while [0x101668e8], else 0x100f1e10),
  * colour 9 afterwards; once the timer has run out +0xc becomes 0.
  */
 void __cdecl Sim_1007e0ff(void);

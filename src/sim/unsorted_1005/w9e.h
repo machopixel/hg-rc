@@ -24,8 +24,8 @@
 /*
  * Fills the box (x, y, width, height) on the surface with horizontal lines in three shades of `colour`: the
  * first quarter of the rows in colour - 1, the second quarter in colour, the third in colour - 1 and the last
- * in colour - 2 (quarters by truncating division). With the 16-bit display ([0x1017b940] set) the shade is
- * looked up in the palette table at 0x101659e0. Nothing is drawn when width <= 0.
+ * in colour - 2 (quarters by truncating division), each shade looked up in the palette table at 0x101659e0. Nothing is
+ * drawn when width <= 0.
  */
 void __cdecl Hud_DrawShadedBox(uint32_t surface, int32_t x, int32_t y, int32_t width, int32_t height,
                                int32_t colour);

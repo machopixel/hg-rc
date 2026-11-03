@@ -37,8 +37,8 @@ int __cdecl Sim_100a4933(void *obj);
  * The scene pass: draw list at [0x1017d168] + [0x1017d134] * 8 (Sim_100a88db first when [0x1017d134] is 0),
  * counters cleared, visible cells marked (0x10087d83), every list of the table 0x1036f2a0 (until a null entry)
  * offered object by object (+0x20 chain from +0x20) until one stops, the entries sorted (0x100a4700) when more
- * than one, [0x101c9ea0] = their count, and outside the high-colour mode ([0x1017b940] = 0) each drawn with
- * 0x100a539e. A list whose +8 is 0 or equal to its +4 is retried for ever, as in the original.
+ * than one, [0x101c9ea0] = their count. A list whose +8 is 0 or equal to its +4 is retried for ever, as in the
+ * original.
  */
 void __cdecl Sim_100a4d8e(void);
 void __cdecl Sim12_10090a85(uint32_t first, uint32_t last);

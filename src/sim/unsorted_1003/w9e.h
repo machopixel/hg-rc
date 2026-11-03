@@ -29,16 +29,12 @@ typedef void(__cdecl *W9eDriverPolyFn)(int count, void *vertices, uint32_t colou
 
 /* ---- w9e_frame.c ---- */
 /*
- * Renders one frame of the 3-D view through the camera at [0x1014cae0]: clears the frame buffer when
- * [0x1015e53c] asks (Mem_Fill of [0x109e3e20] with [0x10138c70], Sim_100d32e5 of that preset), re-applies the
- * viewport when 0x1013a014 is set, publishes the view rectangle [0x109e3e00] at 0x109e3dc4..0x109e3ddc (8-bit
- * display only), then either only clears the view (0x100eb070, when [0x1014cae8] with the 8-bit display) or
- * draws: Sim_100d255e, 0x100d1f90, the clear or the sky (0x100a0def), the light direction (Sim_100b53f0), the
- * far scene [0x1015e544] with the far plane 0x7f7fc99e and the far polygon routine 0x10001ab9 in 0x1014cb40,
- * Sim_100a4d8e, the near scene [0x1015e548] with the near plane 8.0 (0x41000000) and routine 0x10002ce3, the
- * cells (0x10087d83, then 0x100357db for every entry of 0x1036f2a0 up to the first 0) when [0x1015e52c], and
- * finally Sim_100071f6 and Sim_100d32e5(0). 0x1015e54c sums the polygon counts 0x1017d138 of the three scene
- * passes.
+ * Renders one frame of the 3-D view through the camera at [0x1014cae0]: re-applies the viewport when 0x1013a014
+ * is set, then draws (the 8-bit display's clears are gone, round 42): Sim_100d255e, 0x100d1f90, the light direction
+ * (Sim_100b53f0), the far scene [0x1015e544] with the far plane 0x7f7fc99e and the far polygon routine 0x10001ab9 in
+ * 0x1014cb40, Sim_100a4d8e, the near scene [0x1015e548] with the near plane 8.0 (0x41000000) and routine 0x10002ce3,
+ * the cells (0x10087d83, then 0x100357db for every entry of 0x1036f2a0 up to the first 0) when [0x1015e52c], and
+ * finally Sim_100071f6 and Sim_100d32e5(0). 0x1015e54c sums the polygon counts 0x1017d138 of the three scene passes.
  */
 void __cdecl Sim_10034ec9(void);
 
