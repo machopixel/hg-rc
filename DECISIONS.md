@@ -3177,3 +3177,39 @@ call site:
   spec_w22_100a0880 stubs 0x100a88db by address (the C no longer calls Sim_100a88db). tools/verify/w9e_shim.c's
   bodies are weak, so spec_w9e links again when the checker adds a real file defining the same function (it had
   not linked since the memory round).
+
+## Platform layer off Windows, rounds P1 / P2 (Diego, 2026-11-03: "do changes"; recommended choices: 1 ms clock steps, assert box folder + "HG")
+
+- **Moved to SDL3** (src/platform/plat_system.c; were Windows calls in plat_win32.c):
+  - Plat_TicksMs: SDL_GetTicks cut to 32 bits (was GetTickCount: since Windows started, about 15.6 ms steps; now
+    since SDL started, 1 ms steps). Its callers only take differences. Plat_TimeMs stays timeGetTime (round P3).
+  - Plat_DebugText: SDL's log (on Windows still the debugger); one trailing line end of the text is dropped, since
+    SDL adds its own.
+  - Plat_LoadLibrary / Plat_LibraryFunction / Plat_FreeLibrary: the built-in table first (unchanged; the name
+    compared with SDL_strcasecmp), then SDL_LoadObject / SDL_LoadFunction / SDL_UnloadObject. Freeing NULL does
+    nothing.
+  - Plat_CurrentDir: SDL_GetCurrentDirectory without its separator at the end (a drive's root keeps "C:\"), the
+    size needed when the buffer is too small, as GetCurrentDirectoryA. On Linux / Mac "C:" is put in front (the
+    loading animation, w28_anim, takes the first character as a drive letter; plat_file.c drops "X:" again):
+    compiled there only, untested until a Linux / Mac build exists. Difference: a folder name with non-English
+    characters comes as UTF-8 (Windows: the ANSI code page); the game's folders are plain ASCII.
+  - Plat_ProgramPath: SDL_GetBasePath + "HG" (was the full path of HG.EXE); only the C runtime's assert box shows it.
+- **Moved to SDL3** (src/platform/input_sdl3.c, next to the key table):
+  - Plat_KeyChar (was MapVirtualKeyA type 2): the sim's key code back to its SDL scancode (the first one in
+    input_sdl3.c's table), SDL_GetKeyFromScancode without modifiers, the English letters upper case and the rest as
+    Windows-1252 (Windows keeps ñ / ç lower case); the keypad's codes give '0'..'9' * + - . / as Windows does.
+    **Difference (a fix):** input_sdl3.c sends the US position's key code for a physical key, which the Windows
+    lookup then read with the user's layout's meaning: on a Spanish keyboard 8 punctuation keys typed another
+    key's character (the Ñ key typed `). The new lookup answers for the physical key, as the original game did with
+    Windows' own key codes. US keyboards: no change.
+  - Plat_KeyState (was GetKeyState): SDL's modifier state in GetKeyState's form: 0xFF80 while Shift / Ctrl / Alt is
+    held, bit 0 for Caps / Num Lock toggled. Measured: Windows answers 0xFF80, so the game's 0x1000 test in
+    Input_QueueKey does see the modifiers (they are added to the typed character, as in the original).
+  - input_sdl3.c defines the Windows key-code numbers it uses itself (when windows.h is not there).
+- **Check** (tools/verify/plat_native.c, native on Windows, old against new): 164 checks, 0 differences: the current
+  folder, a drive's root, a too-small buffer, the program folder, libraries (kernel32, winmm, a missing function and
+  library, the built-in renderer through a path), the clock over a 1 s sleep (1000 / 1000 ms), the debug text; every
+  key code our input produces against Windows' character of the same physical key under the US and the Spanish
+  layout (loaded for the test only, unloaded after), 2 Spanish dead keys; GetKeyState against the new state for
+  nothing / Shift / Ctrl / Alt held and the locks toggled. No game file changed (the checker stands in for the
+  platform layer), so no game spec was re-run. Release build compiles clean.

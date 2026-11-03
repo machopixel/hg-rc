@@ -248,8 +248,11 @@ start (the checker needs the DLL to compare against).
 - **The game window is still the launcher's Windows window** (src/launcher/main.c CreateMainWindow, the message
   routing 0x41e / 0x41f): SDL3 wraps it (plat_window.c PlatSdl_Window). Plat_WindowSend, Plat_DropEvent,
   Plat_WindowPainted, Plat_WindowDefault, Plat_EventTime, Plat_RequestQuit and the pointer (Plat_CursorVisible /
-  Plat_CursorShown, Windows' ShowCursor count) stay in plat_win32.c for it. After (and
-  after the shell round): SDL3 creates the window, the window procedure becomes SDL event handling, and these go.
+  Plat_CursorShown, Windows' ShowCursor count) stay in plat_win32.c for it, with Plat_TimeMs (timeGetTime: the
+  window procedure compares the message time with a stamp it took) and input_sdl3.c's Windows message filter,
+  WaitMessage and its Peek / Translate / DispatchMessage fallback (round P3). After (and after the shell round): SDL3
+  creates the window, the window procedure becomes SDL event handling, and these go. The clock, debug text,
+  folders, libraries and the two key lookups are SDL3 already (round P1 / P2, DECISIONS.md).
 - **Loading-screen marks** ([0x1017b3c0] "device context", [0x1017b3c4] "palette"): 1 instead of GDI handles, kept
   because the driver tests them. After: a plain "picture open" flag.
 - **Callback addresses passed as data** (0x100020e5 in w9c_tree.c / w8y_objects.c; 0x10002513 / 0x10002964 in

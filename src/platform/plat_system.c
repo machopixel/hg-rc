@@ -105,3 +105,131 @@ int Plat_FileTimeToLocal(const uint32_t *fileTime, void *systemTime)
     memcpy(systemTime, v, sizeof(v));
     return 1;
 }
+
+/* ---- clock, debug text, folders, libraries (round P1: were Windows calls in plat_win32.c) ------------------ */
+
+uint32_t Plat_TicksMs(void)
+{
+    /* SDL_GetTicks: ms since SDL started its clock, in 1 ms steps (GetTickCount: since Windows started, about
+       15.6 ms steps); the game only takes differences, the 32 bits wrap as GetTickCount's did */
+    return (uint32_t)SDL_GetTicks();
+}
+
+void Plat_DebugText(const char *text)
+{
+    size_t n = strlen(text);
+
+    /* SDL's log ends every message with its own line end (on Windows it also goes to the debugger) */
+    if (n > 0 && text[n - 1] == '\n')
+        n--;
+    if (n > 0 && text[n - 1] == '\r')
+        n--;
+    SDL_Log("%.*s", (int)n, text);
+}
+
+uint32_t Plat_CurrentDir(char *out, uint32_t size)
+{
+    char *dir = SDL_GetCurrentDirectory();
+    size_t n;
+    const char *prefix = "";
+    size_t p;
+
+    if (dir == NULL)
+        return 0;
+    n = strlen(dir);
+    if (n > 1 && (dir[n - 1] == '/' || dir[n - 1] == '\\'))
+        n--;                            /* GetCurrentDirectoryA gives no separator at the end */
+#ifdef _WIN32
+    if (n == 2 && dir[1] == ':')
+        n = 3;                          /* "C:\": a drive's root keeps it */
+#else
+    prefix = "C:";                      /* the game takes the first character as a drive letter (w28_anim) */
+#endif
+    p = strlen(prefix);
+    if (p + n + 1 > size) {
+        SDL_free(dir);
+        return (uint32_t)(p + n + 1);   /* too small: the size needed, as GetCurrentDirectoryA */
+    }
+    memcpy(out, prefix, p);
+    memcpy(out + p, dir, n);
+    out[p + n] = 0;
+    SDL_free(dir);
+    return (uint32_t)(p + n);
+}
+
+uint32_t Plat_ProgramPath(char *out, uint32_t size)
+{
+    /* the program's folder and "HG" (DECISIONS.md, round P1; only the assert box shows it) */
+    const char *base = SDL_GetBasePath();
+    size_t n;
+
+    if (base == NULL)
+        return 0;
+    n = strlen(base);
+    if (n + 3 > size)
+        return 0;
+    memcpy(out, base, n);
+    memcpy(out + n, "HG", 3);
+    return (uint32_t)(n + 2);
+}
+
+/* the libraries built into the program (the Vulkan renderer); a handle of ours is the address of its entry */
+typedef struct {
+    const char *name;
+    void *(*function)(const char *name);
+} PlatBuiltin;
+
+static PlatBuiltin g_builtins[4];
+static int g_builtinCount;
+
+void Plat_AddBuiltinLibrary(const char *name, void *(*function)(const char *name))
+{
+    if (g_builtinCount < (int)(sizeof(g_builtins) / sizeof(g_builtins[0]))) {
+        g_builtins[g_builtinCount].name = name;
+        g_builtins[g_builtinCount].function = function;
+        g_builtinCount++;
+    }
+}
+
+static PlatBuiltin *Builtin(const void *handle)
+{
+    int i;
+
+    for (i = 0; i < g_builtinCount; i++) {
+        if (handle == &g_builtins[i])
+            return &g_builtins[i];
+    }
+    return NULL;
+}
+
+void *Plat_LoadLibrary(const char *name)
+{
+    const char *file = name;
+    const char *p;
+    int i;
+
+    for (p = name; *p != '\0'; p++) {
+        if (*p == '\\' || *p == '/' || *p == ':')
+            file = p + 1;
+    }
+    for (i = 0; i < g_builtinCount; i++) {
+        if (SDL_strcasecmp(file, g_builtins[i].name) == 0)
+            return &g_builtins[i];
+    }
+    return (void *)SDL_LoadObject(name);
+}
+
+void *Plat_LibraryFunction(void *library, const char *name)
+{
+    PlatBuiltin *b = Builtin(library);
+
+    if (b != NULL)
+        return b->function(name);
+    return (void *)SDL_LoadFunction((SDL_SharedObject *)library, name);
+}
+
+void Plat_FreeLibrary(void *library)
+{
+    if (library != NULL && Builtin(library) == NULL)
+        SDL_UnloadObject((SDL_SharedObject *)library);
+}

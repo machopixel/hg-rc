@@ -13,7 +13,60 @@
 #include <SDL3/SDL_system.h>
 
 #include "input.h"
+#include "plat.h"
 #include "plat_sdl3.h"
+
+/* The Windows virtual-key codes the sim works in (fixed numbers; windows.h has them on Windows) */
+#ifndef VK_RETURN
+#define VK_BACK 0x08
+#define VK_TAB 0x09
+#define VK_RETURN 0x0D
+#define VK_SHIFT 0x10
+#define VK_CONTROL 0x11
+#define VK_MENU 0x12
+#define VK_PAUSE 0x13
+#define VK_CAPITAL 0x14
+#define VK_ESCAPE 0x1B
+#define VK_SPACE 0x20
+#define VK_PRIOR 0x21
+#define VK_NEXT 0x22
+#define VK_END 0x23
+#define VK_HOME 0x24
+#define VK_LEFT 0x25
+#define VK_UP 0x26
+#define VK_RIGHT 0x27
+#define VK_DOWN 0x28
+#define VK_SNAPSHOT 0x2C
+#define VK_INSERT 0x2D
+#define VK_DELETE 0x2E
+#define VK_LWIN 0x5B
+#define VK_RWIN 0x5C
+#define VK_APPS 0x5D
+#define VK_NUMPAD0 0x60
+#define VK_NUMPAD1 0x61
+#define VK_MULTIPLY 0x6A
+#define VK_ADD 0x6B
+#define VK_SUBTRACT 0x6D
+#define VK_DECIMAL 0x6E
+#define VK_DIVIDE 0x6F
+#define VK_F1 0x70
+#define VK_F11 0x7A
+#define VK_F12 0x7B
+#define VK_NUMLOCK 0x90
+#define VK_SCROLL 0x91
+#define VK_OEM_1 0xBA
+#define VK_OEM_PLUS 0xBB
+#define VK_OEM_COMMA 0xBC
+#define VK_OEM_MINUS 0xBD
+#define VK_OEM_PERIOD 0xBE
+#define VK_OEM_2 0xBF
+#define VK_OEM_3 0xC0
+#define VK_OEM_4 0xDB
+#define VK_OEM_5 0xDC
+#define VK_OEM_6 0xDD
+#define VK_OEM_7 0xDE
+#define VK_OEM_102 0xE2
+#endif
 
 static SDL_Window *g_window;
 static int g_sdlStarted;
@@ -33,12 +86,17 @@ typedef struct KeyMap {
 } KeyMap;
 
 static KeyMap g_keyMap[SDL_SCANCODE_COUNT];
+/* the other way, for the key lookups (Plat_KeyChar): a virtual key's first scancode in BuildKeyMap's order */
+static SDL_Scancode g_vkScancode[256];
+static int g_keyMapBuilt;
 
 static void MapKey(SDL_Scancode usb, int sc, int ext, int vk)
 {
     g_keyMap[usb].sc = sc;
     g_keyMap[usb].ext = ext;
     g_keyMap[usb].vk = vk;
+    if (vk > 0 && vk < 256 && g_vkScancode[vk] == SDL_SCANCODE_UNKNOWN)
+        g_vkScancode[vk] = usb;
 }
 
 static void BuildKeyMap(void)
@@ -112,6 +170,88 @@ static void BuildKeyMap(void)
     MapKey(SDL_SCANCODE_RSHIFT, 0x36, 0, VK_SHIFT);
     MapKey(SDL_SCANCODE_RALT, 0x38, 1, VK_MENU);
     MapKey(SDL_SCANCODE_RGUI, 0x5C, 1, VK_RWIN);
+    g_keyMapBuilt = 1;
+}
+
+/* Windows-1252's characters 0x80..0x9F, as Unicode */
+static const uint16_t g_cp1252High[32] = {
+    0x20AC, 0, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, 0x02C6, 0x2030, 0x0160, 0x2039, 0x0152, 0, 0x017D, 0,
+    0, 0x2018, 0x2019, 0x201C, 0x201D, 0x2022, 0x2013, 0x2014, 0x02DC, 0x2122, 0x0161, 0x203A, 0x0153, 0, 0x017E,
+    0x0178};
+
+/*
+ * MapVirtualKeyA(key, MAPVK_VK_TO_CHAR) in SDL3 (round P2): the character of the physical key the sim's key code
+ * stands for, without modifiers, on the user's keyboard layout, in the Windows code page (1252), the English letters
+ * upper case; 0 when the key types none. (The key codes come from input_sdl3.c's table, which follows the US
+ * positions: SDL answers for the physical key, as the original game's own Windows key codes did.)
+ */
+uint32_t Plat_KeyChar(uint32_t key)
+{
+    SDL_Keycode k;
+    int i;
+
+    if (!g_keyMapBuilt)
+        BuildKeyMap();
+    if (key >= 256 || g_vkScancode[key] == SDL_SCANCODE_UNKNOWN)
+        return 0;
+    k = SDL_GetKeyFromScancode(g_vkScancode[key], SDL_KMOD_NONE, false);
+    switch (k) {                        /* the keypad: Windows gives its characters whatever Num Lock is */
+    case SDLK_KP_0: case SDLK_KP_1: case SDLK_KP_2: case SDLK_KP_3: case SDLK_KP_4:
+    case SDLK_KP_5: case SDLK_KP_6: case SDLK_KP_7: case SDLK_KP_8: case SDLK_KP_9:
+        return (uint32_t)('0' + (k == SDLK_KP_0 ? 0 : k - SDLK_KP_1 + 1));
+    case SDLK_KP_MULTIPLY:
+        return '*';
+    case SDLK_KP_PLUS:
+        return '+';
+    case SDLK_KP_MINUS:
+        return '-';
+    case SDLK_KP_PERIOD:
+        return '.';
+    case SDLK_KP_DIVIDE:
+        return '/';
+    default:
+        break;
+    }
+    if ((k & SDLK_SCANCODE_MASK) != 0 || k == 0)
+        return 0;
+    if (k >= 'a' && k <= 'z')
+        return (uint32_t)(k - 'a' + 'A');   /* only the English letters come upper case (Windows: 'A', but 0xF1 ñ) */
+    if (k < 0x100)
+        return (uint32_t)k;                 /* Latin-1 is Windows-1252 from 0xA0 on */
+    for (i = 0; i < 32; i++) {
+        if (g_cp1252High[i] != 0 && (SDL_Keycode)g_cp1252High[i] == k)
+            return (uint32_t)(0x80 + i);
+    }
+    return 0;
+}
+
+/* GetKeyState in SDL3 (round P2), for the modifier keys the sim asks about (Shift, Ctrl, Alt) and the two locks:
+   held as Windows answers it (the high byte and bit 7 set: 0xFF80), toggled bit 0 */
+int16_t Plat_KeyState(int key)
+{
+    SDL_Keymod mod = SDL_GetModState();
+    int down = 0, toggled = 0;
+
+    switch (key) {
+    case VK_SHIFT:
+        down = (mod & SDL_KMOD_SHIFT) != 0;
+        break;
+    case VK_CONTROL:
+        down = (mod & SDL_KMOD_CTRL) != 0;
+        break;
+    case VK_MENU:
+        down = (mod & SDL_KMOD_ALT) != 0;
+        break;
+    case VK_CAPITAL:
+        toggled = (mod & SDL_KMOD_CAPS) != 0;
+        break;
+    case VK_NUMLOCK:
+        toggled = (mod & SDL_KMOD_NUM) != 0;
+        break;
+    default:
+        break;
+    }
+    return (int16_t)((down ? 0xFF80 : 0) | (toggled ? 1 : 0));
 }
 
 #define KEY_QUEUE_SIZE 256

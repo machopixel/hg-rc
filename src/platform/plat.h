@@ -68,15 +68,16 @@ int Plat_DropEvent(void);
 
 /* ---- time and folders ------------------------------------------------------------------------------------- */
 
-/* Milliseconds since some fixed moment (wraps after 49 days). */
+/* Milliseconds since some fixed moment (wraps after 49 days): SDL_GetTicks, 1 ms steps (plat_system.c). */
 uint32_t Plat_TicksMs(void);
 /* Milliseconds since some fixed moment at the multimedia timer's finer step (Windows: timeGetTime, as the sim's own
  * timing read; Linux / Mac: SDL_GetTicks, still to do). */
 uint32_t Plat_TimeMs(void);
 /*
- * The program's current folder into out (size bytes, with the end zero); returns its length, 0 on failure.
- * Windows: "C:\...". Linux: the same call, but the game's paths will need a mapping layer (separators, letter
- * case) that this backend does not have yet.
+ * The program's current folder into out (size bytes, with the end zero), no separator at the end; returns its
+ * length, the size needed when out is too small, 0 on failure. SDL_GetCurrentDirectory (plat_system.c): Windows
+ * "C:\..."; Linux / Mac "C:" in front of the folder ("C:/home/..."), since the game takes the first character as a
+ * drive letter; the file layer drops "X:" again.
  */
 uint32_t Plat_CurrentDir(char *out, uint32_t size);
 
@@ -153,30 +154,31 @@ int Plat_FileTimeToLocal(const uint32_t *fileTime, void *systemTime);
 
 /* ---- program ---------------------------------------------------------------------------------------------- */
 
-/* The program's own file name (full path) into out (size bytes, with the end zero); its length, 0 when unknown.
- * Windows: GetModuleFileNameA. Linux / Mac: their own way (still to do; 0 until then). */
+/* The program's folder and "HG" into out (size bytes, with the end zero); its length, 0 when unknown
+ * (SDL_GetBasePath, plat_system.c; only the assert box shows it). */
 uint32_t Plat_ProgramPath(char *out, uint32_t size);
 /* The C runtime's assert box (C runtime replacement, the rest): text and caption, Abort / Retry / Ignore (SDL3). */
 enum { PLAT_ASSERT_ABORT = 3, PLAT_ASSERT_RETRY = 4, PLAT_ASSERT_IGNORE = 5 };
 int Plat_AssertBox(const char *text, const char *caption);
 /* Stops in the debugger (the original's DebugBreak after "Retry"); without one the program ends there. */
 void Plat_DebugBreak(void);
-/* A line of debug text for an attached debugger (Windows: OutputDebugStringA; Linux / Mac: stderr, still to do). */
+/* A line of debug text: SDL's log (Windows: also the attached debugger; Linux / Mac: the console). */
 void Plat_DebugText(const char *text);
 
 /* ---- keyboard ---------------------------------------------------------------------------------------------- */
 
-/* The character a Windows virtual-key code types without modifiers, 0 for none (Windows: MapVirtualKeyA type 2,
- * whose high bit marks a dead key; Linux / Mac: from SDL's key map, still to do). */
+/* The character a Windows virtual-key code types without modifiers on the user's keyboard layout, as
+ * MapVirtualKeyA type 2 gives it (English letters upper case, Windows-1252), 0 for none: SDL3's key map (input_sdl3.c). */
 uint32_t Plat_KeyChar(uint32_t key);
-/* A Windows virtual key's state as GetKeyState gives it (bit 15: down; bit 0: toggled); Linux / Mac: SDL's. */
+/* Shift / Ctrl / Alt / Caps Lock / Num Lock's state as GetKeyState gives it (held 0xFF80, toggled bit 0), from
+ * SDL3's modifier state (input_sdl3.c). */
 int16_t Plat_KeyState(int key);
 
 /* ---- libraries (the renderer plugins) ---------------------------------------------------------------------- */
 
 /* Loads a library by its file name; 0 when it does not load. A name whose file part is a built-in library's
  * (Plat_AddBuiltinLibrary: the Vulkan renderer "HGVK.DLL") gives that one, from the program itself. Otherwise
- * Windows: LoadLibraryA. Linux: the plugin's shared object (name mapping still to do). */
+ * SDL_LoadObject (plat_system.c). */
 void *Plat_LoadLibrary(const char *name);
 /* A library built into the program, under its file name (letter case aside): `function` answers its functions
  * by name (NULL for none). */

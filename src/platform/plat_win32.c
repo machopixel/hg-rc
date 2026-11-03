@@ -1,7 +1,7 @@
 /*
  * The Windows backend of the platform layer (plat.h): what is left of the window procedure's plumbing (the launcher
- * makes the game window the Windows way), the clocks, libraries and keys. The screen services are SDL3's
- * (plat_window.c), which wraps that same window.
+ * makes the game window the Windows way), the pointer and the clock the window messages are compared with. The
+ * screen services are SDL3's (plat_window.c), which wraps that same window.
  */
 #include <windows.h>
 #include <mmsystem.h>
@@ -68,102 +68,10 @@ int Plat_DropEvent(void)
     return PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE) != 0;
 }
 
-uint32_t Plat_TicksMs(void)
-{
-    return (uint32_t)GetTickCount();
-}
-
 uint32_t Plat_TimeMs(void)
 {
     return (uint32_t)timeGetTime();
 }
 
-void Plat_DebugText(const char *text)
-{
-    OutputDebugStringA(text);
-}
-
-uint32_t Plat_KeyChar(uint32_t key)
-{
-    return (uint32_t)MapVirtualKeyA(key, 2);
-}
-
-int16_t Plat_KeyState(int key)
-{
-    return (int16_t)GetKeyState(key);
-}
-
-uint32_t Plat_CurrentDir(char *out, uint32_t size)
-{
-    return (uint32_t)GetCurrentDirectoryA(size, out);
-}
-
-/* Plat_IniInt / Plat_IniString: plat_ini.c (our own reader, every system). Files: plat_file.c. */
-
-uint32_t Plat_ProgramPath(char *out, uint32_t size)
-{
-    DWORD n = GetModuleFileNameA(NULL, out, size);
-
-    return n < size ? (uint32_t)n : 0;
-}
-
-/* the libraries built into the program (the Vulkan renderer); a handle of ours is the address of its entry */
-typedef struct {
-    const char *name;
-    void *(*function)(const char *name);
-} PlatBuiltin;
-
-static PlatBuiltin g_builtins[4];
-static int g_builtinCount;
-
-void Plat_AddBuiltinLibrary(const char *name, void *(*function)(const char *name))
-{
-    if (g_builtinCount < (int)(sizeof(g_builtins) / sizeof(g_builtins[0]))) {
-        g_builtins[g_builtinCount].name = name;
-        g_builtins[g_builtinCount].function = function;
-        g_builtinCount++;
-    }
-}
-
-static PlatBuiltin *Builtin(const void *handle)
-{
-    int i;
-
-    for (i = 0; i < g_builtinCount; i++) {
-        if (handle == &g_builtins[i])
-            return &g_builtins[i];
-    }
-    return NULL;
-}
-
-void *Plat_LoadLibrary(const char *name)
-{
-    const char *file = name;
-    const char *p;
-    int i;
-
-    for (p = name; *p != '\0'; p++) {
-        if (*p == '\\' || *p == '/' || *p == ':')
-            file = p + 1;
-    }
-    for (i = 0; i < g_builtinCount; i++) {
-        if (_stricmp(file, g_builtins[i].name) == 0)
-            return &g_builtins[i];
-    }
-    return (void *)LoadLibraryA(name);
-}
-
-void *Plat_LibraryFunction(void *library, const char *name)
-{
-    PlatBuiltin *b = Builtin(library);
-
-    if (b != NULL)
-        return b->function(name);
-    return (void *)GetProcAddress((HMODULE)library, name);
-}
-
-void Plat_FreeLibrary(void *library)
-{
-    if (Builtin(library) == NULL)
-        FreeLibrary((HMODULE)library);
-}
+/* Plat_IniInt / Plat_IniString: plat_ini.c (our own reader, every system). Files: plat_file.c. The coarse clock,
+   debug text, folders and libraries: plat_system.c (SDL3); the keys: input_sdl3.c (round P1 / P2). */
