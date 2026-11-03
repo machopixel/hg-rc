@@ -43,10 +43,7 @@ void __cdecl Sim_10064364(float yaw, float pitch)
     }
     shape = W12C_LOAD(G32(0x109e8480), G32(0x1014cec0), 0);
     if (shape != 0) {
-        if (G32(0x1017b940) != 0)
-            W12C_BLIT_F0205(canvas, shape, 0, 0, 0);
-        else
-            W12C_BLIT_E91DC(canvas, shape, 0, 0, 0);
+        W12C_BLIT_F0205(canvas, shape, 0, 0, 0);
         W12C_Release(G32(0x109e8480), G32(0x1014cec0));
     }
     shape = W12C_LOAD(G32(0x109e8488), G32(0x1014cec0), 0);
@@ -79,10 +76,8 @@ void __cdecl Sim_10064364(float yaw, float pitch)
         W12C_SPRINTF(text, (const char *)GBYTES(0x10145044), Render_Ftol((double)heading));
         if (G32(0x101668e8) != 0)
             draw = SIM_FN(W12cTextFn, 0x100f2f01);
-        else if (G32(0x1017b940) != 0)
-            draw = SIM_FN(W12cTextFn, 0x100f1e10);
         else
-            draw = SIM_FN(W12cTextFn, 0x100ecea6);
+            draw = SIM_FN(W12cTextFn, 0x100f1e10);
         draw(canvas, y, x, font, text, 0x109b9920);
         U8(0x109b9900, 0x2e) = 9;
         W12C_Release(G32(0x109b9900), G32(0x1014cec4));

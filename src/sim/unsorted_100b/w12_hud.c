@@ -22,10 +22,7 @@ void __cdecl Sim_100b66a0(void)
     uint32_t shape = W12_LOAD(G32(0x109e8498), G32(0x1014cec0), 0);
 
     if (shape != 0) {
-        if (G32(0x1017b940) != 0)
-            W12_DRAW_F0205(0x109e8674, shape, 0, 0, 0);
-        else
-            W12_DRAW_E91DC(0x109e8674, shape, 0, 0, 0);
+        W12_DRAW_F0205(0x109e8674, shape, 0, 0, 0);
         Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109e8498), (const char *)(uintptr_t)G32(0x1014cec0));
     }
     for (i = 0; i < 7; i++) {
@@ -59,14 +56,9 @@ void __cdecl Sim_100b66a0(void)
         if (G32(0x1017692c) != 0) {
             uint32_t at = U32(G32(0x109e88e4), 0xf0);
 
-            if (G32(0x1017b940) != 0) {
-                W12_COLOURS_F01AD(0x10176960 + ((uint32_t)style << 9));
-                W12_DRAW_F0205(0x109e8674, shape, 0, U32(at, 0), U32(at, 4));
-                W12_COLOURS_F01AD(0x101659e0);
-            } else {
-                W12_COLOURS_E96A7(0x10178b60 + ((uint32_t)style << 8));
-                W12_DRAW_E96C6(0x109e8674, shape, 0, U32(at, 0), U32(at, 4));
-            }
+            W12_COLOURS_F01AD(0x10176960 + ((uint32_t)style << 9));
+            W12_DRAW_F0205(0x109e8674, shape, 0, U32(at, 0), U32(at, 4));
+            W12_COLOURS_F01AD(0x101659e0);
         }
         Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109e8480 + G32(0x101508a4 + (uint32_t)i * 8) * 4),
                      (const char *)(uintptr_t)G32(0x1014cec0));

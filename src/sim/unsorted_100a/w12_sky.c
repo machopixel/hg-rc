@@ -101,18 +101,11 @@ void __cdecl Sim_100a0063(const char *mission)
 #ifndef W12S_MUTATE /* the checker's negative check only: light 2's direction left as it was */
     W12_UnitDir(g_w33Light2Dir, dir2[0], dir2[1], dir2[2]);
 #endif
-    if (G32(0x1017b940) != 0 || G32(0x1017b944) != 0) {
-        intensity = hwIntensity;
-        Str_Copy(SIM_PTR(char, 0x1017d0d0), horizon);
-        U16(G32(0x1014cae0), 0x2a) = (uint16_t)hwAmbient;
-        G32(0x10138c74) = (uint32_t)sky5;
-        G32(0x10138c78) = (uint32_t)sky6;
-    } else {
-        G32(0x10138c74) = (uint32_t)sky1;
-        G32(0x10138c78) = (uint32_t)sky3;
-        if ((int32_t)G32(0x1017d108) < 0)
-            G32(0x1017d108) = 0;
-    }
+    intensity = hwIntensity;
+    Str_Copy(SIM_PTR(char, 0x1017d0d0), horizon);
+    U16(G32(0x1014cae0), 0x2a) = (uint16_t)hwAmbient;
+    G32(0x10138c74) = (uint32_t)sky5;
+    G32(0x10138c78) = (uint32_t)sky6;
     if (G32(0x1014cb38) != 0) {
         G32(0x10138c74) = 0xc0;
         G32(0x10138c78) = 0xdf;

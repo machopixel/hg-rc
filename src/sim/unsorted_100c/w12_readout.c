@@ -42,10 +42,7 @@ static void W12R_PaneText(uint8_t *pane, uint32_t text)
 
 static void W12R_Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
-    if (G32(0x1017b940) != 0)
-        SIM_FN(W12rLineFn, 0x100ef727)(0x109e3e00, x1, y1, x2, y2, 0, (uint32_t)*SIM_PTR(uint16_t, 0x101659f2));
-    else
-        SIM_FN(W12rLineFn, 0x100e86a1)(0x109e3e00, x1, y1, x2, y2, 0, 9);
+    SIM_FN(W12rLineFn, 0x100ef727)(0x109e3e00, x1, y1, x2, y2, 0, (uint32_t)*SIM_PTR(uint16_t, 0x101659f2));
 }
 
 /* the colour of a side: 0 -> 15, 1 -> 4, 2 -> 20, else unchanged */
@@ -232,10 +229,8 @@ void __cdecl Sim_100c7120(uint8_t *pane)
         U8(0x109b992e, 0) = (uint8_t)colour;
         if (G32(0x101668e8) != 0)
             draw = SIM_FN(W12rTextFn, 0x100f2f01);
-        else if (G32(0x1017b940) != 0)
-            draw = SIM_FN(W12rTextFn, 0x100f1e10);
         else
-            draw = SIM_FN(W12rTextFn, 0x100ecea6);
+            draw = SIM_FN(W12rTextFn, 0x100f1e10);
         draw(U32(pane, 0xec), 0, 0, font, (const char *)(pane + 0x10), 0x109b9920);
         U8(0x109b992e, 0) = 9;
         U8(0x109b992e, 0) = 0xf;
@@ -243,12 +238,8 @@ void __cdecl Sim_100c7120(uint8_t *pane)
         U8(0x109b992e, 0) = 9;
     } else {
         U8(0x109b992e, 0) = (uint8_t)colour;
-        if (G32(0x1017b940) != 0)
-            SIM_FN(W12rTextFn, 0x100f1e10)(U32(pane, 0xec), 0, 0, font, (const char *)(uintptr_t)G32(0x101c47e4),
-                                           0x109b9920);
-        else
-            SIM_FN(W12rTextFn, 0x100ecea6)(U32(pane, 0xec), 0, 0, font, (const char *)(uintptr_t)G32(0x101c47e4),
-                                           0x109b9920);
+        SIM_FN(W12rTextFn, 0x100f1e10)(U32(pane, 0xec), 0, 0, font, (const char *)(uintptr_t)G32(0x101c47e4),
+                                       0x109b9920);
         U8(0x109b992e, 0) = 9;
     }
     Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109b98c0), (const char *)(uintptr_t)G32(0x1014cec4));

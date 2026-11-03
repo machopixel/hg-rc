@@ -29,18 +29,13 @@ static void W13M_Text(uint32_t surface, int32_t x, int32_t y, uint32_t font, con
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W13mTextFn, 0x100f2f01)(surface, x, y, font, text, 0x109b9920);
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W13mTextFn, 0x100f1e10)(surface, x, y, font, text, 0x109b9920);
     else
-        SIM_FN(W13mTextFn, 0x100ecea6)(surface, x, y, font, text, 0x109b9920);
+        SIM_FN(W13mTextFn, 0x100f1e10)(surface, x, y, font, text, 0x109b9920);
 }
 
 static void W13M_Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
-    if (G32(0x1017b940) != 0)
-        SIM_FN(W13mLineFn, 0x100ef727)(W13M_SURFACE, x1, y1, x2, y2, 0, (uint32_t)*SIM_PTR(uint16_t, 0x101659f8));
-    else
-        SIM_FN(W13mLineFn, 0x100e86a1)(W13M_SURFACE, x1, y1, x2, y2, 0, 0xc);
+    SIM_FN(W13mLineFn, 0x100ef727)(W13M_SURFACE, x1, y1, x2, y2, 0, (uint32_t)*SIM_PTR(uint16_t, 0x101659f8));
 }
 
 /* The waypoint's name line: the language text [0x101c4ed0] alone, or followed by the entry's name. */

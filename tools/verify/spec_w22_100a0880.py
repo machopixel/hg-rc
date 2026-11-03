@@ -8,7 +8,7 @@ exec(open('tools/verify/w12_common.py').read())
 
 SOURCES = closure(['sim/render/w22_poly.c'])
 NEG = bool(os.environ.get('W22_NEG'))
-helper(0x100a88db, 'Sim_100a88db', 0)
+helper(0x100a88db, None, 0)      # round 42: the C no longer calls it (software side only)
 helper(0x100a0512, 'Render_ClipPolygon', 4, deref={0: 4 * 0x58})
 helper(0x100ba7d5, None, 3, sargs=(0,))
 helper(0x100a0339, None, 4)

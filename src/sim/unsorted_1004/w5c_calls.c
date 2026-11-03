@@ -51,18 +51,6 @@ int __cdecl Sim_1004e1c6(void)
     return 0;
 }
 
-// FUNCTION: HGSIM 0x1004ec60
-int __cdecl Sim_1004ec60(int value)
-{
-    int r = 1;
-
-    if (value != 0 && G32(0x1013b9a8) == 3) {
-        r = SIM_CALL_1004d980(value, U32(G32(0x109e3da4), 0), U32(G32(0x109e3da4), 4), U32(G32(0x109e3da4), 0xc), 6);
-        G32(0x1013b9a8) = 0;
-    }
-    return r;
-}
-
 // FUNCTION: HGSIM 0x1004edca
 int __cdecl Sim_1004edca(uint32_t a, uint32_t b)
 {

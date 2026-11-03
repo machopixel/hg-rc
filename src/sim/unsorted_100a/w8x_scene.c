@@ -136,7 +136,7 @@ void __cdecl Sim12_10090a85(uint32_t first, uint32_t last)
 void __cdecl Sim_100a4d8e(void)
 {
     uint32_t base, list, o;
-    int32_t i, k;
+    int32_t i;
 
     if (G32(0x1017d134) == 0)
         Sim_100a88db();
@@ -172,7 +172,4 @@ void __cdecl Sim_100a4d8e(void)
     /* 1.2: with fog on, its 3DFX / PowerVR mode sets the renderer's state 1 (1.0's 2) to 0x200000 */
     if (G32(0x1017d108) != 0 && g_w33Voodoo != 0)
         W8X_STATE(2, 0x200000);
-    if (G32(0x1017b940) == 0)
-        for (k = 0; k < GS32(0x1017d138); k++)
-            W8XA_CALL_100a539e(U32(G32(0x1017d168), (uint32_t)k * 8));
 }

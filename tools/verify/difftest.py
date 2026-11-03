@@ -484,6 +484,10 @@ def run_spec(m, spec, seed=1):
         args = spec['gen'](ctx) if 'gen' in spec else [g(ctx) if callable(g) else g for g in spec['args']]
         if 'skip' in spec and spec['skip'](args):     # spec 'skip'(args): inputs a recorded exception leaves out
             continue
+        # round 42: the renderer is always there ("3dfx" slot, [0x1017b940] and [0x1017b944] set; the C has no
+        # software / D3D side left); a spec with 'renderer_free' keeps what its generator wrote
+        if not spec.get('renderer_free'):
+            m.uc.mem_write(0x1017b940, struct.pack('<2I', 1, 1))
         d0 = {pg for pg in m.dirty if pg in m.pagemap}
         pre_pages = {pg: m.page_now(pg) for pg in d0}
         pre_full = m.full_now()
@@ -649,7 +653,7 @@ def main():
         os.environ['DIFFTEST_VERBOSE'] = '1'
     jobs = 1
     if args and args[0].startswith('-j'):
-        jobs = min(int(args[0][2:] or 8), 8)     # Diego, 2026-11-03: at most 8 processes
+        jobs = min(int(args[0][2:] or 16), 16)   # Diego, 2026-11-03 01:24: 16 processes
         args = args[1:]
     dll, specfile = args[0], args[1]
     want = set(args[2:])

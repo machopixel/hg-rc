@@ -5,8 +5,7 @@ rem log into buildlogs\ in the repo root so the output can be read afterwards.
 rem
 rem   dev.cmd            shows a menu and asks what to run
 rem   dev.cmd hgvk       build, deploy, run with the Vulkan plugin (HGVK)
-rem   dev.cmd dx5        build, deploy, run with the original Direct3D plugin
-rem   dev.cmd dx5noconv  as dx5, but with all converted code off (noconv)
+rem   dev.cmd dx5noconv  the original Direct3D plugin with all converted code off (noconv)
 rem   dev.cmd ref12      the untouched 1.2 game (C:\Coding\HeavyGear\Ref12: 1.2's own DLLs and plugins, our
 rem                      launcher with noconv and 1.2's own "no CD" setting), mission M01_SCN1, Direct3D
 rem   dev.cmd build      build and deploy only, do not start the game
@@ -37,7 +36,7 @@ if "%MODE%"=="" (
     echo.
     echo   1  Vulkan, through the menus
     echo   2  Vulkan, mission M01_SCN1 straight away - no menus, no 256-colour layer
-    echo   3  Original Direct3D renderer
+    echo   3  Original Direct3D renderer, original unconverted code (reference)
     echo   4  Build only, do not start the game
     echo   5  Like 2, but with the Vulkan depth buffer off, to compare
     echo   6  Like 2, but with the original detail and view distance, to compare
@@ -83,7 +82,7 @@ if "%MODE%"=="" (
     ) else if errorlevel 4 (
         set "MODE=build"
     ) else if errorlevel 3 (
-        set "MODE=dx5"
+        set "MODE=dx5noconv"
     ) else if errorlevel 2 (
         set "MODE=direct"
     ) else (
@@ -208,9 +207,6 @@ if /i "%MODE%"=="menusdl" (
 ) else if /i "%MODE%"=="dx5noconv" (
     >"%GAME%\DLLFILE.INI" echo DX5DRAW.DLL
     >"%GAME%\hgrc.cfg" echo d3d noconv
-) else if /i "%MODE%"=="dx5" (
-    >"%GAME%\DLLFILE.INI" echo DX5DRAW.DLL
-    >"%GAME%\hgrc.cfg" echo d3d
 ) else (
     >"%GAME%\DLLFILE.INI" echo HGVK.DLL
     >"%GAME%\hgrc.cfg" echo hgvk

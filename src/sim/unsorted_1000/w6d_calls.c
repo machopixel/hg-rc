@@ -13,11 +13,8 @@ void __cdecl Sim_1000799a(void)
 
     for (i = 0; i < 0x100; i++) {
         for (j = 0; j < 2; j++) {
-            if (G32(0x1017b940) != 0)
-                W6D_CALL_100ef727(0x109e3e00u, x, y + (uint32_t)j, x + 3, y + (uint32_t)j, 0,
-                                  SIM_PTR(u16a, 0x101659e0)[i]);
-            else
-                W6D_CALL_100e86a1(0x109e3e00u, x, y + (uint32_t)j, x + 3, y + (uint32_t)j, 0, (uint32_t)i);
+            W6D_CALL_100ef727(0x109e3e00u, x, y + (uint32_t)j, x + 3, y + (uint32_t)j, 0,
+                              SIM_PTR(u16a, 0x101659e0)[i]);
         }
         if ((i + 1) % 16 == 0) {
             x = 10;

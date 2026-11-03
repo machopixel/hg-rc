@@ -95,7 +95,6 @@ void __cdecl Sim_100ac9ab(void *item)
 }
 
 #define W22_CALL_100a9cfb SIM_FN(void(__cdecl *)(uint32_t, void *, void *, void *), 0x100a9cfb)
-#define W22_CALL_100e84f0 SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, uint32_t), 0x100e84f0)
 typedef int(__cdecl *W22DriverFn)(int32_t count, void *verts, uint32_t flags);
 
 /* x87: an integer plus a float, rounded once to float */
@@ -111,7 +110,7 @@ int __cdecl Sim_100945b8(void *obj)
        hands over stack leftovers (DECISIONS.md round 22): 0 here, z included */
     uint8_t v[4 * 0x24];
     float base[3], scale[3], x, y, z, s;
-    int32_t i, size, a, b;
+    int32_t i, size, a;
     uint32_t colour = 0xf0;
 
     if (obj == 0)
@@ -129,23 +128,6 @@ int __cdecl Sim_100945b8(void *obj)
         if (Sim_100d2669(&x, &y, &z) == 0)
             continue;
         size = Render_Ftol((double)(int32_t)(U32(obj, 0x56a) * 0x7d0u) / (double)z);
-        if (G32(0x1017b940) == 0) {
-            if (size < 1) {
-                W22_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), colour);
-                continue;
-            }
-            for (a = 0; a < size; a += 2) {
-                for (b = 0; b < size; b += 2) {
-                    float px = W22_AddI(a, x), py = W22_AddI(b, y);
-
-                    W22_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(px), Render_Ftol(py), colour);
-                    px = (float)((double)px + (double)*SIM_PTR(w22f, 0x1012b970));
-                    py = (float)((double)py + (double)*SIM_PTR(w22f, 0x1012b970));
-                    W22_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(px), Render_Ftol(py), colour);
-                }
-            }
-            continue;
-        }
         if (size < 1)
             size = 1;
         {
@@ -227,13 +209,8 @@ int __cdecl Sim_1009353e(void *obj)
         if (Sim_100d2669(&x, &y, &z) == 0)
             continue;
         size = Render_Ftol((double)(int32_t)(U32(obj, 0x56a) * 0x7d0u) / (double)z);
-        if (size < 1) {
-            if (G32(0x1017b940) == 0) {
-                W22_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), colour);
-                continue;
-            }
+        if (size < 1)
             size = 1;
-        }
         W22_SparkQuad(v, x, y, size, 1.0f);
         ((W22DriverFn)(uintptr_t)G32(0x1014cb4c))(4, v, colour);
     }

@@ -100,10 +100,8 @@ static void W10_9Text(uint32_t target, uint32_t x, uint32_t y, void *font, const
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W10_9TextFn, 0x100f2f01)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10_9TextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10_9TextFn, 0x100ecea6)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10_9TextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x1009b03d

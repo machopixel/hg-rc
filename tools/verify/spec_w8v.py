@@ -508,13 +508,6 @@ def g_deb3(ctx):
     return [arg(), arg(), arg(), arg(), r.choice([0x10002955, ctx.u32()])]
 
 
-def g_e886(ctx):
-    r = begin(ctx)
-    w32(ctx, 0x1015f344, r.choice([STREAM, 0, ctx.u32()]))
-    rets(0x100fd760, r.choice([0, 0xffffffff, 1]))
-    return []
-
-
 def g_copy_from(ctx):
     r = begin(ctx)
     rets(0x100ae344, r.choice([newbuf(ctx, 0x20), newbuf(ctx, 0x20), 0]))
@@ -942,7 +935,6 @@ SPECS = [
     dict(name='Chat_HandleKey', orig=0x10048c84, c='Chat_HandleKey', gen=g_8c84, trials=1500),
     dict(name='Gamma_BuildTable', orig=0x1004b710, c='Gamma_BuildTable', gen=g_b710, trials=2, void=True),
     dict(name='Gif_WriteImage', orig=0x1004deb3, c='Gif_WriteImage', gen=g_deb3, trials=600),
-    dict(name='Gif_CloseFile', orig=0x1004e886, c='Gif_CloseFile', gen=g_e886, trials=100),
     dict(name='Sim_10050e7e', orig=0x10050e7e, c='Sim_10050e7e', gen=g_0e7e, trials=800, void=True),
     dict(name='Sim_100510d9', orig=0x100510d9, c='Sim_100510d9', gen=g_10d9, trials=500, void=True),
     dict(name='Sim_10051372', orig=0x10051372, c='Sim_10051372', gen=g_1372, trials=600, void=True),

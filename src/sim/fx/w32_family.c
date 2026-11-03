@@ -113,18 +113,15 @@ int32_t W32_ParticleScale(uint8_t *rec, int32_t size)
     const W32Type *t = &g_w32_1011e700[S32(rec, 0x402)];
     float f, scale = *(const w32fa *)(rec + 0x3fe);
 
-    if (G32(0x1017b940) != 0) {
-        f = (float)((double)(float)size * (double)t->size);
-        f = (float)((double)f * (double)*(const w32fa *)&g_w32_1011e9d0[Sim_1009c929(0x18)]);
-        if (f < 1.0f)
-            f = 1.0f;
-        if (g_w32_1014b58c != 0 && (scale < 0.0f || scale > 0.0f))   /* fcomp 0.0 / test ah, 0x40 */
-            f = (float)((double)f * (double)scale);
-        else
-            f = (float)((double)f * (double)*(const w32fa *)(BYTES(G32(0x1014cae0)) + 0x18));
-        size = Render_Ftol((double)f);
-    }
-    return size;
+    f = (float)((double)(float)size * (double)t->size);
+    f = (float)((double)f * (double)*(const w32fa *)&g_w32_1011e9d0[Sim_1009c929(0x18)]);
+    if (f < 1.0f)
+        f = 1.0f;
+    if (g_w32_1014b58c != 0 && (scale < 0.0f || scale > 0.0f))   /* fcomp 0.0 / test ah, 0x40 */
+        f = (float)((double)f * (double)scale);
+    else
+        f = (float)((double)f * (double)*(const w32fa *)(BYTES(G32(0x1014cae0)) + 0x18));
+    return Render_Ftol((double)f);
 }
 
 int32_t W32_ParticleSize(uint8_t *rec, int32_t size)

@@ -46,10 +46,8 @@ void __cdecl Sim_100d0198(uint8_t *pane)
     target = U32(pane, 0xec);
     if (G32(0x101668e8) != 0)
         SIM_FN(W10dTextFn, 0x100f2f01)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10dTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10dTextFn, 0x100ecea6)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10dTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109b9900), (const char *)(uintptr_t)G32(0x1014cec4));
     Sim_10051532(pane);
 }
@@ -140,10 +138,8 @@ static void W10dText(uint32_t target, uint32_t x, uint32_t y, void *font, const 
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W10dTextFn, 0x100f2f01)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10dTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10dTextFn, 0x100ecea6)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10dTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x100d02bf

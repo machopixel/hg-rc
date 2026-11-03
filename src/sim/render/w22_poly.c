@@ -19,8 +19,6 @@ typedef int(__cdecl *W22pDriverFn)(int32_t count, void *verts, uint32_t flags);
 #define W22P_CALL_100e84f0 SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, uint32_t), 0x100e84f0)
 #define W22P_CALL_100ef727 \
     SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t), 0x100ef727)
-#define W22P_CALL_100e86a1 \
-    SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, int32_t, int32_t, uint32_t, uint32_t), 0x100e86a1)
 #define W22P_CALL_1009fada SIM_FN(void(__cdecl *)(int32_t, void *, uint32_t), 0x1009fada)
 
 // FUNCTION: HGSIM 0x100a539e
@@ -73,13 +71,9 @@ void __cdecl Sim_100a539e(void *rec)
         return;
     }
     if (count == 2 && G32(0x1014cafc) != 0) {
-        if (G32(0x1017b940) != 0)
-            W22P_CALL_100ef727(GBYTES(0x109e3e00), Render_Ftol(W22P_FL(v, 0)), Render_Ftol(W22P_FL(v, 4)),
-                               Render_Ftol(W22P_FL(v, 0x24)), Render_Ftol(W22P_FL(v, 0x28)), 0,
-                               U16(GBYTES(0x101659e0), flags * 2));
-        else
-            W22P_CALL_100e86a1(GBYTES(0x109e3e00), Render_Ftol(W22P_FL(v, 0)), Render_Ftol(W22P_FL(v, 4)),
-                               Render_Ftol(W22P_FL(v, 0x24)), Render_Ftol(W22P_FL(v, 0x28)), 0, flags);
+        W22P_CALL_100ef727(GBYTES(0x109e3e00), Render_Ftol(W22P_FL(v, 0)), Render_Ftol(W22P_FL(v, 4)),
+                           Render_Ftol(W22P_FL(v, 0x24)), Render_Ftol(W22P_FL(v, 0x28)), 0,
+                           U16(GBYTES(0x101659e0), flags * 2));
         return;
     }
     switch (G32(0x1014cb1c)) {
@@ -133,7 +127,6 @@ void __cdecl Sim_1009fada(int32_t count, void *verts)
     float xmin = 3.4028235e38f, xmax = -3.4028235e38f, ymin = 3.4028235e38f, ymax = -3.4028235e38f;
     int32_t cx, cy, i, j;
     uint8_t *v = BYTES(verts), *base, *out;
-    uint32_t colour;
 
     memset(spark, 0, sizeof(spark));
     for (i = 0; i < count; i++, v += 0x24) {
@@ -175,21 +168,9 @@ void __cdecl Sim_1009fada(int32_t count, void *verts)
             }
         }
     }
-    if (G32(0x1017b940) != 0) {
-        tex[0] = 0;
-        tex[1] = 0x40;
-        ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(0x10, GBYTES(0x109e3dc0), spark, 8, tex);
-    } else {
-        G32(0x101cc2bc) = (uint32_t)Render_Ftol(W22P_FL(spark, 0));
-        G32(0x101ccc6c) = (uint32_t)Render_Ftol(W22P_FL(spark, 4));
-        for (i = 1; i < 8; i++) {
-            colour = W22P_CALL_1009c929(100) < 0x32 ? 0x17 : 0xfe;
-            W22P_CALL_100a2b8c(Render_Ftol(W22P_FL(spark + i * 0x24, 0)), Render_Ftol(W22P_FL(spark + i * 0x24, 4)),
-                               colour);
-        }
-        colour = W22P_CALL_1009c929(100) < 0x32 ? 0x17 : 0xfe;
-        W22P_CALL_100a2b8c(Render_Ftol(W22P_FL(spark, 0)), Render_Ftol(W22P_FL(spark, 4)), colour);
-    }
+    tex[0] = 0;
+    tex[1] = 0x40;
+    ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(0x10, GBYTES(0x109e3dc0), spark, 8, tex);
     G32(0x1017d110) += 1;
 }
 
@@ -198,9 +179,6 @@ void __cdecl Sim_1009fada(int32_t count, void *verts)
 #define W22P_CALL_10006744 SIM_FN(int(__cdecl *)(uint32_t, int32_t, void *, int32_t), 0x10006744)
 #define W22P_CALL_10006609 \
     SIM_FN(int(__cdecl *)(uint32_t, int32_t, void *, uint32_t, uint32_t, uint32_t, uint32_t), 0x10006609)
-#define W22P_CALL_100a2d91 SIM_FN(int32_t(__cdecl *)(int32_t, uint32_t), 0x100a2d91)
-#define W22P_CALL_100e4780 SIM_FN(void(__cdecl *)(void *, int32_t, void *), 0x100e4780)
-#define W22P_CALL_100e5477 SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, void *), 0x100e5477)
 
 /* the colour bytes +0x14..+0x16 of a plugin vertex from palette entry index, scaled by the three channel factors */
 static void W22p_Shade(uint8_t *v, uint32_t index)
@@ -210,32 +188,6 @@ static void W22p_Shade(uint8_t *v, uint32_t index)
     v[0x14] = (uint8_t)((((c >> 16) & 0xff) * GS32(0x10143fdc)) >> 8);
     v[0x15] = (uint8_t)((((c >> 8) & 0xff) * GS32(0x10143fe0)) >> 8);
     v[0x16] = (uint8_t)(((c & 0xff) * GS32(0x10143fe4)) >> 8);
-}
-
-/* the 0x18-byte software vertices at 0x101ce4a0 with their clip bits (2 / 1: x below / above +-0x2000, 4 / 8: y) */
-static uint32_t W22p_Soft(int32_t count, uint8_t *verts, uint32_t flags, int gouraud)
-{
-    uint32_t bits = 0;
-    int32_t *p = (int32_t *)GBYTES(0x101ce4a0), x, y, i;
-
-    for (i = 0; i < count; i++, p += 6) {
-        uint8_t *v = verts + i * 0x24;
-
-        p[0] = Render_Ftol(W22P_FL(v, 0));
-        x = p[0];
-        p[1] = Render_Ftol(W22P_FL(v, 4));
-        y = p[1];
-        p[2] = (int32_t)((gouraud ? U32(v, 0x10) + (flags & 0xf0) : flags) << 16);
-        if (x < -0x2000)
-            bits |= 2;
-        else if (x > 0x2000)
-            bits |= 1;
-        if (y < -0x2000)
-            bits |= 4;
-        else if (y > 0x2000)
-            bits |= 8;
-    }
-    return bits;
 }
 
 /* the renderer [0x109e3d30] with a texture record of {0, rec1} (see Sim_1009ef50) */
@@ -251,8 +203,8 @@ static void W22p_Render(int mode, void *verts, int32_t count, uint32_t rec1)
 // FUNCTION: HGSIM 0x1009ef50
 void __cdecl Sim_1009ef50(int32_t count, void *verts, uint32_t flags)
 {
-    uint8_t *v = BYTES(verts), *soft;
-    uint32_t bits, saved, fog;
+    uint8_t *v = BYTES(verts);
+    uint32_t saved, fog;
     int32_t i;
 
     switch (flags & 0xf000) {
@@ -264,49 +216,24 @@ void __cdecl Sim_1009ef50(int32_t count, void *verts, uint32_t flags)
         return;
     case 0:
         flags &= 0xff;
-        if (G32(0x1017b940) != 0) {
-            for (i = 0; i < count; i++, v += 0x24) {
-                W22p_Shade(v, flags);
-                U32(v, 0x10) = 0xff;
-                U32(v, 0x18) = 0xff000000u;
-            }
-            W22p_Render(0xd, verts, count, flags);
-            return;
+        for (i = 0; i < count; i++, v += 0x24) {
+            W22p_Shade(v, flags);
+            U32(v, 0x10) = 0xff;
+            U32(v, 0x18) = 0xff000000u;
         }
-        U32(GBYTES(0x101ce4a0), 8) = flags;
-        bits = W22p_Soft(count, BYTES(verts), flags, 0);
-        soft = GBYTES(0x101ce4a0);
-        if (bits != 0) {
-            count = W22P_CALL_100a2d91(count, bits);
-            if (count > 2)
-                soft = GBYTES(0x101ccca0);
-        }
-        if (count > 2)
-            W22P_CALL_100e4780(GBYTES(0x109e3e00), count, soft);
+        W22p_Render(0xd, verts, count, flags);
         return;
     case 0x1000:
         flags &= 0xff;
-        if (G32(0x1017b940) != 0) {
-            for (i = 0; i < count; i++, v += 0x24) {
-                W22p_Shade(v, U32(v, 0x10) + (flags & 0xf0));
-                U32(v, 0x10) = 0xff;
-            }
-            W22p_Render(0xd, verts, count, 0);
-            return;
+        for (i = 0; i < count; i++, v += 0x24) {
+            W22p_Shade(v, U32(v, 0x10) + (flags & 0xf0));
+            U32(v, 0x10) = 0xff;
         }
-        bits = W22p_Soft(count, BYTES(verts), flags, 1);
-        soft = GBYTES(0x101ce4a0);
-        if (bits != 0) {
-            count = W22P_CALL_100a2d91(count, bits);
-            if (count > 2)
-                soft = GBYTES(0x101ccca0);
-        }
-        if (count > 2)
-            W22P_CALL_100e5477(GBYTES(0x109e3e00), 0x7fff, count, soft);
+        W22p_Render(0xd, verts, count, 0);
         return;
     case 0xa000:
         flags &= 0xff;
-        if (G32(0x1017b940) != 0 && G32(0x1017b948) != 0) {
+        if (G32(0x1017b948) != 0) {
             int32_t c = GS32(0x10185760 + flags * 4);
 
             for (i = 0; i < count; i++, v += 0x24) {
@@ -400,8 +327,6 @@ void __cdecl Sim_100a0880(void)
 
     if ((int8_t)*GBYTES(0x1017d0b0) == 0)
         return;
-    if (G32(0x1017b940) == 0)
-        Sim_100a88db();
     yaw = W22P_FL(cam, 0xc);
     pitch = (float)((double)*SIM_PTR(w22pf, 0x1012ba2c) - (double)W22P_FL(cam, 0x10));
     while (yaw > *SIM_PTR(w22pf, 0x1012ba30))
@@ -570,7 +495,7 @@ void __cdecl Sim_100a0def(void *view)
         G32(0x1012da34) = 0;
         W22P_CALL_1000656f();
     }
-    light0 = G32(0x1017b940) != 0 ? 0xff : 0x80;
+    light0 = 0xff;
     light2 = light0;
     yaw = W22P_FL(view, 0xc);
     while (!(yaw >= *SIM_PTR(w22pf, 0x1012ba28)))
@@ -826,61 +751,57 @@ void __cdecl Sim_100a0def(void *view)
         sw[2][1] = z.y2;
         sw[3][0] = z.x3;
         sw[3][1] = z.y3;
-        if (G32(0x1014cb38) != 0 && G32(0x1017b940) == 0) {
-            W22P_CALL_100e5477(GBYTES(0x109e3e00), 0x8000, 4, sw);
-        } else {
-            for (i = 0; i < 4; i++) {
-                W22P_FL(pv + i * 0x24, 0) = (float)sw[i][0];
-                W22P_FL(pv + i * 0x24, 4) = (float)sw[i][1];
-            }
-            if (W31_TexMode()) {
-                /* round 31, T2: 1.2 (0x1008dff3) puts the band at the far end (z 0x7f7fc99e, 1/z still 1) and loads
-                   its texture as .TEX in 3D mode, described with its own palette */
-                for (i = 0; i < 4; i++)
-                    U32(pv + i * 0x24, 8) = 0x7f7fc99eu;
+        for (i = 0; i < 4; i++) {
+            W22P_FL(pv + i * 0x24, 0) = (float)sw[i][0];
+            W22P_FL(pv + i * 0x24, 4) = (float)sw[i][1];
+        }
+        if (W31_TexMode()) {
+            /* round 31, T2: 1.2 (0x1008dff3) puts the band at the far end (z 0x7f7fc99e, 1/z still 1) and loads
+               its texture as .TEX in 3D mode, described with its own palette */
+            for (i = 0; i < 4; i++)
+                U32(pv + i * 0x24, 8) = 0x7f7fc99eu;
 #ifdef W31S_MUTATE /* the checker's negative check only: the far depth one bit off */
-                U32(pv, 8) = 0x7f7fc99fu;
+            U32(pv, 8) = 0x7f7fc99fu;
 #endif
-                if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
-                    tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), (uint32_t)(uintptr_t)W31_TypeTex(), 0));
-                    G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
-                    if (tex != 0) {
-                        void *palette = g_w31FileTex[0].palette;
+            if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
+                tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), (uint32_t)(uintptr_t)W31_TypeTex(), 0));
+                G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
+                if (tex != 0) {
+                    void *palette = g_w31FileTex[0].palette;
 
-                        g_w31TexLoaded++;
-                        W31_DescribeFileTex(&g_w31FileTex[0], tex, 0x101cfc90);
-                        g_w31FileTex[0].palette = palette;   /* 1.2 sets the palette only when it draws */
-                    } else {
-                        g_w31TexMissing++;
-                    }
-                }
-                if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
-                    g_w31FileTex[0].palette = (void *)(uintptr_t)(G32(0x1017d0fc) + 0xc);
-                    ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
+                    g_w31TexLoaded++;
+                    W31_DescribeFileTex(&g_w31FileTex[0], tex, 0x101cfc90);
+                    g_w31FileTex[0].palette = palette;   /* 1.2 sets the palette only when it draws */
                 } else {
-                    ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
+                    g_w31TexMissing++;
                 }
+            }
+            if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
+                g_w31FileTex[0].palette = (void *)(uintptr_t)(G32(0x1017d0fc) + 0xc);
+                ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
             } else {
-                if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
-                    tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), G32(0x1014ceb8), 0));
-                    G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
-                    if (tex != 0) {
-                        G32(0x101ccc80) = (uint32_t)(int32_t)S16(tex, 0);
-                        G32(0x101ccc84) = (uint32_t)(int32_t)S16(tex, 2);
-                        G32(0x101ccc88) = (uint32_t)(uintptr_t)(tex + 4);
-                        G32(0x101cfc90) = (uint32_t)(uintptr_t)GBYTES(0x101ccc80);
-                    }
+                ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
+            }
+        } else {
+            if (G32(0x1017d0fc) == 0 && (int8_t)*GBYTES(0x1017d0d0) != 0) {
+                tex = BYTES(W22P_CALL_100ba7d5(GBYTES(0x1017d0d0), G32(0x1014ceb8), 0));
+                G32(0x1017d0fc) = (uint32_t)(uintptr_t)tex;
+                if (tex != 0) {
+                    G32(0x101ccc80) = (uint32_t)(int32_t)S16(tex, 0);
+                    G32(0x101ccc84) = (uint32_t)(int32_t)S16(tex, 2);
+                    G32(0x101ccc88) = (uint32_t)(uintptr_t)(tex + 4);
+                    G32(0x101cfc90) = (uint32_t)(uintptr_t)GBYTES(0x101ccc80);
                 }
-                if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
-                    G32(0x101ccc8c) = (uint32_t)(uintptr_t)GBYTES(0x10185760);
-                    ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
-                } else {
-                    ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
-                }
+            }
+            if (G32(0x1017d0fc) != 0 && G32(0x1014cb38) == 0) {
+                G32(0x101ccc8c) = (uint32_t)(uintptr_t)GBYTES(0x10185760);
+                ((W22pRenderFn)(uintptr_t)G32(0x109e3d30))(2, GBYTES(0x109e3dc0), pv, 4, GBYTES(0x101cfc90));
+            } else {
+                ((W22pDriverFn)(uintptr_t)G32(0x1014cb4c))(4, pv, (G32(0x10138c74) & 0xf0) | 0x1000);
             }
         }
     }
-    if (G32(0x1017b940) != 0 && U32(G32(0x1015d1b8), 0x38) != 0) {
+    if (U32(G32(0x1015d1b8), 0x38) != 0) {
         /* round 31, T2: 1.2 sets render state 0xc (its numbering; 1.0's 0xd) to 1 first, unless the display kind
            [0x1014cb1c] is 1; neither 1.2's dx5draw nor our renderers act on that state */
         if (W31_TexMode() && G32(0x1014cb1c) != 1)

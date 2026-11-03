@@ -3,10 +3,7 @@
 
 static void W9e_Row(uint32_t surface, int32_t x, int32_t y, int32_t x2, int32_t shade)
 {
-    if (G32(0x1017b940) != 0)
-        W9E_LINE16(surface, x, y, x2, y, 0, U16(GBYTES(0x101659e0), (uint32_t)shade * 2));
-    else
-        W9E_LINE8(surface, x, y, x2, y, 0, (uint32_t)shade);
+    W9E_LINE16(surface, x, y, x2, y, 0, U16(GBYTES(0x101659e0), (uint32_t)shade * 2));
 }
 
 // FUNCTION: HGSIM 0x10051c90

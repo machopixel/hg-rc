@@ -136,9 +136,7 @@ void __cdecl Sim_100cfd28(void *obj)
     a = U32(obj, 0xec);
     if (G32(0x101668e8) != 0)
         W8Z_CALL_100f2f01(a, b, c, res, BYTES(obj) + 0x10, SIM_PTR(uint8_t, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W8Z_CALL_100f1e10(a, b, c, res, BYTES(obj) + 0x10, SIM_PTR(uint8_t, 0x109b9920));
     else
-        W8Z_CALL_100ecea6(a, b, c, res, BYTES(obj) + 0x10, SIM_PTR(uint8_t, 0x109b9920));
+        W8Z_CALL_100f1e10(a, b, c, res, BYTES(obj) + 0x10, SIM_PTR(uint8_t, 0x109b9920));
     Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109b9900), (const char *)(uintptr_t)G32(0x1014cec4));
 }

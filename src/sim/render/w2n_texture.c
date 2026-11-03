@@ -118,10 +118,7 @@ int __cdecl Render_SubmitVerts_10006609(int index, int count, unsigned char *ver
     v = verts;
     for (i = 0; i < count; i++, v += 0x24) {
         FinishVertex(v, 1);
-        if (U32(0x1017b940) != 0)
-            *(uint32_t *)(v + 0x10) = (*(uint32_t *)(v + 0x10) << 3) | 7;
-        else
-            *(uint32_t *)(v + 0x10) = *(uint32_t *)(v + 0x10) << 3;
+        *(uint32_t *)(v + 0x10) = (*(uint32_t *)(v + 0x10) << 3) | 7;
     }
     tex.width = width;
     tex.height = height;
@@ -158,10 +155,7 @@ int __cdecl Render_SubmitVerts_10006744(int index, int count, unsigned char *ver
            3DFX / PowerVR vertex colours, which our renderers never take (round 31: 1.2 with Vulkan) */
         if (!g_w31Tex)
             v[0x17] = 0xff;
-        if (U32(0x1017b940) != 0)
-            *(uint32_t *)(v + 0x10) = (*(uint32_t *)(v + 0x10) << 3) | 7;
-        else
-            *(uint32_t *)(v + 0x10) = *(uint32_t *)(v + 0x10) << 3;
+        *(uint32_t *)(v + 0x10) = (*(uint32_t *)(v + 0x10) << 3) | 7;
     }
     tex.width = width;
     tex.height = height;
@@ -172,13 +166,11 @@ int __cdecl Render_SubmitVerts_10006744(int index, int count, unsigned char *ver
     handle = &tex;
     if (flag != 0) {
         RENDER_CALL(1, RENDER_PLUGIN, verts, count, &handle);
-    } else if (U32(0x1017b940) != 0) {
-        tex.key = 0xff; /* only set on this path; the others leave it unset */
+    } else {
+        tex.key = 0xff; /* only set on this path; the other leaves it unset */
         tex.flag = W31_TexMode(); /* 1.2 (0x100012c5): a .TEX texture in 3D mode */
         /* 1.2 asks for mode 8: its renderers renumbered the modes, its 8 is 1.0's 6 (DECISIONS.md, round 31) */
         RENDER_CALL(6, RENDER_PLUGIN, verts, count, &handle);
-    } else {
-        RENDER_CALL(2, RENDER_PLUGIN, verts, count, &handle);
     }
     return 1;
 }
@@ -202,10 +194,7 @@ int __cdecl Render_SubmitVerts_100068d9(int index, int count, unsigned char *ver
     v = verts;
     for (i = 0; i < count; i++, v += 0x24) {
         FinishVertex(v, 0);
-        if (U32(0x1017b940) != 0)
-            *(uint32_t *)(v + 0x10) = 0xff;
-        else
-            *(uint32_t *)(v + 0x10) = 0x80;
+        *(uint32_t *)(v + 0x10) = 0xff;
         v[0x17] = 0xc8;
     }
     tex.key = 0xff;
@@ -217,9 +206,6 @@ int __cdecl Render_SubmitVerts_100068d9(int index, int count, unsigned char *ver
     tex.flag = W31_TexMode(); /* 1.2: a .TEX texture in 3D mode */
     handle = &tex;
     /* 1.2 asks for mode 8: its renderers renumbered the modes, its 8 is 1.0's 6 (DECISIONS.md, round 31) */
-    if (U32(0x1017b940) != 0)
-        RENDER_CALL(6, RENDER_PLUGIN, verts, count, &handle);
-    else
-        RENDER_CALL(2, RENDER_PLUGIN, verts, count, &handle);
+    RENDER_CALL(6, RENDER_PLUGIN, verts, count, &handle);
     return 1;
 }

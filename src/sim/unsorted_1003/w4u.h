@@ -7,15 +7,6 @@
 #ifndef _WIN32
 #define __cdecl /* the default convention on other targets, for the test builds */
 /*
- * One step of the refresh-mode test (strings "Refresh mode %d start=..."), driven by the counter dword 0x1015e9cc:
- * at 1 it reads the high-resolution counter into the qword 0x1015e680, at 5 it reads it again, stores the low-word
- * difference in dword +0xc of the current mode object (dword 0x1015e68c) and moves on to the next mode object whose
- * function at +0x10 succeeds (marking the ones that fail as unavailable, +8 = 0), finally calling Sim_10037e8f when the
- * active flag 0x1015e694 is 0; any other value of the counter just increments it. The mode numbers are compared with
- * the dword 0x1013a2c4. A failing counter read clears the active flag 0x1015e694.
- */
-void __cdecl Sim_10037cab(void);
-/*
  * The name is the one the DLL prints ("ToggleFullScreen(1): pause_timer(TRUE)"). Does nothing while the flag 0x1015e694 is
  * set, or while the window already covers the display (dwords 0x1015e9c0 == 0 and 0x1015e9c4/0x1015e9c8 not above the
  * size at 0x109e3d14/0x109e3d18). Otherwise pauses the timer (Timer_Pause(0x80, 1)), picks the mode object to switch to,
@@ -49,15 +40,6 @@ int __cdecl Sim_1003693c(void);
  */
 void __cdecl Sim_1003913b(uint32_t key, void *other);
 
-/*
- * One step of the refresh-mode test (strings "Refresh mode %d start=..."), driven by the counter dword 0x1015e9cc:
- * at 1 it reads the high-resolution counter into the qword 0x1015e680, at 5 it reads it again, stores the low-word
- * difference in dword +0xc of the current mode object (dword 0x1015e68c) and moves on to the next mode object whose
- * function at +0x10 succeeds (marking the ones that fail as unavailable, +8 = 0), finally calling Sim_10037e8f when the
- * active flag 0x1015e694 is 0; any other value of the counter just increments it. The mode numbers are compared with
- * the dword 0x1013a2c4. A failing counter read clears the active flag 0x1015e694.
- */
-void __cdecl Sim_10037cab(void);
 /*
  * The name is the one the DLL prints ("ToggleFullScreen(1): pause_timer(TRUE)"). Does nothing while the flag 0x1015e694 is
  * set, or while the window already covers the display (dwords 0x1015e9c0 == 0 and 0x1015e9c4/0x1015e9c8 not above the

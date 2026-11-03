@@ -55,17 +55,5 @@ int __cdecl Sim_1004bfa9(int word);
  * the dword at 0x10126cf4 when Sim_1004bfa9(b).
  */
 int __cdecl Sim_1004c221(int a, int b);
-/*
- * Stores three bytes at [0x1015f360] + 3 * index: each of r, g and b times 255
- * divided by ((1 << [0x1015f22c]) - 1), signed. Faults when that is 0.
- */
-void __cdecl Sim_1004de34(int32_t index, int32_t r, int32_t g, int32_t b);
-/*
- * When [0x1013b9a8] is 0: for each entry i below the signed dword [[0x109e3da4] + 0xc]
- * takes its 3 bytes with Sim_1003830e(i, 1, buf) and calls
- * Sim_1004de34(i, buf[0], buf[1], buf[2]), then sets [0x1013b9a8] to 1.
- * The count must not exceed 256: past that the original passes uninitialised stack bytes.
- */
-void __cdecl Sim_1004ecb8(void);
 
 #endif

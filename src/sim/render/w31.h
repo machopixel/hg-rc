@@ -10,7 +10,8 @@
  * .TEX mode (W31_TexMode): 1.2 loads the world textures as .TEX files (the "1.22" header, a kind word, width +6,
  * height +8, palette count +0xa, that many palette dwords from +0xc, then 8-bit rows; each row mirrored once
  * after loading) and hands the renderer each texture's own palette. Here only with the Vulkan renderer
- * (g_w31Tex, set by the hook layer) and the game's 3D mode ([0x1017b940]), as 1.2 sets its flag 0x10105048.
+ * (g_w31Tex, set by the hook layer; the game's 3D mode [0x1017b940] is always on, round 42), as 1.2 sets its
+ * flag 0x10105048.
  */
 #ifndef HG_SIM_RENDER_W31_H
 #define HG_SIM_RENDER_W31_H
@@ -51,7 +52,7 @@ extern uint8_t g_w31TexNames[W31_GROUPS * W31_GROUP_SIZE];
 
 /* Set by the hook layer at sim load: the Vulkan renderer is in use (round 31, Diego's pick: 1.2 data with Vulkan). */
 extern int g_w31Tex;
-/* 1.2's .TEX flag (1.2 0x10105048): the Vulkan renderer and the 3D mode ([0x1017b940]). */
+/* 1.2's .TEX flag (1.2 0x10105048): the Vulkan renderer (the 3D mode [0x1017b940] is always on, round 42). */
 int W31_TexMode(void);
 /* The start of the mission load (1.2 0x1012d3f8, timeGetTime in 1.2's sim main): the preload stops 30 s after. */
 extern uint32_t g_w31TexStart;

@@ -125,10 +125,8 @@ static void W10c_StateText(uint8_t *pane, uint32_t rec, int ownPos)
     target = U32(pane, 0xec);
     if (G32(0x101668e8) != 0)
         SIM_FN(W10cTextFn, 0x100f2f01)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10cTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10cTextFn, 0x100ecea6)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10cTextFn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     U8(GBYTES(0x109b992e), 0) = 0xc;
     Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109b9900), (const char *)(uintptr_t)G32(0x1014cec4));
 }
@@ -163,10 +161,8 @@ static void W10c_Text(uint32_t target, int32_t x, int32_t y, void *font, const c
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W10cText2Fn, 0x100f2f01)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10cText2Fn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10cText2Fn, 0x100ecea6)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10cText2Fn, 0x100f1e10)(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x100cf96c
@@ -220,22 +216,18 @@ void __cdecl Sim_100cf96c(uint8_t *pane)
 typedef void(__cdecl *W10cLineFn)(void *surface, int32_t x1, int32_t y1, int32_t x2, int32_t y2, int32_t zero,
                                   uint32_t colour);
 
-/* one line on the surface 0x109e3e00: 0x100ef727 with the colour word when [0x1017b940] is set, else 0x100e86a1 with
- * the colour code */
-static void W10c_Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t word_addr, uint32_t code)
+/* one line on the surface 0x109e3e00: 0x100ef727 with the colour word */
+static void W10c_Line(int32_t x1, int32_t y1, int32_t x2, int32_t y2, uint32_t word_addr)
 {
-    if (G32(0x1017b940) != 0)
-        SIM_FN(W10cLineFn, 0x100ef727)(SIM_PTR(void, 0x109e3e00), x1, y1, x2, y2, 0, *SIM_PTR(u16a, word_addr));
-    else
-        SIM_FN(W10cLineFn, 0x100e86a1)(SIM_PTR(void, 0x109e3e00), x1, y1, x2, y2, 0, code);
+    SIM_FN(W10cLineFn, 0x100ef727)(SIM_PTR(void, 0x109e3e00), x1, y1, x2, y2, 0, *SIM_PTR(u16a, word_addr));
 }
 
 /* a chevron of three lines at (x, y), opening up (s = 1: y + 2 / y + 5) or down (s = -1) */
-static void W10c_Chevron(int32_t x, int32_t y, int32_t s, uint32_t word_addr, uint32_t code)
+static void W10c_Chevron(int32_t x, int32_t y, int32_t s, uint32_t word_addr)
 {
-    W10c_Line(x - 5, y + 2 * s, x + 5, y + 2 * s, word_addr, code);
-    W10c_Line(x + 5, y + 2 * s, x, y + 5 * s, word_addr, code);
-    W10c_Line(x, y + 5 * s, x - 5, y + 2 * s, word_addr, code);
+    W10c_Line(x - 5, y + 2 * s, x + 5, y + 2 * s, word_addr);
+    W10c_Line(x + 5, y + 2 * s, x, y + 5 * s, word_addr);
+    W10c_Line(x, y + 5 * s, x - 5, y + 2 * s, word_addr);
 }
 
 // FUNCTION: HGSIM 0x100c83ed
@@ -244,16 +236,16 @@ void __cdecl Sim_100c83ed(float rate, int32_t x, int32_t y)
     double mid = *SIM_PTR(double, 0x1012bc18);
 
     if (!((double)rate >= mid)) {
-        W10c_Chevron(x, y, 1, 0x101659f4, 0xa);
+        W10c_Chevron(x, y, 1, 0x101659f4);
         if (G32(0x1017e578) != 0)
-            W10c_Chevron(x, y, -1, 0x101659e8, 4);
+            W10c_Chevron(x, y, -1, 0x101659e8);
     } else if ((double)rate > mid) {
-        W10c_Chevron(x, y, -1, 0x101659f4, 0xa);
+        W10c_Chevron(x, y, -1, 0x101659f4);
         if (G32(0x1017e578) != 0)
-            W10c_Chevron(x, y, 1, 0x101659e8, 4);
+            W10c_Chevron(x, y, 1, 0x101659e8);
     } else {
-        W10c_Chevron(x, y, -1, 0x101659e8, 4);
-        W10c_Chevron(x, y, 1, 0x101659e8, 4);
+        W10c_Chevron(x, y, -1, 0x101659e8);
+        W10c_Chevron(x, y, 1, 0x101659e8);
     }
     G32(0x1017e578) = (uint32_t)((int32_t)(G32(0x1017e578) + 1) % 2);
 }
@@ -265,11 +257,11 @@ typedef void *(__cdecl *W10cGaugeLoadFn)(uint32_t name, uint32_t ext, uint32_t z
 /* the weapon label box at (x, y) with its pointer line */
 static void W10c_GaugeBox(int32_t x, int32_t y)
 {
-    W10c_Line(x, y + 10, x + 20, y + 10, 0x101659f4, 0xa);
-    W10c_Line(x + 20, y + 10, x + 20, y + 12, 0x101659f4, 0xa);
-    W10c_Line(x + 20, y + 12, x, y + 12, 0x101659f4, 0xa);
-    W10c_Line(x, y + 12, x, y + 10, 0x101659f4, 0xa);
-    W10c_Line(x + 20, y + 12, x + 32, y - 4, 0x101659f0, 8);
+    W10c_Line(x, y + 10, x + 20, y + 10, 0x101659f4);
+    W10c_Line(x + 20, y + 10, x + 20, y + 12, 0x101659f4);
+    W10c_Line(x + 20, y + 12, x, y + 12, 0x101659f4);
+    W10c_Line(x, y + 12, x, y + 10, 0x101659f4);
+    W10c_Line(x + 20, y + 12, x + 32, y - 4, 0x101659f0);
 }
 
 /* the text with the font [0x109b98c0] by the display mode (0x100f2f01 / 0x100f1e10 / 0x100ecea6), colours 0x109b9920 */
@@ -277,10 +269,8 @@ static void W10c_GaugeText(int32_t x, int32_t y, void *font, const char *text)
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W10cGaugeTextFn, 0x100f2f01)(SIM_PTR(void, 0x109e3e00), x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W10cGaugeTextFn, 0x100f1e10)(SIM_PTR(void, 0x109e3e00), x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        SIM_FN(W10cGaugeTextFn, 0x100ecea6)(SIM_PTR(void, 0x109e3e00), x, y, font, text, SIM_PTR(void, 0x109b9920));
+        SIM_FN(W10cGaugeTextFn, 0x100f1e10)(SIM_PTR(void, 0x109e3e00), x, y, font, text, SIM_PTR(void, 0x109b9920));
     *GBYTES(0x109b992e) = 9;
     Sim_100bb2b0((const uint32_t *)(uintptr_t)G32(0x109b98c0), (const char *)(uintptr_t)G32(0x1014cec4));
 }
@@ -356,8 +346,8 @@ void __cdecl Sim_100c8ba7(uint8_t *obj, int32_t x, int32_t y, const uint8_t *wea
         w = Sim_100ccb0d(text, font);
         x += 0x3c;
         y -= 0x1e;
-        W10c_Line(x + 20, y - 10, x + w + 20, y - 10, 0x101659f4, 0xa);
-        W10c_Line(x, y, x + 20, y - 10, 0x101659f4, 0xa);
+        W10c_Line(x + 20, y - 10, x + w + 20, y - 10, 0x101659f4);
+        W10c_Line(x, y, x + 20, y - 10, 0x101659f4);
         W10c_GaugeText(x + 20, y - 20, font, text);
     }
     G32(0x1017e574) = (uint32_t)((int32_t)(G32(0x1017e574) + 1) % 3);

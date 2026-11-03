@@ -161,7 +161,7 @@ for _a, _n in [(0x100cada2, 3), (0x10064364, 2), (0x10062b7c, 4), (0x10063529, 1
     helper(_a, None, _n)
 # converted (called by name), and Sim_10062956 of this list when Sim_100622f0 calls it
 for _a, _c, _n in [
-        (0x10048287, 'Sim_10048287', 4), (0x1004e719, 'Sim_1004e719', 1), (0x1004e886, 'Gif_CloseFile', 0),
+        (0x10048287, 'Sim_10048287', 4), (0x1004e719, 'Sim_1004e719', 1),
         (0x100fefe0, 'Heap_FreeBlock', 1), (0x10011be7, 'Mono_BlankRows', 0), (0x100346ad, 'Mono_PutText', 4),
         (0x10016cb7, 'Sim_10016cb7', 3), (0x100c3668, 'Sim_100c3668', 1), (0x10015630, 'Sim_10015630', 4),
         (0x10062956, 'Sim_10062956', 0), (0x10065131, 'Sim_10065131', 0), (0x10062abd, 'Sim_10062abd', 1),
@@ -456,13 +456,6 @@ def g_c8cb(ctx):
     return [ctx.u32(), ctx.u32(), ctx.u32(), ctx.u32()]
 
 
-def g_e838(ctx):
-    r = begin(ctx, 0x1004e719, 0x1004e886, 0x100fefe0)
-    rets(0x1004e719, r.choice([0, 0, 2, 1]))
-    w32(ctx, 0x1015f360, r.choice([0, 0, ctx.u32(), newbuf(ctx, 0x10)]))
-    return []
-
-
 VALCHARS = b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._ \\/-'
 
 
@@ -657,7 +650,6 @@ SPECS = [
     dict(name='Mono_ShowMissions', orig=0x10012af0, c='Mono_ShowMissions', gen=g_2af0, trials=800, void=True),
     dict(name='Sim_10016de7', orig=0x10016de7, c='Sim_10016de7', gen=g_6de7, trials=1500),
     dict(name='Sim_1002c8cb', orig=0x1002c8cb, c='Sim_1002c8cb', gen=g_c8cb, trials=300, void=True),
-    dict(name='Gif_Finish', orig=0x1004e838, c='Gif_Finish', gen=g_e838, trials=300),
     dict(name='Lang_ReadIni', orig=0x1005f4e0, c='Lang_ReadIni', gen=g_f4e0, trials=1000, void=True),
     dict(name='Sim_100622f0', orig=0x100622f0, c='Sim_100622f0', gen=g_22f0, trials=800, void=True),
     dict(name='Sim_10062956', orig=0x10062956, c='Sim_10062956', gen=g_2956, trials=800, void=True),

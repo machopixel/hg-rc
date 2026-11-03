@@ -29,8 +29,7 @@ FUNCS.update({0x10083dde: 'Sim12_10083dde', 0x10083e8a: 'Sim12_10083e8a', 0x1008
               0x10081bdc: 'Sim12_10081bdc', 0x1007ffb3: 'Sim12_1007ffb3', 0x1008011d: 'Sim12_1008011d',
               0x10084a87: 'Sim12_10084a87', 0x10084b83: 'Sim12_10084b83', 0x1007e99d: 'Sim12_1007e99d',
               0x1007eb46: 'Sim12_1007eb46', 0x1007dbe7: 'Sim12_1007dbe7', 0x1007dd89: 'Sim12_1007dd89',
-              0x1007bb48: 'Sim12_1007bb48', 0x1007bca5: 'Sim12_1007bca5', 0x1007c996: 'Sim12_1007c996',
-              0x1007ca8b: 'Sim12_1007ca8b', 0x1007cb80: 'Sim12_1007cb80', 0x1007cc7c: 'Sim12_1007cc7c',
+              0x1007bb48: 'Sim12_1007bb48', 0x1007bca5: 'Sim12_1007bca5', 0x1007cc7c: 'Sim12_1007cc7c',
               0x1007cd78: 'Sim12_1007cd78'})
 GLOBALS.append((0x1036f050, 0x1028c7d0, 0x20))     # the sparks' colours, kind 0
 GLOBALS.append((0x10215b18, 0x1018ef70, 0x8))      # and kind 1
@@ -75,7 +74,7 @@ def world(ctx, r):
     w32(ctx, 0x1014cae0, cam)
     w32(ctx, 0x1015dc78, r.getrandbits(16))
     wf(ctx, 0x1015eef4, r.choice([0.0, 1.0, 37.5, r.uniform(-100, 100)]))
-    w32(ctx, 0x1017b940, 1 if r.random() < 0.9 else 0)
+    w32(ctx, 0x1017b940, 1)                         # the renderer is always there (round 42)
     w32(ctx, ctx.m.syms['g_w31Tex'], 1)
     w32(ctx, 0x1017cc20, r.choice([1000, 1000, 5]))
     w32(ctx, 0x1017cc24, r.choice([0, 3, 4, 999]))
@@ -282,8 +281,5 @@ def r_spark(ctx):
 
 
 SPECS += [spec12('Sim12_1007d342', 0x1007d342, g_spark, 3000, void=True),
-          spec12('Sim12_1007c996', 0x1007c996, lambda c: g_update(c, r_spark(c)), 1500),
-          spec12('Sim12_1007ca8b', 0x1007ca8b, lambda c: g_update(c, r_spark(c)), 1500),
-          spec12('Sim12_1007cb80', 0x1007cb80, lambda c: g_update(c, r_spark(c)), 600),
           spec12('Sim12_1007cc7c', 0x1007cc7c, lambda c: g_update(c, r_spark(c)), 600),
           spec12('Sim12_1007cd78', 0x1007cd78, g_dust_draw, 1500)]

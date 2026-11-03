@@ -155,8 +155,8 @@ static void W9d_Switch(char *tok, uint32_t *opts)
         opts[1] = 0;
         break;
     case 'Z':
-        if (tok[2] == '=')
-            G32(0x1017b940) = Crt_ToUpper((int8_t)tok[3]) == 'H' ? 1 : 0;
+        /* the display choice ("Z=H": the renderer, else software): ignored, the renderer is always there
+           (round 42, DECISIONS.md) */
         break;
     default:
         W9D_CALL_100bc280(10, STR(0x1013558c), tok);
@@ -180,11 +180,13 @@ int __cdecl CmdLine_Parse(char *cmdline, uint32_t *opts, char *rest)
         if (tok[0] == '/' || tok[0] == '-') {
             char *sw = tok + 1;
 
-            if (Str_CompareNoCase(sw, STR(0x10135518)) == 0)
-                G32(0x1017b940) = 1;
-            else if (Str_CompareNoCase(sw, STR(0x1013551c)) == 0)
+            /* round 42: "/d3d" is ignored; "/3dfx" (our Vulkan renderer's slot) also sets the renderer flag
+               [0x1017b940], which the original set for "/d3d" or later in SimMain (DECISIONS.md) */
+            if (Str_CompareNoCase(sw, STR(0x10135518)) == 0) {
+            } else if (Str_CompareNoCase(sw, STR(0x1013551c)) == 0) {
                 G32(0x1017b944) = 1;
-            else if (Str_CompareNoCase(sw, STR(0x10135524)) == 0)
+                G32(0x1017b940) = 1;
+            } else if (Str_CompareNoCase(sw, STR(0x10135524)) == 0)
                 G32(0x1017c8c4) = 1;
             else if (Str_CompareNoCase(sw, STR(0x1013552c)) == 0)
                 G32(0x1017c8c4) = 0;

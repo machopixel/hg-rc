@@ -31,7 +31,6 @@ char *__cdecl Sim_100474db(const char *name);
 int __cdecl Sim_1004dcaa(int c);
 /* Writes the byte [0x1015f340] (plus 1 unless [0x1015f348] is 8) to the stream and 0x1004db5b; resets the state. Returns 0, or -1 on a failure. */
 int __cdecl Sim_1004e1c6(void);
-int __cdecl Sim_1004ec60(int value);
 int __cdecl Sim_1004edca(uint32_t a, uint32_t b);
 void __cdecl Sim_1004f0d6(void *obj);
 

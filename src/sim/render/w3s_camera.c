@@ -106,8 +106,5 @@ void __cdecl Sim_100d1f90(void *camera)
             COPY(0x10143fcc, G32(0x101668cc));
         }
     }
-    if (G32(0x1017b940) != 0)
-        GF32(0x10143fcc) = (float)((double)GF32(0x10143fcc) * (double)GF32(0x1012bcb0));
-    else
-        GF32(0x10143fcc) = (float)((double)GF32(0x10143fcc) * (double)GF32(0x1012bcb4));
+    GF32(0x10143fcc) = (float)((double)GF32(0x10143fcc) * (double)GF32(0x1012bcb0));
 }

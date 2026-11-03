@@ -19,10 +19,8 @@ static void W9cC_Text(uint32_t pane, int32_t x, int32_t y, uint32_t font, const 
 {
     if (G32(0x101668e8) != 0)
         W9CC_CALL_100f2f01(pane, x, y, font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W9CC_CALL_100f1e10(pane, x, y, font, text, GBYTES(0x109b9920));
     else
-        W9CC_CALL_100ecea6(pane, x, y, font, text, GBYTES(0x109b9920));
+        W9CC_CALL_100f1e10(pane, x, y, font, text, GBYTES(0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x100ccc60

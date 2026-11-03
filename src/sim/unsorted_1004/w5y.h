@@ -22,7 +22,5 @@ void __cdecl Sim_10044069(void);
  * stores the low byte of the value at 0x109b94be and returns 1. Otherwise returns 0.
  */
 int __cdecl Sim_10048720(short value);
-/* Sets the dword at 0x1013b9a8 to 3 and calls Sim_1004e838(). */
-void __cdecl Sim_1004edb6(void);
 
 #endif

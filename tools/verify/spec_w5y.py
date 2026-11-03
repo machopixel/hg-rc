@@ -852,7 +852,6 @@ SPECS = [
     S('Sim_10041a16', 0x10041a16, g_41a16, 300, void=True),
     S('Sim_10044069', 0x10044069, g_44069, 300, void=True),
     S('Sim_10048720', 0x10048720, g_48720, 400),
-    S('Sim_1004edb6', 0x1004edb6, with_stubs(g_none, 0x1004e838), 100, void=True),
     S('Sim_10053620', 0x10053620, g_53620, 500),
     # Sim_10057afc (0x10057afc): round 28 moved it to src/sim/platform/w28_input.c, proven in spec_w28_input.py
     S('Sim_1005aee5', 0x1005aee5, g_5aee5, 300),

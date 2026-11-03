@@ -103,9 +103,3 @@ int __cdecl Gif_WriteImage(int32_t x, int32_t y, int32_t width, int32_t height, 
         return 2;
     return 0;
 }
-
-// FUNCTION: HGSIM 0x1004e886
-int __cdecl Gif_CloseFile(void)
-{
-    return W8V_FCLOSE(BYTES(G32(0x1015f344)));
-}

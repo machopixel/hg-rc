@@ -118,11 +118,9 @@ void __cdecl Sim_10099c59(void)
     if (G32(0x1015d1ac) == 4) {
         W8x_SceneSetup();
         Sim_1008fce3(0);
-        if (G32(0x1017b940) != 0) {
-            if (G32(0x1017b920) != 0)
-                (*(W8xDriverFn *)(BYTES(G32(0x1015e688)) + 0x20))();
-            G32(0x1017b948) = 0;
-        }
+        if (G32(0x1017b920) != 0)
+            (*(W8xDriverFn *)(BYTES(G32(0x1015e688)) + 0x20))();
+        G32(0x1017b948) = 0;
     }
     if (G32(0x1015d1ac) != 4 || (S16(me, 0x1c) & 0x16) == 0)
         Sim_1009ace7(BYTES(view), h);

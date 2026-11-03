@@ -3132,3 +3132,48 @@ call site:
   conv_w10.inc entries, hooks_conv.c's choice between them and the SDL3 versions, and their spec files
   (spec_w11_10039708 / 100397e7 / 10039931 / 1003a548.py; the line in crt_math_specs.txt). sim/sound/sdl_sound.c is
   unchanged. Release build compiles and links.
+
+## Software and Direct3D sides removed (round 42; Diego, 2026-11-03: "Remove them")
+
+- **The renderer flag:** [0x1017b940] (1.0: set by "/d3d", or by SimMain for "/3dfx" once the display is set up) is
+  now set together with [0x1017b944] when CmdLine_Parse reads "/3dfx" (our Vulkan renderer's slot; the launcher
+  always passes it). "/d3d" is still recognised but does nothing; the display switch "Z=" (Z=H: renderer, else
+  software) is ignored. SimMain still sets the flag with the "3dfx" display set-up, as 1.0 does.
+- **SimMain:** the renderer plugin is always the "3dfx" slot (S(0x1014b1f4), 2), where 1.0 picked the D3D slot for
+  [0x1017b940] and a software one without either flag; the test that cleared [0x1017b940] for a plugin whose record
+  +0x44 is not 1, the software display set-up, the two 0x1008181e screen calls, the driver-less loop and the 8-bit
+  line / clear calls are gone.
+- **Everywhere else** (137 flag tests in 96 converted functions, through the macros W28_FITS and DISPLAY16 too):
+  only the renderer side is left. The 8-bit routines (lines 0x100e86a1, shapes 0x100e91dc / 0x100e96c6, palettes
+  0x100e96a7, text 0x100ecea6, pixels 0x100e84f0, polygons 0x100e4780 / 0x100e5477 / 0x100f9fd4, the clear
+  0x100eb070, the fade 0x100eda16) are no longer called by the C on those paths; the 8-bit HUD palettes
+  (0x10178b60..), the software vertices (0x101ce4a0) and the window procedure's small-screen minimise handling go
+  with them. Other 8-bit calls that the original made in every mode (for instance the single-point plot in
+  Sim_100a539e) are unchanged.
+- **Deleted converted functions** that only those paths reached (nothing else in the C, HGSHELL or the DLL's data
+  refers to them): Clip_Polygon2D (0x100a2d91, file w9e_clip.c with its header), the GIF screenshot chain
+  Sim_1004ec60, Sim_1004ecb8, Sim_1004ed37, Sim_1004edb6, Gif_Finish (0x1004e838), Gif_CloseFile (0x1004e886),
+  Sim_1004de34, the refresh-mode test step Sim_10037cab with Sim_10037e8f, and 1.2's software-mode spark updates
+  Sim12_1007c996 / Sim12_1007ca8b / Sim12_1007cb80; their CONV lines and spec entries too. Screenshots are TGA only.
+- **Launcher:** ChooseRenderer picks hgvk for every converted run; glide / d3d / soft stay only with the hgrc.cfg
+  word "noconv" (the reference runs of the original code: dx5noconv, ref12). dev.cmd (Diego, 01:39): mode dx5 (the
+  converted game with Direct3D) is gone; menu option 3 is now dx5noconv.
+- **Checker:** difftest.py sets [0x1017b940] and [0x1017b944] to 1 for every trial (after the generator); a spec
+  with 'renderer_free' keeps its generator's values. SimMain's spec is one: it starts as after "/3dfx" (1.0:
+  [0x1017b944] only), since its command line is a stub. CmdLine_Parse's spec gives "Z=" the letter H only (1.0's
+  other letters would clear the flag the C no longer touches). spec_w32_explode always has the 3D mode.
+- **Not changed:** the header comments that describe the original's [0x1017b940] tests still describe the
+  original (both sides); the C follows the set side.
+- **Checks** (16 processes): the 102 changed functions' entries. Pass: SimMain 4000 / 0, CmdLine_Parse 2500 / 0,
+  Screenshot_Save 400 / 0, the 7 particle functions (1.2) 3000 / 0 each, Render_SubmitClipped_100ac738 and
+  Sim_100ad1f3 (1.2) 3000 / 0, Sim_100352d5 (1.2) 3000 / 0, Sim_100cd70f (1.2) 3000 / 0, Sim_10058c5e (1.2)
+  5000 / 0, Sim_100867a2 (1.2) 20000 / 0, Sim_100a0880 4000 / 0, Sim_10034ec9 1000 / 0, and every other entry of
+  the list. Not passing, as before this round: the 1.0 specs of functions ported to 1.2 (Sim_100cd70f in spec_w9g
+  and spec_w21_wrap_cd70f, Sim_10058c5e, Sim_100867a2: their 1.2 specs above pass) and the long-known Sim_100a0063
+  1952 and Sim_100a0def 248 (the same counts as recorded in the maths round).
+- **Spec changes for the checks:** spec_w8y's Sim_100a4ff0 / Sim_100a512a leave out g_w33Light1Cam /
+  g_w33Light2Cam (C-only: 1.2's light directions in the camera frame, written by Sim_1005874a during the object
+  walk; checked against 1.2 in spec_w3p_light_v12): a -0.0 there was the only difference (6 of 500 trials).
+  spec_w22_100a0880 stubs 0x100a88db by address (the C no longer calls Sim_100a88db). tools/verify/w9e_shim.c's
+  bodies are weak, so spec_w9e links again when the checker adds a real file defining the same function (it had
+  not linked since the memory round).

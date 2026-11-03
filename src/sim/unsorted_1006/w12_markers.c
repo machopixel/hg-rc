@@ -25,7 +25,7 @@ static float W12_MarkF(uint32_t u)
 
 static uint32_t W12_Palette(int32_t p)
 {
-    return G32(0x1017b940) != 0 ? 0x10176960u + ((uint32_t)p << 9) : 0x10178b60u + ((uint32_t)p << 8);
+    return 0x10176960u + ((uint32_t)p << 9);
 }
 
 static void W12_Draw(float x, float y, char *name, int32_t palette)

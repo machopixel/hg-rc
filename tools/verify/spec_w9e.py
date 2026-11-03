@@ -22,7 +22,7 @@ SOURCES = [
     # this letter
     'sim/unsorted_1001/w9e_misc.c', 'sim/unsorted_1007/w9e_misc.c', 'sim/unsorted_100d/w9e_misc.c',
     'sim/unsorted_1009/w9e_misc.c', 'sim/unsorted_1005/w9e_hud.c', 'sim/unsorted_1005/w9e_gear.c',
-    'sim/unsorted_100a/w9e_clip.c', 'sim/unsorted_100b/w9e_links.c', 'sim/unsorted_100b/w9e_cache.c',
+    'sim/unsorted_100b/w9e_links.c', 'sim/unsorted_100b/w9e_cache.c',
     'sim/unsorted_1003/w9e_frame.c', 'sim/unsorted_100c/w9e_hud.c', 'sim/unsorted_1005/w9e_input.c',
     # callees of the four above that run for real (Crt_StrUpper, Array_Clear, Crt_StrStr, sscanf, Str_Cat) or
     # are stubbed on both sides and link on their own
@@ -296,27 +296,6 @@ def g_1c90(ctx):
     height = r.choice([-7, -3, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 16, 40])
     colour = r.choice([0, 1, 2, 3, 7, 11, 0x1f, 0x20, 0x3e, r.randrange(0, 0x60), -1])
     return [ctx.u32(), r.randrange(-50, 700), r.randrange(-50, 500), width, height, colour & 0xffffffff]
-
-
-def vertex_word(r):
-    k = r.random()
-    if k < 0.15:
-        return r.choice([0x2000, -0x2000, 0x2001, -0x2001, 0x1fff, -0x1fff])
-    if k < 0.85:
-        return r.randrange(-0x3000, 0x3001)
-    return r.choice([0x7fffffff, -0x80000000, r.getrandbits(32)])
-
-
-def g_2d91(ctx):
-    r = begin(ctx)
-    count = r.choice([0, 1, 2, 3, 3, 4, 4, 5, 6, 8, 12, 20, 40])
-    planes = r.choice([0, 1, 2, 4, 8, 3, 5, 9, 15, 15, 15, 6, 10, 12, 7, 11, 13, 14, r.randrange(16, 64)])
-    for i in range(count * 5 + 8):
-        v = 0x101ce4a0 + 0x18 * i
-        wb(ctx, v, rb(ctx, 0x18))
-        w32(ctx, v, vertex_word(r), vertex_word(r))
-    wb(ctx, 0x101ccca0, rb(ctx, 0x18 * (count * 5 + 8)))
-    return [count, planes]
 
 
 def g_a1db(ctx):
@@ -693,7 +672,6 @@ SPECS = [
     spec('GameThing_NextIndex', 0x100dc2d7, g_dc2d7, 400),
     spec('Sim_1009b516', 0x1009b516, g_9b516, 1500),
     spec('Hud_DrawShadedBox', 0x10051c90, g_1c90, 1000, void=True),
-    spec('Clip_Polygon2D', 0x100a2d91, g_2d91, 2000),
     spec('Sim_1005a1db', 0x1005a1db, g_a1db, 1500),
     spec('Sim_100b43ce', 0x100b43ce, g_43ce, 1500),
     spec('Sim_100b9203', 0x100b9203, g_9203, 1500),

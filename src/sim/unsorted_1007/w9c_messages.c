@@ -35,20 +35,15 @@ void __cdecl Sim_1007e0ff(void)
         if (shape == 0)
             continue;
         *GBYTES(0x109b992e) = 0xfe;
-        if (G32(0x1017b940) != 0)
-            W9C7_CALL_100f0205(U32(m, 0x38), shape, 0, 0, 0);
-        else
-            W9C7_CALL_100e91dc(U32(m, 0x38), shape, 0, 0, 0);
+        W9C7_CALL_100f0205(U32(m, 0x38), shape, 0, 0, 0);
         text = U32(m, 0);
         y = U32(m, 8);
         x = U32(m, 4);
         pane = U32(m, 0x38);
         if (G32(0x101668e8) != 0)
             W9C7_CALL_100f2f01(pane, (int32_t)x, (int32_t)y, font, (const char *)(uintptr_t)text, GBYTES(0x109b9920));
-        else if (G32(0x1017b940) != 0)
-            W9C7_CALL_100f1e10(pane, (int32_t)x, (int32_t)y, font, (const char *)(uintptr_t)text, GBYTES(0x109b9920));
         else
-            W9C7_CALL_100ecea6(pane, (int32_t)x, (int32_t)y, font, (const char *)(uintptr_t)text, GBYTES(0x109b9920));
+            W9C7_CALL_100f1e10(pane, (int32_t)x, (int32_t)y, font, (const char *)(uintptr_t)text, GBYTES(0x109b9920));
         *GBYTES(0x109b992e) = 9;
     }
 }

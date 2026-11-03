@@ -39,10 +39,7 @@ void __cdecl Sim_1008d4f1(int32_t *bmp, int32_t colour)
 
 #define SIDE(x0, y0, x1, y1)                                                                              \
     do {                                                                                                  \
-        if (G32(0x1017b940) != 0)                                                                         \
-            W7O_CALL_100ef727(bmp, x0, y0, x1, y1, 0, SIM_PTR(uint16_t, 0x101659e0)[colour]);            \
-        else                                                                                              \
-            W7O_CALL_100e86a1(bmp, x0, y0, x1, y1, 0, (uint32_t)colour);                                  \
+        W7O_CALL_100ef727(bmp, x0, y0, x1, y1, 0, SIM_PTR(uint16_t, 0x101659e0)[colour]);                 \
     } while (0)
     SIDE(0, 0, w, 0);
     SIDE(w, 0, w, h);

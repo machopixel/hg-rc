@@ -54,11 +54,6 @@ void __cdecl Sim_100354ff(void)
     Sim_100a87f0();
     if (G32(0x109e3d2c) != 0)
         ((void(__cdecl *)(void))(uintptr_t)G32(0x109e3d2c))();
-    if (G32(0x1017b940) == 0 && G32(0x1015e534) != 0 && G32(0x109e3e00) != 0) {
-        SIM_CALL_100eb070(GBYTES(0x109e3e00), 0xf0);
-        if (G32(0x1017b920) != 0)
-            ((void(__cdecl *)(void))(uintptr_t)U32(G32(0x1015e68c), 0x18))();
-    }
     if (G32(0x1015e534) != 0)
         Hg_HeapFree(G32(0x1017b8f8), 1, (void *)(uintptr_t)G32(0x1015e534));
     G32(0x1015e538) = 0;

@@ -119,12 +119,12 @@ uint8_t *W32_NewSystem(uint32_t update, uint32_t draw, uint32_t arg, int force, 
  */
 uint32_t W32_ParticleFlags(uint8_t *rec, int32_t i, uint32_t plain);
 /*
- * A particle's size on screen (1.2's draw callbacks): in 3D mode size * the type's Size * a random factor (at least
+ * A particle's size on screen (1.2's draw callbacks): size * the type's Size * a random factor (at least
  * 1), times the system's scale +0x3fe when 1.2's flag g_w32_1014b58c is set and the scale is not 0, else times the
  * camera's +0x18, truncated; below 1 it is half the type's Size.
  */
 int32_t W32_ParticleSize(uint8_t *rec, int32_t size);
-/* The 3D part of W32_ParticleSize alone (in 2D mode `size` unchanged). */
+/* The scaling part of W32_ParticleSize alone. */
 int32_t W32_ParticleScale(uint8_t *rec, int32_t size);
 /* The four corners' template at +0x36a (1.2's spawns): the type's colour and intensity, fog byte 0xff, texture
    coordinates (0,1) (1,1) (1,0) (0,0), z and 1/z 1. */
@@ -152,7 +152,7 @@ void __cdecl Sim12_10078c29(uint8_t *rec, uint8_t *points, uint32_t flags, int32
    colour +0x346 = 0x1f, returns 1; then releases the node, clears bits 0..2 of +0x10, returns 0. */
 int __cdecl Sim12_10083dde(uint8_t *rec);
 /* 1.2 0x10083e8a (its draw): the 8 particles at the node + their offsets, projected; the visible ones drawn as
-   squares (Sim12_10078c29), a pixel each in 2D mode. Returns 0 when the frames ran out, else 1. */
+   squares (Sim12_10078c29). Returns 0 when the frames ran out, else 1. */
 int __cdecl Sim12_10083e8a(uint8_t *rec);
 /* 1.2 0x10084362: a tracer explosion at (x, y, z) moving by (dx, dy, dz) / 8 per frame, if it is within the
    camera's reach (+0x40), on screen and in line of sight; its scale is [0x1015eef4] / distance / 4. */
@@ -173,7 +173,7 @@ uint8_t *W32_Explosion(float x, float y, float z, float dx, float dy, float dz, 
 /* 1.2 0x10081afb (update): for 110 frames moves the node by the velocity, y plus a random 0..9, colour from the fade
    table 0x101d09c0 by age; then releases the node, returns 0. */
 int __cdecl Sim12_10081afb(uint8_t *rec);
-/* 1.2 0x10081bdc (draw): as the tracer's without the 2D pixels; a node nearer than projected depth 20000 also
+/* 1.2 0x10081bdc (draw): as the tracer's; a node nearer than projected depth 20000 also
    projects each particle one tenth of the velocity on (the result is not used). */
 int __cdecl Sim12_10081bdc(uint8_t *rec);
 /* 1.2 0x10082556: the missile explosion, its 8 particles along the velocity with random offsets (x, z -5..4, y
@@ -193,10 +193,10 @@ void __cdecl Sim12_100805dc(float x, float y, float z, float dx, float dy, float
 /* 1.2 0x10084a87 (update): for 90 frames moves the node (y plus a random 0..9), colour and size from the tables
    0x10215bc0 / 0x10215bb0 by age. */
 int __cdecl Sim12_10084a87(uint8_t *rec);
-/* 1.2 0x10084b83 (draw): every particle moved by its own velocity (+0x1e), drawn with size +0x34a * 2000 / depth (scaled
-   in 3D mode; below 1 a pixel in 2D mode, half the type's Size in 3D); none below size 1. */
+/* 1.2 0x10084b83 (draw): every particle moved by its own velocity (+0x1e), drawn with size +0x34a * 2000 / depth (scaled;
+   below 1 half the type's Size); none below size 1. */
 int __cdecl Sim12_10084b83(uint8_t *rec);
-/* 1.2 0x1008514d: in 3D mode, dust at (x, y, z) when in sight: type by the ground kind (0xf..0x1b: 20, 0x25 / 0x2d:
+/* 1.2 0x1008514d: dust at (x, y, z) when in sight: type by the ground kind (0xf..0x1b: 20, 0x25 / 0x2d:
    19, 0x21..0x23 / 0x28: 18, else 17), drifting back (-d / 5, y -10), 8 particles near the centre with random
    velocities around it. */
 void __cdecl Sim12_1008514d(float x, float y, float z, float dx, float dy, float dz, uint32_t unused, int32_t kind);
@@ -205,8 +205,7 @@ void __cdecl Sim12_1008514d(float x, float y, float z, float dx, float dy, float
 /* 1.2 0x1007e99d (update): for 543 frames moves the node (y plus 0..9), colour / size from 0x10215bd0 /
    0x10217b20 by age, every particle jittered by -10..9 on each axis. */
 int __cdecl Sim12_1007e99d(uint8_t *rec);
-/* 1.2 0x1007eb46 (draw): size +0x34a * 2000 / depth; in 2D mode a pixel, or pixel pairs over the size; in 3D the
-   first corner coloured from the colour table by the flags (past its 256 entries 1.2 reads its scene-object table;
+/* 1.2 0x1007eb46 (draw): size +0x34a * 2000 / depth (below 1 half the type's Size); the first corner coloured from the colour table by the flags (past its 256 entries 1.2 reads its scene-object table;
    the same bytes are read from ours). */
 int __cdecl Sim12_1007eb46(uint8_t *rec);
 /* 1.2 0x1007f8a9 (smoke) / 0x1007f19f (gun): the system along the velocity (node d / 256, particles d / 8). */
@@ -242,15 +241,11 @@ int __cdecl Sim12_1007bca5(uint8_t *rec);
 void __cdecl Sim12_1007c1a1(float x, float y, float z, float dx, float dy, float dz, int32_t strength);
 
 /* ---- the sparks / puffs (types 13..16; replace 1.0's Sim_100939a3, with the shot's ground kind) ---- */
-/* 1.2 0x1007c996 / 0x1007ca8b (updates in 2D mode, kinds 0 / 1): the dust's, colour from 0x1036f050 / 0x10215b18 by
-   age, size 1. 0x1007cb80 (kind 2) and 0x1007cc7c (3D mode) are the dust's update, 0x1007cd78 its draw (byte for byte
-   the same code in 1.2). */
-int __cdecl Sim12_1007c996(uint8_t *rec);
-int __cdecl Sim12_1007ca8b(uint8_t *rec);
-int __cdecl Sim12_1007cb80(uint8_t *rec);
+/* 1.2 0x1007cc7c (the update with the renderer) is the dust's update, 0x1007cd78 its draw (byte for byte the same code
+   in 1.2). 1.2's software-mode updates 0x1007c996 / 0x1007ca8b / 0x1007cb80 are not converted (round 42). */
 int __cdecl Sim12_1007cc7c(uint8_t *rec);
 int __cdecl Sim12_1007cd78(uint8_t *rec);
-/* 1.2 0x1007d342: sparks at (x, y, z) when in sight: in 2D mode by `kind` (0..2; none for others), in 3D the type by
+/* 1.2 0x1007d342: sparks at (x, y, z) when in sight (`kind` only chose the software mode's update): the type by
    the ground kind (0xf..0x1b: 14, 0x25 / 0x2d: 16, 0x21..0x23 / 0x28: 15, else 13); then as the dust. */
 void __cdecl Sim12_1007d342(float x, float y, float z, float dx, float dy, float dz, int32_t kind, int32_t ground);
 

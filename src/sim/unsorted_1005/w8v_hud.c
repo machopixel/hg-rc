@@ -13,14 +13,10 @@
 #define HALF_W(r) ((int32_t)(U32(r, 0xc) - U32(r, 4) + 1) >> 1)
 #define HALF_H(r) ((int32_t)(U32(r, 0x10) - U32(r, 8) + 1) >> 1)
 
-/* colour16 points to the 16-bit colour, read only in the 16-bit mode like the original */
-static void Line(uint32_t surface, int32_t x1, int32_t y1, int32_t x2, int32_t y2, const u16a *colour16,
-                 uint32_t colour8)
+/* colour16 points to the 16-bit colour */
+static void Line(uint32_t surface, int32_t x1, int32_t y1, int32_t x2, int32_t y2, const u16a *colour16)
 {
-    if (G32(0x1017b940) != 0)
-        W8V_LINE16(surface, x1, y1, x2, y2, 0, *colour16);
-    else
-        W8V_LINE8(surface, x1, y1, x2, y2, 0, colour8);
+    W8V_LINE16(surface, x1, y1, x2, y2, 0, *colour16);
 }
 
 /*
@@ -51,11 +47,9 @@ void __cdecl Sim_10050e7e(uint8_t *rect, float angle, int32_t colour, uint8_t *r
         Sim_1008e266((const int32_t *)rect2, pt, out2);
         out2[0] = (int32_t)((uint32_t)out2[0] + (uint32_t)(HALF_W(rect) - HALF_W(rect2)));
         out2[1] = (int32_t)((uint32_t)out2[1] + (uint32_t)(HALF_H(rect) - HALF_H(rect2)));
-        Line((uint32_t)(uintptr_t)rect, out[0], out[1], out2[0], out2[1], SIM_PTR(u16a, 0x101659e0) + colour,
-             (uint32_t)colour);
+        Line((uint32_t)(uintptr_t)rect, out[0], out[1], out2[0], out2[1], SIM_PTR(u16a, 0x101659e0) + colour);
     } else {
-        Line((uint32_t)(uintptr_t)rect, out[0], out[1], HALF_W(rect), HALF_H(rect), SIM_PTR(u16a, 0x101659e0) + colour,
-             (uint32_t)colour);
+        Line((uint32_t)(uintptr_t)rect, out[0], out[1], HALF_W(rect), HALF_H(rect), SIM_PTR(u16a, 0x101659e0) + colour);
     }
 }
 
@@ -86,7 +80,7 @@ void __cdecl Sim_100510d9(uint8_t *gauge)
     max = S32(gauge, 0x94);
     G32(0x1013bafc) = (uint32_t)Render_Ftol((double)(int32_t)((uint32_t)v * (uint32_t)max) / (double)GFL(0x1012b438));
     n = Sim_10047e95(SIM_PTR(int32_t, 0x1013baf8));
-    Line((uint32_t)(uintptr_t)rect, HALF_W(rect), 0, HALF_W(rect), HALF_H(rect), SIM_PTR(u16a, 0x10165a10), 0x18);
+    Line((uint32_t)(uintptr_t)rect, HALF_W(rect), 0, HALF_W(rect), HALF_H(rect), SIM_PTR(u16a, 0x10165a10));
     if (n < max)
         deg = Degrees(n, max);
     else
@@ -219,10 +213,10 @@ void __cdecl Sim_100517dc(uint8_t *gauge)
     const u16a *c16 = SIM_PTR(u16a, 0x101659f4);
     int32_t n, h;
 
-    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x70), S32(gauge, 0x6c), S32(gauge, 0x78), c16, 0xa);
-    Line(surface, S32(gauge, 0x74), S32(gauge, 0x70), S32(gauge, 0x74), S32(gauge, 0x78), c16, 0xa);
-    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x70), S32(gauge, 0x74), S32(gauge, 0x70), c16, 0xa);
-    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x78), S32(gauge, 0x74), S32(gauge, 0x78), c16, 0xa);
+    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x70), S32(gauge, 0x6c), S32(gauge, 0x78), c16);
+    Line(surface, S32(gauge, 0x74), S32(gauge, 0x70), S32(gauge, 0x74), S32(gauge, 0x78), c16);
+    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x70), S32(gauge, 0x74), S32(gauge, 0x70), c16);
+    Line(surface, S32(gauge, 0x6c), S32(gauge, 0x78), S32(gauge, 0x74), S32(gauge, 0x78), c16);
     if (S32(blk, 0x510) < 0)
         return;
     G32(0x1013bb2c) = U32(blk, 0x510);

@@ -79,12 +79,8 @@ int __cdecl Sim_100d8e43(void *obj)
             colour = (int32_t)((uint32_t)colour - 1u);
         else
             colour = (int32_t)((uint32_t)colour + 1u);
-        if (G32(0x1017b940) != 0)
-            W8Z_CALL_100ef727(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
-                              W8z_ColourWord(colour));
-        else
-            W8Z_CALL_100e86a1(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
-                              (uint32_t)colour);
+        W8Z_CALL_100ef727(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
+                          W8z_ColourWord(colour));
     }
     return 1;
 }
@@ -122,12 +118,8 @@ int __cdecl Sim_100d943f(void *obj)
         y1 = (float)(((double)W8Z_FL(obj, 0x16) + (double)W8z_Float(oy)) + (double)vy);
         z1 = (float)(((double)W8Z_FL(obj, 0x1a) + (double)W8z_Float(oz)) + (double)vz);
         Sim_100d2669(&x1, &y1, &z1);
-        if (G32(0x1017b940) != 0)
-            W8Z_CALL_100ef727(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
-                              W8z_ColourWord(colour));
-        else
-            W8Z_CALL_100e86a1(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
-                              (uint32_t)colour);
+        W8Z_CALL_100ef727(SIM_PTR(uint8_t, 0x109e3e00), W8z_Ftol(x0), W8z_Ftol(y0), W8z_Ftol(x1), W8z_Ftol(y1), 0,
+                          W8z_ColourWord(colour));
     }
     return 1;
 }

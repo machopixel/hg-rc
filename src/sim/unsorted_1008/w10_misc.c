@@ -129,10 +129,8 @@ void __cdecl Sim_1008dba2(const int32_t *pane, const char *text, void *font)
         if (*start != 0) {
             if (G32(0x101668e8) != 0)
                 SIM_FN(W10_8TextFn, 0x100f2f01)(pane, pos[0], pos[1], font, start, SIM_PTR(void, 0x109b9920));
-            else if (G32(0x1017b940) != 0)
-                SIM_FN(W10_8TextFn, 0x100f1e10)(pane, pos[0], pos[1], font, start, SIM_PTR(void, 0x109b9920));
             else
-                SIM_FN(W10_8TextFn, 0x100ecea6)(pane, pos[0], pos[1], font, start, SIM_PTR(void, 0x109b9920));
+                SIM_FN(W10_8TextFn, 0x100f1e10)(pane, pos[0], pos[1], font, start, SIM_PTR(void, 0x109b9920));
         }
         pos[1] += lineh;
         p++;

@@ -38,8 +38,9 @@ void __cdecl Sim_1004b7d2(int value)
        DirectDraw / DISPDIB drivers fill: in renderer modes it is empty, and the menus lost their colours (an original
        bug). In the game (g_simLiveBrightness) both are rebuilt as mission start does instead: Sim_100d3000 with this
        gamma row sets the texture palette and, through the driver's +0x14, the 2D colour table from the mission
-       palette (DECISIONS.md, round 25). */
-    if (g_simLiveBrightness != 0 && G32(0x1017b940) != 0) {
+       palette (DECISIONS.md, round 25). The original's non-renderer test is gone with its software side
+       (round 42). */
+    if (g_simLiveBrightness != 0) {
         uint32_t entry = W3t_PaletteEntry(), count = 0, stampLo = 0, stampHi = 0;
 
         if (entry != 0) {

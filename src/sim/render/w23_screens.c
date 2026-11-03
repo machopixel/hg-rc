@@ -34,10 +34,7 @@ void __cdecl Sim_100d422f(void *panel)
 #endif
         image = W23H_LOAD(G32(0x109e84b8), G32(0x1014cec0), 0);
         if (image != 0) {
-            if (G32(0x1017b940) != 0)
-                W23H_SHAPE_ACCEL(U32(panel, 0xec), image, 0, 0, 0);
-            else
-                W23H_SHAPE_SOFT(U32(panel, 0xec), image, 0, 0, 0);
+            W23H_SHAPE_ACCEL(U32(panel, 0xec), image, 0, 0, 0);
             W23H_RELEASE(G32(0x109e84b8), G32(0x1014cec0));
         }
     }
@@ -54,10 +51,8 @@ static void W23h_Text(uint32_t surface, int32_t x, int32_t y, void *font, const 
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W23hTextFn, 0x100f2f01)(surface, x, y, font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W23hTextFn, 0x100f1e10)(surface, x, y, font, text, GBYTES(0x109b9920));
     else
-        SIM_FN(W23hTextFn, 0x100ecea6)(surface, x, y, font, text, GBYTES(0x109b9920));
+        SIM_FN(W23hTextFn, 0x100f1e10)(surface, x, y, font, text, GBYTES(0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x100ce586

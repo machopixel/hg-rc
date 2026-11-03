@@ -169,15 +169,6 @@ int __cdecl Sim_10091223(uint8_t *obj)
     return 1;
 }
 
-/* The pixel of a small particle (not in the high-colour mode). */
-static void W8x_Pixel(float x, float y, uint32_t colour)
-{
-    int32_t py = Render_Ftol((double)y);
-    int32_t px = Render_Ftol((double)x);
-
-    W8X9_CALL_100e84f0(SIM_PTR(void, 0x109e3e00), (uint32_t)px, (uint32_t)py, colour);
-}
-
 // FUNCTION: HGSIM 0x10092bbb
 int __cdecl Sim_10092bbb(uint8_t *obj)
 {
@@ -204,13 +195,8 @@ int __cdecl Sim_10092bbb(uint8_t *obj)
         if (W8X9_CALL_100d2669(&px, &py, &pz) == 0)
             continue;
         size = Render_Ftol((double)(int32_t)(U32(obj, 0x56a) * 0x7d0u) / (double)pz);
-        if (size < 1) {
-            if (G32(0x1017b940) == 0) {
-                W8x_Pixel(px, py, colour);
-                continue;
-            }
+        if (size < 1)
             size = 1;
-        }
         x1 = (float)((double)size + (double)px);
         y1 = (float)((double)size + (double)py);
         W8x_Quad(quad, px, py, x1, y1, &pz);
@@ -243,13 +229,8 @@ int __cdecl Sim_10093e5b(uint8_t *obj)
         if (W8X9_CALL_100d2669(&px, &py, &pz) == 0)
             continue;
         size = Render_Ftol((double)(int32_t)(U32(obj, 0x56a) * 0x7d0u) / (double)pz);
-        if (size < 1) {
-            if (G32(0x1017b940) == 0) {
-                W8x_Pixel(px, py, colour);
-                continue;
-            }
+        if (size < 1)
             size = 1;
-        }
         x1 = (float)((double)size + (double)px);
         y1 = (float)((double)size + (double)py);
         W8x_Quad(quad, px, py, x1, y1, 0);
@@ -311,10 +292,6 @@ int __cdecl Sim_10096869(uint8_t *obj)
         pz = W8x_Add(FL(p, 0x1a), Float_OfBits(bz));
         if (W8X9_CALL_100d2669(&px, &py, &pz) == 0)
             continue;
-        if (G32(0x1017b940) == 0) {
-            W8x_Pixel(px, py, colour);
-            continue;
-        }
         W8x_Quad(quad, px, py, W8x_Add(px, GFL(0x1012b970)), W8x_Add(py, GFL(0x1012b970)), 0);
         DRIVER_POLY(4, quad, colour);
     }

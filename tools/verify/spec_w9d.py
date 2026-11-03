@@ -451,6 +451,11 @@ def g_ad50(ctx):
                 toks[i] = r.choice([b'/', b'-', b'/', b'/']) + toks[i]
     if r.random() < 0.3:
         toks = [bytes(r.choice(b'abcXYZ019_.') for _ in range(r.randint(1, 10)))] + toks
+    # round 42: the C ignores "Z=" (the display choice; the renderer is always there): 1.0's "Z=H" sets the renderer
+    # flag the checker already sets, any other letter would clear it, so the switch is given H / h only
+    for i in range(len(toks)):
+        if toks[i][:1] in (b'/', b'-') and toks[i][1:3] in (b'Z=', b'z='):
+            toks[i] = toks[i][:3] + bytes([r.choice(b'Hh')]) + toks[i][4:]
     line = sep.join(toks)
     if r.random() < 0.3:
         line = sep * r.randint(1, 3) + line + sep * r.randint(0, 2)

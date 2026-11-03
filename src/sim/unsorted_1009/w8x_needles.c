@@ -8,13 +8,10 @@
 
 typedef void(__cdecl *W8xNeedleFn)(void *pane, float angle, int32_t *end);
 
-/* The pane colour: through the word table 0x101659e0 in the high-colour mode ([0x1017b940]). */
+/* The pane colour: through the word table 0x101659e0 (the high-colour mode, the only one left: round 42). */
 static void W8x_Line(void *pane, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t colour)
 {
-    if (G32(0x1017b940) != 0)
-        W8X9_CALL_100ef727(pane, x0, y0, x1, y1, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
-    else
-        W8X9_CALL_100e86a1(pane, x0, y0, x1, y1, 0, colour);
+    W8X9_CALL_100ef727(pane, x0, y0, x1, y1, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
 }
 
 /* The two needles of the compass: the angle turned to the pane, half the spread (lookup of 1.0 and camera +0x18). */

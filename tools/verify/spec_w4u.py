@@ -632,24 +632,6 @@ def modes_env(ctx, r):
     return objs, other
 
 
-def g_10037cab(ctx):
-    r = ctx.rng
-    objs, other = modes_env(ctx, r)
-    # mode objects numbered 0..6; the table 0x1013a2ac (indexed by the mode number) leads to the next number,
-    # so the walk over unavailable modes ends (the original would loop for ever on a cycle)
-    order = list(range(7))
-    r.shuffle(objs)
-    for k, o in enumerate(objs):
-        w32(ctx, o, k)
-    w32(ctx, 0x1013a2ac, *(objs[1:] + [objs[6]]))
-    w32(ctx, 0x1013a2c4, r.choice([3, 3, 3, 1, 5, 6, 0xffffffff]))
-    w32(ctx, 0x1015e68c, r.choice(objs))
-    w32(ctx, 0x1015e9cc, r.choice([1, 5, 5, 5, 5, 0, 2, 3, 4, 6, 0xffffffff]))
-    w32(ctx, 0x1015e694, r.choice([0, 1]))
-    w32(ctx, 0x1015e680, ctx.u32(), r.choice([0x12, 0x13]))
-    return []
-
-
 def g_togglefs(ctx):
     r = ctx.rng
     objs, other = modes_env(ctx, r)
@@ -735,7 +717,6 @@ SPECS = [
     # superseded: the loading screen draws through Vulkan (DECISIONS.md, "The loading screen through Vulkan"; checked natively against GDI by tools/verify/picture_native.c)
     # sp('Sim_1008400d', 0x1008400d, g_pal4, 500),
     # superseded: the video-mode timing clock is SDL3's and cannot fail (DECISIONS.md, "Windows calls: the screen")
-    # sp('Sim_10037cab', 0x10037cab, g_10037cab, 1000, True),
     # superseded: the window, pointer and message boxes are SDL3's (DECISIONS.md, "Windows calls: the screen"); no Windows call left to compare
     # sp('ToggleFullScreen', 0x10037f71, g_togglefs, 1000, True),
 ]

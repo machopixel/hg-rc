@@ -33,9 +33,7 @@ static void W8x_Label(char *buf, uint32_t text)
 
 static int W8x_Shape(uint32_t pane, void *shape, uint32_t x, uint32_t y)
 {
-    if (G32(0x1017b940) != 0)
-        return W8X9_CALL_100f0205((void *)(uintptr_t)pane, shape, 0, x, y);
-    return W8X9_CALL_100e91dc((void *)(uintptr_t)pane, shape, 0, x, y);
+    return W8X9_CALL_100f0205((void *)(uintptr_t)pane, shape, 0, x, y);
 }
 
 // FUNCTION: HGSIM 0x1009a282

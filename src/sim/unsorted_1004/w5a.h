@@ -45,11 +45,5 @@ void __cdecl Sim_10044909(int flag);
  * [0x1013aed8] is applied with Sim_100448cd and, when it is 2, the saved record is copied back.
  */
 void __cdecl Sim_10044c7a(void);
-/*
- * p: rectangle with the left, top at +4, +8 and the right, bottom at +0xc, +0x10 (inclusive). When p is not
- * null and [0x1013b9a8] is 1: [0x109b8be0] = p, [0x1013b9a8] = 2 and the result of 0x1004deb3(left, top,
- * width, height, 0x10002955) is returned; otherwise 2.
- */
-int __cdecl Sim_1004ed37(const uint8_t *p);
 
 #endif

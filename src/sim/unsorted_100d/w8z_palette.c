@@ -23,8 +23,6 @@ void __cdecl Sim_100d3000(void *unused)
     uint32_t i;
 
     (void)unused;
-    if (G32(0x1017b940) == 0)
-        return;
     pal = W8Z_CALL_100ba7d5_D((const char *)SIM_PTR(char, 0x10185620), W8Z_EXT, 0);
     if (pal == 0)
         return;
@@ -39,10 +37,7 @@ void __cdecl Sim_100d3000(void *unused)
         else
             colour = ((uint32_t)out[0] << 2 << 16) | ((uint32_t)out[1] << 2 << 8) | ((uint32_t)out[2] << 2);
         SIM_PTR(u32a, 0x10185760)[i] = colour;
-        if (G32(0x1017b940) != 0)
-            word = W8Z_CALL_100f01ea(i);
-        else
-            word = i;
+        word = W8Z_CALL_100f01ea(i);
         SIM_PTR(u16a, 0x101659e0)[i] = (uint16_t)word;
     }
     (*SIM_PTR(W8zSlotFn, 0x109e3d44))(0, SIM_PTR(uint8_t, 0x10185760));
@@ -119,15 +114,6 @@ void __cdecl Sim_100d3877(int flag)
 {
     uint32_t name = (uint32_t)(uintptr_t)SIM_PTR(uint8_t, 0x10185720);
     uint32_t pal;
-    void *mem;
-    uint32_t first[5];
-    uint32_t second[5];
-    void *record;
-    int32_t step;
-    int timer;
-    int elapsed = 0;
-    int last = -1;
-    uint32_t value = 0;
 
     if (name != 0 && (pal = W8Z_CALL_100ba7d5_D((const char *)(uintptr_t)name, W8Z_EXT, 0)) != 0) {
         Sim_100d3000((void *)(uintptr_t)pal);
@@ -135,33 +121,6 @@ void __cdecl Sim_100d3877(int flag)
             ((W8zDrv2Fn)(uintptr_t)W8Z_DRIVER(0x1c))((void *)(uintptr_t)pal, 0x3c);
             Sim_100bb2b0((const uint32_t *)(uintptr_t)name, W8Z_EXT);
             ((W8zDrv1Fn)(uintptr_t)W8Z_DRIVER(0x18))((void *)(uintptr_t)pal);
-        } else if (G32(0x1017b940) == 0) {
-            mem = Hg_HeapAlloc(G32(0x1017b8f8), 9, G32(0x109e3ce8));
-            if (mem != 0) {
-                memcpy(first, SIM_PTR(uint8_t, 0x109e3e00), sizeof(first));
-                first[0] = (uint32_t)(uintptr_t)second;
-                memcpy(second, SIM_PTR(uint8_t, 0x109e3e20), sizeof(second));
-                second[0] = (uint32_t)(uintptr_t)mem;
-                record = SIM_PTR(uint8_t, 0x109e3e00);
-                step = (int32_t)(G32(0x109e3ce8) << 2) / 0xb5;
-                timer = (int16_t)W8Z_TIMER_ALLOC(0x100);
-                W8Z_TIMER_RESET((unsigned)timer);
-                while (elapsed < 0x10f) {
-                    elapsed = W8Z_TIMER_ELAPSED((unsigned)timer);
-                    if (elapsed > last) {
-                        last = elapsed + 1;
-                        value = W8Z_CALL_100eda16(first, record, step, value);
-                        if (G32(0x1017b920) != 0)
-                            ((W8zVoidFn)(uintptr_t)U32(G32(0x1015e68c), 0x18))();
-                    }
-                }
-                W8Z_CALL_100eb070(record, 0xf0);
-                if (G32(0x1017b920) != 0)
-                    ((W8zVoidFn)(uintptr_t)U32(G32(0x1015e68c), 0x18))();
-                ((W8zDrv1Fn)(uintptr_t)W8Z_DRIVER(0x18))((void *)(uintptr_t)pal);
-                Hg_HeapFree(G32(0x1017b8f8), 1, mem);
-                W8Z_TIMER_FREE((unsigned)timer);
-            }
         }
     }
     G32(0x10152420) = 0x10;

@@ -224,8 +224,6 @@ void __cdecl Sim_100352d5(void)
 {
     uint8_t quad[4 * 0x24];
 
-    if (G32(0x1017b940) == 0)
-        return;
     if (G32(0x1013a014) != 0) {
         SIM_FN(W9hCameraFn, 0x100d2306)(BYTES(G32(0x1014cae0)));
         G32(0x1013a014) = 0;

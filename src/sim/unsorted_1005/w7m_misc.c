@@ -5,10 +5,7 @@
 
 static void Column(uint32_t surface, int32_t x, int32_t y, int32_t top, int32_t colour)
 {
-    if (G32(0x1017b940) != 0)
-        W7M_CALL_100ef727(surface, x, y, x, top, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
-    else
-        W7M_CALL_100e86a1(surface, x, y, x, top, 0, (uint32_t)colour);
+    W7M_CALL_100ef727(surface, x, y, x, top, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
 }
 
 // FUNCTION: HGSIM 0x10051a36

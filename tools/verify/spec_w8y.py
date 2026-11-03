@@ -1714,10 +1714,13 @@ def spec(name, orig, gen, trials, **kw):
     return dict(name=name, orig=orig, c=name, gen=gen, trials=trials, **kw)
 
 
+W8Y_LIGHTS = {'g_w33Light1Cam': 12, 'g_w33Light2Cam': 12}
 SPECS = [
     spec('Sim_100a4f03', 0x100a4f03, g_a4f03, 400, void=True),
-    spec('Sim_100a4ff0', 0x100a4ff0, g_tree, 500, void=True),
-    spec('Sim_100a512a', 0x100a512a, g_tree, 500, void=True),
+    # round 42: the object walk reaches Sim_1005874a (the only writer of these), which also turns 1.2's two coloured lights
+    # into the camera's frame (C-only, checked against 1.2 in spec_w3p_light_v12): 1.0 has no such variables
+    spec('Sim_100a4ff0', 0x100a4ff0, g_tree, 500, void=True, ignore_syms=W8Y_LIGHTS),
+    spec('Sim_100a512a', 0x100a512a, g_tree, 500, void=True, ignore_syms=W8Y_LIGHTS),
     spec('Sim_100a526b', 0x100a526b, g_tree, 600, void=True),
     spec('Sim_100a648c', 0x100a648c, g_a648c, 1500),
     spec('Sim_100a76a0', 0x100a76a0, g_a76a0, 400, api=HEAP_API),

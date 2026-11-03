@@ -370,27 +370,6 @@ def g_b7b9(ctx):
     return []
 
 
-def g_de34(ctx):
-    rg = ctx.rng
-    w32(ctx, 0x1015f22c, rg.choice([0, 1, 2, 5, 6, 8, 8, 8, 31, 32, 33, 0x105, rg.randrange(0, 12)]))
-    dst = ctx.buf(0x300 + 16, 'rand')
-    w32(ctx, 0x1015f360, dst)
-    ch = lambda: rg.choice([rg.randrange(0, 256), rg.randrange(0, 256), rg.randrange(0, 64), 255, -1, rg.randrange(-300, 300), ctx.u32()])
-    return [rg.randrange(0, 250), ch(), ch(), ch()]
-
-
-def g_ecb8(ctx):
-    rg = ctx.rng
-    rnd(ctx, 0x1015e6a0, 256 * 3)
-    rec = ctx.buf(0x20, 'rand')
-    w32(ctx, rec + 0xc, rg.choice([0, 1, 5, 64, 255, 256, 256, rg.randrange(0, 257), -1]))
-    w32(ctx, 0x109e3da4, rec)
-    w32(ctx, 0x1013b9a8, rg.choice([0, 0, 0, 0, 1]))
-    w32(ctx, 0x1015f22c, rg.choice([1, 2, 6, 8, 8, 5]))
-    w32(ctx, 0x1015f360, ctx.buf(0x300 + 16, 'rand'))
-    return []
-
-
 # ---- unsorted_1005 -----------------------------------------------------------------
 def g_52530(ctx):
     rnd(ctx, 0x109b7d40, 0x10 * 0x6c)
@@ -703,8 +682,6 @@ SPECS = [
     dict(name='Sim_1004b7b9', orig=0x1004b7b9, c='Sim_1004b7b9', gen=g_b7b9),
     dict(name='Sim_1004bfa9', orig=0x1004bfa9, c='Sim_1004bfa9', gen=g_bfa9),
     dict(name='Sim_1004c221', orig=0x1004c221, c='Sim_1004c221', gen=g_c221),
-    dict(name='Sim_1004de34', orig=0x1004de34, c='Sim_1004de34', gen=g_de34, void=True, trials=600),
-    dict(name='Sim_1004ecb8', orig=0x1004ecb8, c='Sim_1004ecb8', gen=g_ecb8, void=True),
     dict(name='Sim_10052530', orig=0x10052530, c='Sim_10052530', gen=g_52530, void=True),
     dict(name='Sim_10052632', orig=0x10052632, c='Sim_10052632', gen=g_52632),
     dict(name='Sim_10052c60', orig=0x10052c60, c='Sim_10052c60', gen=g_52c60),

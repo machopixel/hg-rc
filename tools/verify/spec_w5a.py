@@ -704,21 +704,6 @@ def g_44c7a(ctx):
     return []
 
 
-def g_4ed37(ctx):
-    begin(ctx)
-    r = ctx.rng
-    p = newbuf(ctx, 0x20)
-    x0 = r.randrange(-100, 100)
-    y0 = r.randrange(-100, 100)
-    put(ctx, p + 4, 'I', x0)
-    put(ctx, p + 8, 'I', y0)
-    put(ctx, p + 0xc, 'I', x0 + r.randrange(-3, 300))
-    put(ctx, p + 0x10, 'I', y0 + r.randrange(-3, 300))
-    w32(ctx, 0x1013b9a8, r.choice([1, 1, 1, 0, 2, 3, ctx.u32()]))
-    w32(ctx, 0x109b8be0, ctx.u32())
-    return [0 if r.random() < 0.06 else p]
-
-
 def g_579ad(ctx):
     begin(ctx)
     r = ctx.rng
@@ -1085,7 +1070,6 @@ SPECS = [
     SF('Sim_10041c4c', 0x10041c4c, 'Sim_10041c4c', g_41c4c, 400, void=True),
     SF('Sim_10044909', 0x10044909, 'Sim_10044909', g_44909, 500, void=True),
     SF('Sim_10044c7a', 0x10044c7a, 'Sim_10044c7a', g_44c7a, 500, void=True),
-    SF('Sim_1004ed37', 0x1004ed37, 'Sim_1004ed37', g_4ed37, 300),
     SF('Sim_100579ad', 0x100579ad, 'Sim_100579ad', g_579ad, 300, void=True),
     SF('Sim_1005ae79', 0x1005ae79, 'Sim_1005ae79', g_5ae79, 500),
     SF('Sim_10060882', 0x10060882, 'Sim_10060882', g_60882, 400, void=True, fp=True, tol=1e-9),

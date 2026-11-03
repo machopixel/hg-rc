@@ -15,10 +15,8 @@ static void W9e_Text(const uint8_t *hud, const int32_t *pos, void *font, const c
 {
     if (G32(0x101668e8) != 0)
         W9E_CALL_100f2f01(PANE(hud), pos[0], pos[1], font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W9E_CALL_100f1e10(PANE(hud), pos[0], pos[1], font, text, GBYTES(0x109b9920));
     else
-        W9E_CALL_100ecea6(PANE(hud), pos[0], pos[1], font, text, GBYTES(0x109b9920));
+        W9E_CALL_100f1e10(PANE(hud), pos[0], pos[1], font, text, GBYTES(0x109b9920));
 }
 
 /* A text in colour 0xc, leaving the colour 9. */

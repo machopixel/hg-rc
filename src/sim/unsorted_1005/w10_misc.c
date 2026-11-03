@@ -235,22 +235,9 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
                 rgb[i * 4 + 2] += b;
             }
         }
-        if (GS32(0x1014cb2c) > 0 && G32(0x1017b940) == 0) {
-            if (!((double)GS32(0x1014cb2c) >= *(float *)(v + 8))) {
-                q = Render_Ftol((double)GS32(0x1014cb2c) / *(float *)(v + 8) * (double)GS32(0x10143fbc));
-                U32(v, 0x3c) -= 0x80u - (uint32_t)q;
-                if (W10_V3C(v) < 0)
-                    U32(v, 0x3c) = 0;
-            }
-        } else if (G32(0x1017d108) != 0) {
+        if (G32(0x1017d108) != 0)
             U8(v, 0x2b) = (uint8_t)Render_Ftol((double)SIM_FN(W10FogFn, 0x10058ac2)(U32(v, 8), U32(v, 0x2c)) *
                                                GF(0x10143fcc));
-            if (G32(0x1017b940) == 0) {
-                U32(v, 0x3c) += 0x80u - U8(v, 0x2b);
-                if (W10_V3C(v) < 0)
-                    U32(v, 0x3c) = 0;
-            }
-        }
     }
     /* 1.2: the two coloured lights, colour only, their directions already in the camera's frame */
     G32(0x109afdcc) = 1;
@@ -289,8 +276,7 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
     }
     G32(0x109afdcc) = 0;
     /* 1.2: the point lights also in 3D mode with fog on, but not for the b000..e000 polygons; each adds white */
-    if (G32(0x10143fd8) != 0 && !mode3 &&
-        ((G32(0x1017d108) == 0 && G32(0x1017b940) == 0) || (!special && G32(0x1017b940) != 0))) {
+    if (G32(0x10143fd8) != 0 && !mode3 && !special) {
         for (src = BYTES(G32(0x101668d0)); src != 0; src = BYTES(U32(src, 0))) {
             if (Sim_1005897b(poly, verts, src) == 0)
                 continue;
@@ -325,8 +311,7 @@ void __cdecl Sim_10058c5e(const uint8_t *poly, const uint8_t *verts, uint8_t *co
         v = list[i];
         if ((U8(v, 0x29) & 2) != 0)
             continue;
-        if (G32(0x1017b940) != 0)
-            U32(v, 0x3c) <<= 1;
+        U32(v, 0x3c) <<= 1;
         if (W10_V3C(v) > 0x80)
             U32(v, 0x3c) = 0x80;
         U32(v, 0x3c) *= (uint32_t)scale;

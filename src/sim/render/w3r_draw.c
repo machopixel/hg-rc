@@ -34,7 +34,7 @@ void __cdecl Render_SubmitVerts_100d1e10(void *surface, void *pixels, short widt
     tex.unset14 = 0;
     tex.flag = 0;
     /* tex.key stays unset, as in the original */
-    RENDER_SLOT(int(__cdecl *)(int, void *, void *, int, void *), 0x109e3d30)(GS32(0x1017b940) != 0 ? 6 : 2, surface, verts, count, &handle);
+    RENDER_SLOT(int(__cdecl *)(int, void *, void *, int, void *), 0x109e3d30)(6, surface, verts, count, &handle);
 }
 
 // FUNCTION: HGSIM 0x100a78d9

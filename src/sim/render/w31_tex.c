@@ -35,11 +35,7 @@ void W31_DescribeFileTex(W31Texture *tex, const uint8_t *image, uint32_t handleA
 /* 1.2's .TEX flag 0x10105048: set by its SimMain for the 3D mode or its 3DFX / PowerVR mode (round 33) */
 int W31_TexMode(void)
 {
-#ifdef W31V_MUTATE /* the checker's negative check only: the 3D mode alone */
-    return g_w31Tex != 0 && G32(0x1017b940) != 0;
-#else
-    return g_w31Tex != 0 && (G32(0x1017b940) != 0 || g_w33Voodoo != 0);
-#endif
+    return g_w31Tex != 0;
 }
 
 void W31_MirrorRows(uint8_t *pixels, int32_t width, int32_t height)

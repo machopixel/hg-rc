@@ -37,10 +37,3 @@ int __cdecl Sim_10048720(short value)
     U8(GBYTES(0x109b94be), 0) = (uint8_t)value;
     return 1;
 }
-
-// FUNCTION: HGSIM 0x1004edb6
-void __cdecl Sim_1004edb6(void)
-{
-    G32(0x1013b9a8) = 3;
-    SIM_FN(void(__cdecl *)(void), 0x1004e838)();
-}

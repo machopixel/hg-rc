@@ -30,10 +30,7 @@ void __cdecl Sim_1009a137(void *obj)
             uint32_t x = (uint32_t)Render_Ftol((double)fx);
             uint32_t y = (uint32_t)Render_Ftol((double)fy);
 
-            if (G32(0x1017b940) != 0)
-                W9D_CALL_100f0205((void *)(uintptr_t)pane, shape, 0, x, y);
-            else
-                W9D_CALL_100e91dc((void *)(uintptr_t)pane, shape, 0, x, y);
+            W9D_CALL_100f0205((void *)(uintptr_t)pane, shape, 0, x, y);
             Sim_100bb2b0((const uint32_t *)label, (const char *)(uintptr_t)G32(0x1014cec0));
             Sim_1009a3b3(obj);
         }

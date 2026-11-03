@@ -11,58 +11,30 @@ void __cdecl Sim_10062386(void)
 
     if (G32(0x1017692c) == 0)
         return;
-    if (G32(0x1017b940) != 0) {
-        for (i = 0; i < 8; i++) {
-            SIM_PTR(u16a, 0x10176960)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
-            SIM_PTR(u16a, 0x10176b60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
-            SIM_PTR(u16a, 0x10176d60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x10);
-            SIM_PTR(u16a, 0x10176f60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x18);
-        }
-        for (i = 8; i < 0x10; i++) {
-            SIM_PTR(u16a, 0x10177160)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
-            SIM_PTR(u16a, 0x10177360)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
-            SIM_PTR(u16a, 0x10177560)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
-            SIM_PTR(u16a, 0x10177760)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x10);
-            SIM_PTR(u16a, 0x10177960)[i] = (uint16_t)W8W6_CALL_100f01ea(0);
-        }
-        for (i = 0x10; i < 0x18; i++) {
-            SIM_PTR(u16a, 0x10177b60)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x10);
-            SIM_PTR(u16a, 0x10177d60)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
-            SIM_PTR(u16a, 0x10177f60)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
-            SIM_PTR(u16a, 0x10178160)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
-        }
-        for (i = 0x18; i < 0x20; i++) {
-            SIM_PTR(u16a, 0x10178360)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x18);
-            SIM_PTR(u16a, 0x10178560)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x10);
-            SIM_PTR(u16a, 0x10178760)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
-            SIM_PTR(u16a, 0x10178960)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
-        }
-        return;
-    }
     for (i = 0; i < 8; i++) {
-        GBYTES(0x10178b60)[i] = (uint8_t)i;
-        GBYTES(0x10178c60)[i] = (uint8_t)(i + 8);
-        GBYTES(0x10178d60)[i] = (uint8_t)(i + 0x10);
-        GBYTES(0x10178e60)[i] = (uint8_t)(i + 0x18);
+        SIM_PTR(u16a, 0x10176960)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
+        SIM_PTR(u16a, 0x10176b60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
+        SIM_PTR(u16a, 0x10176d60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x10);
+        SIM_PTR(u16a, 0x10176f60)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x18);
     }
     for (i = 8; i < 0x10; i++) {
-        GBYTES(0x10178f60)[i] = (uint8_t)(i - 8);
-        GBYTES(0x10179060)[i] = (uint8_t)i;
-        GBYTES(0x10179160)[i] = (uint8_t)(i + 8);
-        GBYTES(0x10179260)[i] = (uint8_t)(i + 0x10);
-        GBYTES(0x10179360)[i] = 0;
+        SIM_PTR(u16a, 0x10177160)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
+        SIM_PTR(u16a, 0x10177360)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
+        SIM_PTR(u16a, 0x10177560)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
+        SIM_PTR(u16a, 0x10177760)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 0x10);
+        SIM_PTR(u16a, 0x10177960)[i] = (uint16_t)W8W6_CALL_100f01ea(0);
     }
     for (i = 0x10; i < 0x18; i++) {
-        GBYTES(0x10179460)[i] = (uint8_t)(i - 0x10);
-        GBYTES(0x10179560)[i] = (uint8_t)(i - 8);
-        GBYTES(0x10179660)[i] = (uint8_t)i;
-        GBYTES(0x10179760)[i] = (uint8_t)(i + 8);
+        SIM_PTR(u16a, 0x10177b60)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x10);
+        SIM_PTR(u16a, 0x10177d60)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
+        SIM_PTR(u16a, 0x10177f60)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
+        SIM_PTR(u16a, 0x10178160)[i] = (uint16_t)W8W6_CALL_100f01ea(i + 8);
     }
     for (i = 0x18; i < 0x20; i++) {
-        GBYTES(0x10179860)[i] = (uint8_t)(i - 0x18);
-        GBYTES(0x10179960)[i] = (uint8_t)(i - 0x10);
-        GBYTES(0x10179a60)[i] = (uint8_t)(i - 8);
-        GBYTES(0x10179b60)[i] = (uint8_t)i;
+        SIM_PTR(u16a, 0x10178360)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x18);
+        SIM_PTR(u16a, 0x10178560)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 0x10);
+        SIM_PTR(u16a, 0x10178760)[i] = (uint16_t)W8W6_CALL_100f01ea(i - 8);
+        SIM_PTR(u16a, 0x10178960)[i] = (uint16_t)W8W6_CALL_100f01ea(i);
     }
 }
 
@@ -141,10 +113,6 @@ void __cdecl Sim_1006419e(uint32_t dest, uint32_t res, uint32_t a3, int32_t x, i
 
     if (image == 0)
         return;
-    if (G32(0x1017b940) == 0) {
-        W8W6_CALL_100e9cd1((void *)(uintptr_t)dest, res, a3, x, y, (uint32_t)(uintptr_t)image, a7, a8, a9, a10);
-        return;
-    }
     record[0] = (uint32_t)(uintptr_t)surface;
     surface[0] = (uint32_t)(uintptr_t)image;
     /* the size and offset of the resource are fetched but replaced by the fixed 0xb2 x 0xb2 and 0x59 below */
@@ -203,10 +171,7 @@ uint32_t __cdecl Sim_1006519d(uint32_t x, uint32_t y, char *name)
 
     if (data == 0)
         return 0;
-    if (G32(0x1017b940) != 0)
-        W8W6_CALL_100f0205(0x109e3e00, data, 0, x, y);
-    else
-        W8W6_CALL_100e91dc(0x109e3e00, data, 0, x, y);
+    W8W6_CALL_100f0205(0x109e3e00, data, 0, x, y);
     return (uint32_t)Sim_100bb2b0((const uint32_t *)name, (const char *)(uintptr_t)G32(0x1014cec0));
 }
 
@@ -218,18 +183,9 @@ uint32_t __cdecl Sim_10065216(uint32_t x, uint32_t y, char *name, uint32_t palet
     if (data == 0)
         return 0;
     if (G32(0x1017692c) != 0) {
-        if (G32(0x1017b940) != 0)
-            W8W6_CALL_100f01ad(palette);
-        else
-            W8W6_CALL_100e96a7(palette);
-        if (G32(0x1017b940) != 0)
-            W8W6_CALL_100f0205(0x109e3e00, data, 0, x, y);
-        else
-            W8W6_CALL_100e96c6(0x109e3e00, data, 0, x, y);
-        if (G32(0x1017b940) != 0)
-            W8W6_CALL_100f01ad(0x101659e0);
-        else
-            W8W6_CALL_100e96a7(0x101659e0);
+        W8W6_CALL_100f01ad(palette);
+        W8W6_CALL_100f0205(0x109e3e00, data, 0, x, y);
+        W8W6_CALL_100f01ad(0x101659e0);
     }
     return (uint32_t)Sim_100bb2b0((const uint32_t *)name, (const char *)(uintptr_t)G32(0x1014cec0));
 }
@@ -241,9 +197,6 @@ uint32_t __cdecl Sim_100652e8(uint32_t x, uint32_t y, char *name, uint32_t dest)
 
     if (data == 0)
         return 0;
-    if (G32(0x1017b940) != 0)
-        W8W6_CALL_100f0205(dest, data, 0, x, y);
-    else
-        W8W6_CALL_100e91dc(dest, data, 0, x, y);
+    W8W6_CALL_100f0205(dest, data, 0, x, y);
     return (uint32_t)Sim_100bb2b0((const uint32_t *)name, (const char *)(uintptr_t)G32(0x1014cec0));
 }

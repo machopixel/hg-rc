@@ -113,10 +113,7 @@ int32_t __cdecl Sim_10075667(uint8_t *s)
     if (U32(s, 4) & 0x20)
         W8W7_CALL_100eb070(frame, 0xf0);
     if (U32(s, 0x14) != 0) {
-        if (G32(0x1017b940) != 0)
-            W8W7_CALL_100f0205(data, U32(s, 0x14), 0, 0, 0);
-        else
-            W8W7_CALL_100e91dc(data, U32(s, 0x14), 0, 0, 0);
+        W8W7_CALL_100f0205(data, U32(s, 0x14), 0, 0, 0);
     }
     if (U32(s, 4) & 4)
         Sim_1008d4f1((int32_t *)(uintptr_t)frame, 0x1c);

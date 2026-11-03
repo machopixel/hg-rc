@@ -11,15 +11,6 @@
 
 #include "../simmem.h"
 
-/*
- * Picks, among the 7 pointers at 0x1013a2a8, the one whose dwords +8 and +0xc are both non-zero and whose
- * unsigned dword +0xc is smallest (first one on ties). When it differs from the current one (dword
- * 0x1015e68c) it calls the current one's function at +0x14 (no arguments), makes the pick current and
- * calls its function at +0x10 with (dword 0x1015e698, dword 0x109e3d14, dword 0x109e3d18). Then copies the
- * current pointer to 0x1015e690, sets dword 0x10179d68 to 1 and calls Sim_10083495(0x1013a340, *cur, cur[3])
- * (an empty function in this build).
- */
-void __cdecl Sim_10037e8f(void);
 
 /* Divides the float at +0x4ec of the block (+0x28) of each of the [0x1015dc64] pointer-table entries by the float at 0x101114fc. */
 void __cdecl Sim_1003ccc4(void);

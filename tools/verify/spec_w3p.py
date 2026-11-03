@@ -436,27 +436,6 @@ def ST_self(ctx):
     return struct.unpack('<I', bytes(ctx.m.uc.mem_read(0x1017b8c8, 4)))[0]
 
 
-def g_37e8f(ctx):
-    r = ctx.rng
-    begin(ctx)
-    objs = []
-    for i in range(7):
-        o = ctx.buf(0x40)
-        w32(ctx, o + 8, r.choice([0, 1, 1, 5]))
-        w32(ctx, o + 0xc, r.choice([0, 1, 2, 3, 0x80000000, 0xffffffff, r.getrandbits(32)]))
-        w32(ctx, o + 0x14, STUB['v14'])
-        w32(ctx, o + 0x10, STUB['v10'])
-        objs.append(o)
-    wb(ctx, 0x1013a2a8, struct.pack('<7I', *objs))
-    cur = r.choice([0] + [objs[r.randrange(7)] for _ in range(6)])
-    w32(ctx, 0x1015e68c, cur)
-    if cur == 0 and r.random() < 0.6:
-        pass
-    for a in (0x1015e698, 0x109e3d14, 0x109e3d18):
-        w32(ctx, a, ctx.u32())
-    return []
-
-
 def g_1b01f(ctx):
     r = ctx.rng
     begin(ctx)
@@ -841,7 +820,6 @@ SPECS = [
     dict(name='Sim_100420a0', orig=0x100420a0, c='Sim_100420a0', gen=g_none_net, trials=500),
     dict(name='Sim_100421b0', orig=0x100421b0, c='Sim_100421b0', gen=g_421b0, trials=500, void=True),
     dict(name='Sim_1002c6e2', orig=0x1002c6e2, c='Sim_1002c6e2', gen=g_2c6e2, trials=500, void=True),
-    dict(name='Sim_10037e8f', orig=0x10037e8f, c='Sim_10037e8f', gen=g_37e8f, trials=600, void=True),
     dict(name='Sim_1000b01f', orig=0x1000b01f, c='Sim_1000b01f', gen=g_1b01f, trials=600),
     dict(name='Sim_1000e6c5', orig=0x1000e6c5, c='Sim_1000e6c5', gen=g_e6c5, trials=300, void=True),
     dict(name='Sim_1003ccc4', orig=0x1003ccc4, c='Sim_1003ccc4', gen=g_ccc4, trials=400, void=True),

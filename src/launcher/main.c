@@ -503,6 +503,8 @@ static LONG WINAPI CrashFilter(EXCEPTION_POINTERS *info)
  * ones. Glide needs glide2x.dll, a 1997 driver that no longer exists, and the
  * sim crashes without saying why when the plugin cannot load. So /3dfx becomes
  * /d3d unless Glide is installed. HG_RENDERER (or hgrc.cfg) overrides: glide, d3d, soft or hgvk.
+ * Round 42: the converted sim has only the /3dfx side left (the Vulkan renderer), so the choice is hgvk whatever
+ * the setting; glide, d3d and soft stay for the reference runs of the original code (hgrc.cfg word "noconv").
  * `cmd` is upper case and has room to grow by a few characters.
  */
 /*
@@ -656,6 +658,8 @@ static void ChooseRenderer(char *cmd)
     size_t i;
 
     LogRenderer("before", want, cmd);
+    if (!ConfigHasWord("noconv"))
+        want = "hgvk";
     if (want == NULL) {
         HMODULE glide = LoadLibraryA("glide2x.dll");
 

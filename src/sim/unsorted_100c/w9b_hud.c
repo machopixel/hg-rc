@@ -23,10 +23,8 @@ static void W9b_Draw(uint8_t *pane, void *font, const char *text)
 
     if (G32(0x101668e8) != 0)
         W9BC_CALL_100f2f01(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W9BC_CALL_100f1e10(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
     else
-        W9BC_CALL_100ecea6(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
+        W9BC_CALL_100f1e10(target, x, y, font, text, SIM_PTR(void, 0x109b9920));
 }
 
 static void W9b_ReleaseFont(void)

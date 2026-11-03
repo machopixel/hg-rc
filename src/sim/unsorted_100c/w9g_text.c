@@ -10,10 +10,8 @@ static void DrawText(uint8_t mode, uint32_t surface, int32_t x, int32_t y, uint3
     *GBYTES(0x109b992e) = mode;
     if (G32(0x101668e8) != 0)
         W9GC_CALL_100f2f01(surface, x, y, font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W9GC_CALL_100f1e10(surface, x, y, font, text, GBYTES(0x109b9920));
     else
-        W9GC_CALL_100ecea6(surface, x, y, font, text, GBYTES(0x109b9920));
+        W9GC_CALL_100f1e10(surface, x, y, font, text, GBYTES(0x109b9920));
     *GBYTES(0x109b992e) = 9;
 }
 

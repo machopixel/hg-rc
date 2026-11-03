@@ -28,10 +28,8 @@ static void W24m_Text(uint32_t pane, int32_t x, int32_t y, uint32_t font, const 
 {
     if (G32(0x101668e8) != 0)
         SIM_FN(W24mTextFn, 0x100f2f01)(pane, x, y, font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        SIM_FN(W24mTextFn, 0x100f1e10)(pane, x, y, font, text, GBYTES(0x109b9920));
     else
-        SIM_FN(W24mTextFn, 0x100ecea6)(pane, x, y, font, text, GBYTES(0x109b9920));
+        SIM_FN(W24mTextFn, 0x100f1e10)(pane, x, y, font, text, GBYTES(0x109b9920));
 }
 
 static int32_t W24m_Width(uint32_t font, uint32_t c)
@@ -165,10 +163,7 @@ void __cdecl Sim_1007581a(uint8_t *s)
         cy += gap;
         gap = S32(s, 0x5c);
         if (i == sel && U32(s, 0x20) != 0) {
-            if (G32(0x1017b940) != 0)
-                W24M_SHAPE_ACCEL(pane, U32(s, 0x20), 0, cx, cy);
-            else
-                W24M_SHAPE_SOFT(pane, U32(s, 0x20), 0, cx, cy);
+            W24M_SHAPE_ACCEL(pane, U32(s, 0x20), 0, cx, cy);
         }
         if (S32(item, 0) != 3) {
             if (i == last)

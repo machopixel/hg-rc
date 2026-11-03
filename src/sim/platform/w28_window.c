@@ -7,7 +7,6 @@
 
 #define W28_WINDOW() ((void *)(uintptr_t)G32(0x1017b8f0))
 #define W28_DRIVER() G32(0x1015e688)        /* the display driver's table */
-#define W28_FITS() (GS32(0x1015e9c4) <= 0x280 && GS32(0x1015e9c8) <= 0x1e0 && G32(0x1017b940) == 0)
 
 typedef void(__cdecl *W28VoidFn)(void);
 typedef void(__cdecl *W28PaletteFn)(uint32_t first, uint32_t count, void *colours, uint32_t now);
@@ -56,19 +55,7 @@ int32_t __stdcall Sim_100867a2(uint32_t window, uint32_t message, uint32_t wPara
                 Sim_1008b900();
             }
             Sim_10057f53();
-            if (W28_FITS()) {
-                if (G32(0x1015e9c0) == 1) {
-                    SIM_FN(W28VoidFn, 0x10037f71)();
-                    G32(0x1015e9c0) = 0;
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_RESTORE);
-                } else if (W28_DRIVER() == 0 || U32(W28_DRIVER(), 0) != 1) {
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_RESTORE);
-                } else {
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_NOACTIVATE);
-                }
-            } else {
-                Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_RESTORE);
-            }
+            Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_RESTORE);
             if (G32(0x1017b934) != 0)
                 ((W28VoidFn)(uintptr_t)G32(0x109e3d5c))();
         } else {
@@ -80,19 +67,7 @@ int32_t __stdcall Sim_100867a2(uint32_t window, uint32_t message, uint32_t wPara
             }
             if (G32(0x1017b934) != 0)
                 ((W28VoidFn)(uintptr_t)G32(0x109e3d60))();
-            if (W28_FITS()) {
-                if (W28_DRIVER() != 0 && U32(W28_DRIVER(), 0) == 0 && G32(0x1015e9c0) == 0) {
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_MINIMIZE);
-                    G32(0x1015e9c0) = 1;
-                    SIM_FN(W28VoidFn, 0x10037f71)();
-                } else if (W28_DRIVER() == 0 || U32(W28_DRIVER(), 0) != 1) {
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_MINIMIZE);
-                } else {
-                    Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_HIDE);
-                }
-            } else {
-                Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_MINIMIZE);
-            }
+            Plat_WindowShow(W28_WINDOW(), PLAT_SHOW_MINIMIZE);
         }
         W28_SetPalette();
         return 0;

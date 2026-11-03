@@ -81,10 +81,8 @@ void __cdecl Sim_10077272(uint8_t *menu, uint8_t *item, int32_t row, uint32_t x,
         }
         if (G32(0x101668e8) != 0)
             SIM_FN(W10_7DrawFn, 0x100f2f01)(target, x, y, U32(menu, 0x48), text, SIM_PTR(void, 0x109b9920));
-        else if (G32(0x1017b940) != 0)
-            SIM_FN(W10_7DrawFn, 0x100f1e10)(target, x, y, U32(menu, 0x48), text, SIM_PTR(void, 0x109b9920));
         else
-            SIM_FN(W10_7DrawFn, 0x100ecea6)(target, x, y, U32(menu, 0x48), text, SIM_PTR(void, 0x109b9920));
+            SIM_FN(W10_7DrawFn, 0x100f1e10)(target, x, y, U32(menu, 0x48), text, SIM_PTR(void, 0x109b9920));
     }
     if (selected) {
         if (hot && U32(state, (uint32_t)row * 0x14u + 0x18u) == 5 && FN(0x1c) != 0)
@@ -101,13 +99,10 @@ typedef uint32_t(__cdecl *W10_7SizeFn)(uint32_t shape, uint32_t zero);
 typedef int32_t(__cdecl *W10_7HeightFn)(uint32_t font);
 typedef void(__cdecl *W10_7BlitFn)(uint32_t target, uint32_t shape, int32_t zero, int32_t x, int32_t y);
 
-/* The shape is drawn by 0x100f0205 when [0x1017b940] is set, else by 0x100e91dc. */
+/* The shape is drawn by 0x100f0205 (the renderer side of the original's [0x1017b940] test, round 42). */
 static void W10_7Blit(uint32_t target, uint32_t shape, int32_t x, int32_t y)
 {
-    if (G32(0x1017b940) != 0)
-        SIM_FN(W10_7BlitFn, 0x100f0205)(target, shape, 0, x, y);
-    else
-        SIM_FN(W10_7BlitFn, 0x100e91dc)(target, shape, 0, x, y);
+    SIM_FN(W10_7BlitFn, 0x100f0205)(target, shape, 0, x, y);
 }
 
 // FUNCTION: HGSIM 0x10076de0

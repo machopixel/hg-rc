@@ -24,51 +24,6 @@ static void W4u_Counter(uint32_t *out)
 #define ACTIVE G32(0x1015e694)
 #define STEP G32(0x1015e9cc)
 
-// FUNCTION: HGSIM 0x10037cab
-void __cdecl Sim_10037cab(void)
-{
-    uint32_t now[2];
-
-    if (S32(CURRENT, 0) > GS32(0x1013a2c4)) {
-        ACTIVE = 0;
-        return;
-    }
-    if (STEP == 1) {
-        W4u_Counter(SIM_PTR(uint32_t, 0x1015e680));
-        STEP = STEP + 1;
-        return;
-    }
-    if (STEP != 5) {
-        STEP = STEP + 1;
-        return;
-    }
-    W4u_Counter(now);
-    /* The original tests whether the high words are equal, but computes the same difference either way. */
-    U32(CURRENT, 0xc) = now[0] - G32(0x1015e680);
-    SIM_FN(W4uLog7Fn, 0x10083495)(GBYTES(0x1013a2ec), U32(CURRENT, 0), G32(0x1015e680), G32(0x1015e684), now[0],
-                                  now[1], U32(CURRENT, 0xc));
-    if (S32(CURRENT, 0) == GS32(0x1013a2c4)) {
-        ACTIVE = 0;
-    } else {
-        while (S32(CURRENT, 0) < GS32(0x1013a2c4)) {
-            (*(W4uMethod0Fn *)(BYTES(CURRENT) + 0x14))();
-            CURRENT = SIM_PTR(u32a, 0x1013a2ac)[U32(CURRENT, 0)];
-            if (U32(CURRENT, 8) != 0
-                && (*(W4uMethod3Fn *)(BYTES(CURRENT) + 0x10))(G32(0x1015e698), G32(0x109e3d14),
-                                                               G32(0x109e3d18)) == 0) {
-                STEP = 0;
-                break;
-            }
-            W4U_LOG(0x1013a320, U32(CURRENT, 0));
-            U32(CURRENT, 8) = 0;
-            if (S32(CURRENT, 0) == GS32(0x1013a2c4))
-                ACTIVE = 0;
-        }
-    }
-    if (ACTIVE == 0)
-        Sim_10037e8f();
-}
-
 // FUNCTION: HGSIM 0x10037f71
 void __cdecl ToggleFullScreen(void)
 {

@@ -36,19 +36,15 @@ static int32_t W8x_DivShift16(int32_t value, int32_t divisor)
     return ((value < 0) != (divisor < 0)) ? (int32_t)(0u - (uint32_t)q) : (int32_t)(uint32_t)q;
 }
 
-/* The pane colour: through the word table 0x101659e0 in the high-colour mode ([0x1017b940]). */
+/* The pane colour: through the word table 0x101659e0 (the high-colour mode, the only one left: round 42). */
 static int W8x_Line(void *pane, uint32_t x0, uint32_t y0, uint32_t x1, uint32_t y1, uint32_t colour)
 {
-    if (G32(0x1017b940) != 0)
-        return W8X8_CALL_100ef727(pane, x0, y0, x1, y1, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
-    return W8X8_CALL_100e86a1(pane, x0, y0, x1, y1, 0, colour);
+    return W8X8_CALL_100ef727(pane, x0, y0, x1, y1, 0, SIM_PTR(u16a, 0x101659e0)[colour]);
 }
 
 static int W8x_Shape(void *pane, void *shape, uint32_t number, uint32_t x, uint32_t y)
 {
-    if (G32(0x1017b940) != 0)
-        return W8X8_CALL_100f0205(pane, shape, number, x, y);
-    return W8X8_CALL_100e91dc(pane, shape, number, x, y);
+    return W8X8_CALL_100f0205(pane, shape, number, x, y);
 }
 
 /* Fits the rectangle 0x1014b938 to 0x109e3e20 the first time ([0x1014b94c]) and draws the shape at (0, 0). */

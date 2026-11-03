@@ -64,12 +64,8 @@ void __cdecl Sim_10063037(void *holder)
     z = W9d_Float(BYTES(obj), 0x10c);
     if (Sim_100d2669(&x, &y, &z) == 0)
         return;
-    if (G32(0x1017b940) != 0)
-        Sim_10065216((uint32_t)Render_Ftol((double)x), (uint32_t)Render_Ftol((double)y), text,
-                     (uint32_t)(uintptr_t)(GBYTES(0x10176960) + row * 0x200));
-    else
-        Sim_10065216((uint32_t)Render_Ftol((double)x), (uint32_t)Render_Ftol((double)y), text,
-                     (uint32_t)(uintptr_t)(GBYTES(0x10178b60) + row * 0x100));
+    Sim_10065216((uint32_t)Render_Ftol((double)x), (uint32_t)Render_Ftol((double)y), text,
+                 (uint32_t)(uintptr_t)(GBYTES(0x10176960) + row * 0x200));
 }
 
 // FUNCTION: HGSIM 0x10065384
@@ -91,10 +87,8 @@ void __cdecl Sim_10065384(void)
     y = Render_Ftol((double)GS32(0x109e3e18) - (double)width * scale);
     if (G32(0x101668e8) != 0)
         W9D_CALL_100f2f01(0x109e3e00, y, x, font, SIM_PTR(char, 0x101658d8), 0x109b9920);
-    else if (G32(0x1017b940) != 0)
-        W9D_CALL_100f1e10(0x109e3e00, y, x, font, SIM_PTR(char, 0x101658d8), 0x109b9920);
     else
-        W9D_CALL_100ecea6(0x109e3e00, y, x, font, SIM_PTR(char, 0x101658d8), 0x109b9920);
+        W9D_CALL_100f1e10(0x109e3e00, y, x, font, SIM_PTR(char, 0x101658d8), 0x109b9920);
     U8(GBYTES(0x109b992e), 0) = 9;
     Sim_100bb2b0((const uint32_t *)fontname, (const char *)(uintptr_t)G32(0x1014cec4));
 }

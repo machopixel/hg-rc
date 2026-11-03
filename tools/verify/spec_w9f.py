@@ -197,8 +197,7 @@ for _a, _c, _n in [
         (0x10015f5b, 'Sim_10015f5b', 2), (0x10040f5f, 'Sim_10040f5f', 4), (0x10015d30, 'Sim_10015d30', 4),
         (0x100fd850, 'Sim_100fd850', 2), (0x10036466, 'Plugin_LoadAll', 0), (0x100fe770, 'Stream_ReadLine', 3),
         (0x100fd760, 'Crt_FClose', 1), (0x100fd560, 'Str_NextToken_100fd560', 2),
-        (0x100472af, 'Screenshot_WriteTga', 5), (0x1004ec60, 'Sim_1004ec60', 1), (0x1004ecb8, 'Sim_1004ecb8', 0),
-        (0x1004ed37, 'Sim_1004ed37', 1), (0x1004edb6, 'Sim_1004edb6', 0), (0x10053b64, 'Input_ReadLine', 3),
+        (0x100472af, 'Screenshot_WriteTga', 5), (0x10053b64, 'Input_ReadLine', 3),
         (0x1008f630, 'Sim_1008f630', 1), (0x1008f867, 'Sim_1008f867', 2), (0x1007e7b6, 'Sim_1007e7b6', 1),
         (0x10020441, 'Sim_10020441', 1), (0x10041c00, 'Sim_10041c00', 0), (0x1007b4d6, 'Sim_1007b4d6', 2),
         (0x10079e3b, 'Sim_10079e3b', 1), (0x10042908, 'Sim_10042908', 1), (0x10079ecd, 'Sim_10079ecd', 2),
@@ -207,14 +206,14 @@ for _a, _c, _n in [
         (0x1007b1d0, 'Sim_1007b1d0', 2), (0x1007adfc, 'Sim_1007adfc', 3), (0x1007b5db, 'Sim_1007b5db', 2)]:
     helper(_a, _c, _n)
 
-SARGS = {0x1003650d: (0,), 0x100fd850: (0, 1), 0x100472af: (0,), 0x1004ec60: (0,), 0x1007e7b6: (0,),
+SARGS = {0x1003650d: (0,), 0x100fd850: (0, 1), 0x100472af: (0,), 0x1007e7b6: (0,),
          0x10020441: (0,), 0x100fd560: (1,)}
 # arguments the helper reads as 16 bits (Sim_10040f5f casts them to uint16_t / uint8_t, Sim_10015d30 takes
 # int16_t): the original pushes them in registers whose upper halves hold leftovers
 M16 = 0xffff
 MASK = {(0x10040f5f, 1): M16, (0x10040f5f, 2): M16, (0x10040f5f, 3): M16, (0x10015d30, 1): M16,
         (0x10015d30, 2): M16, (0x10015d30, 3): M16}
-DEREF = {0x1004ed37: {0: 20}, 0x1008f630: {0: 8}}
+DEREF = {0x1008f630: {0: 8}}
 EFFECT = {}         # helper -> function(uc, call number, raw arguments, eax) that writes the helper's results
 ST = {}
 
@@ -565,12 +564,12 @@ def g_6876(ctx):
 
 
 def g_73e4(ctx):
-    r = begin(ctx, 0x100472af, 0x1004ec60, 0x1004ecb8, 0x1004ed37, 0x1004edb6)
-    # the number goes into "hg%04d.gif" in a 16-byte name: nothing below -99999, which would overflow the frame
+    r = begin(ctx, 0x100472af)
+    # the number goes into "hg%04d.tga" in a 16-byte name: nothing below -99999, which would overflow the frame
     # (the original's as much as the C's, differently laid out)
     w32(ctx, 0x1015f150, r.choice([0, 1, 7, 42, 999, 999, 1000, 1001, 5000, 0xffffffff, -12345, 0x7fffffff,
                                    r.randrange(0, 1200)]))
-    w32(ctx, 0x1017b940, r.choice([0, 1, 1, 2]))
+    w32(ctx, 0x1017b940, 1)                     # the renderer is always there (round 42)
     for a in (0x109e3e14, 0x109e3de0, 0x109e3e24, 0x109e3e20):
         w32(ctx, a, ctx.u32())
     return []

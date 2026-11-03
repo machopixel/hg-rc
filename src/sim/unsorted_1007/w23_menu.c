@@ -81,10 +81,8 @@ void __cdecl Sim_1007760b(void *panel, void *item, int32_t row, int32_t x, int32
         font = U32(panel, 0x48);
         if (G32(0x101668e8) != 0)
             SIM_FN(W23mTextFn, 0x100f2f01)(surface, x, y, font, text, GBYTES(0x109b9920));
-        else if (G32(0x1017b940) != 0)
-            SIM_FN(W23mTextFn, 0x100f1e10)(surface, x, y, font, text, GBYTES(0x109b9920));
         else
-            SIM_FN(W23mTextFn, 0x100ecea6)(surface, x, y, font, text, GBYTES(0x109b9920));
+            SIM_FN(W23mTextFn, 0x100f1e10)(surface, x, y, font, text, GBYTES(0x109b9920));
     }
     if (selected) {
         if (((delta != 0 && S32(menu, 0x18 + row * 0x14) == 4) || (digit && S32(menu, 0x18 + row * 0x14) == 5)) &&

@@ -83,20 +83,3 @@ void __cdecl Sim_10044c7a(void)
             Sim_100449fc((void *)(uintptr_t)G32(0x1014cae0), SIM_PTR(void, 0x109b9a20));
     }
 }
-
-// FUNCTION: HGSIM 0x1004ed37
-int __cdecl Sim_1004ed37(const uint8_t *p)
-{
-    int result = 2;
-    int width;
-    int height;
-
-    if (p != 0 && GS32(0x1013b9a8) == 1) {
-        G32(0x109b8be0) = (uint32_t)(uintptr_t)p;
-        width = S32(p, 0xc) - S32(p, 4) + 1;
-        height = S32(p, 0x10) - S32(p, 8) + 1;
-        result = W5A_CALL_1004deb3(S32(p, 4), S32(p, 8), width, height, (uint32_t)(uintptr_t)SIM_PTR(void, 0x10002955));
-        G32(0x1013b9a8) = 2;
-    }
-    return result;
-}

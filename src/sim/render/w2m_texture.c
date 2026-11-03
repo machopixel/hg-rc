@@ -64,7 +64,7 @@ static void Render_PreloadTexTextures(void)
                             tex.palette = image + 0xc;
                             tex.pixels = image + 0xc + S16(image, 0xa) * 4;
                             tex.key = 0xff;
-                            tex.flag = G32(0x1017b940) != 0;
+                            tex.flag = 1;
                         } else {
                             tex.width = S16(image, 0);
                             tex.height = S16(image, 2);

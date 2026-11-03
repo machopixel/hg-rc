@@ -620,7 +620,6 @@ add_executable(HG WIN32
     ../sim/unsorted_100b/w9d_states.c
     ../sim/unsorted_1003/w9d_tree.c
     ../sim/unsorted_100b/w9e_cache.c
-    ../sim/unsorted_100a/w9e_clip.c
     ../sim/unsorted_1003/w9e_frame.c
     ../sim/unsorted_1005/w9e_gear.c
     ../sim/unsorted_1005/w9e_hud.c

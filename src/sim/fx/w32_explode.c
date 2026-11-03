@@ -17,8 +17,6 @@
 #include "../util/util.h"
 #include "../util/access.h"
 
-/* the graphics library, still original: a pixel on the 2D surface */
-#define W32T_CALL_100e84f0 SIM_FN(void(__cdecl *)(void *, int32_t, int32_t, uint32_t), 0x100e84f0)
 #define W32T_NODE(rec) ((void *)(uintptr_t)U32(rec, 0x332))
 
 static uint32_t W32t_Bits(float f)
@@ -69,10 +67,6 @@ int __cdecl Sim12_10083e8a(uint8_t *rec)
         flags = W32_ParticleFlags(rec, i, U32(rec, 0x346));
         if (flags == 0)
             return 0;
-        if (G32(0x1017b940) == 0) {
-            W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), flags);
-            continue;
-        }
 #ifdef W32E_MUTATE /* the checker's negative check only: the particle one size step bigger */
         U32(rec + i * 0x32, 0x38) = (uint32_t)W32_ParticleSize(rec, 1) + 1;
 #else
@@ -459,12 +453,8 @@ int __cdecl Sim12_10084b83(uint8_t *rec)
         if (flags == 0)
             return 0;
         size = W32_ParticleScale(rec, Render_Ftol((double)(int32_t)(U32(rec, 0x34a) * 0x7d0u) / (double)z));
-        if (size < 1) {
-            if (G32(0x1017b940) == 0)
-                W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), flags);
-            else
-                size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
-        }
+        if (size < 1)
+            size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
 #ifdef W32M_MUTATE /* the checker's negative check only: one size step bigger */
         size++;
 #endif
@@ -488,8 +478,6 @@ void __cdecl Sim12_1008514d(float x, float y, float z, float dx, float dy, float
     int32_t type = 0x11, i;
 
     (void)unused;
-    if (G32(0x1017b940) == 0)
-        return;
     dist = W32_InSight(x, y, z);
     if (!(dist < 0.0f || dist > 0.0f))               /* fcomp 0.0 / test ah, 0x40 */
         return;
@@ -580,7 +568,7 @@ int __cdecl Sim12_1007eb46(uint8_t *rec)
     uint8_t points[8 * 0x10];
     uint32_t px, py, pz, flags = 0, c, a12;
     float hx, hy, hz, x, y, z;
-    int32_t i, size, a, b;
+    int32_t i, size;
 
     if (rec == 0)
         return 0;
@@ -603,26 +591,6 @@ int __cdecl Sim12_1007eb46(uint8_t *rec)
         if (flags == 0)
             return 0;
         size = W32_ParticleScale(rec, Render_Ftol((double)(int32_t)(U32(rec, 0x34a) * 0x7d0u) / (double)z));
-        if (G32(0x1017b940) == 0) {
-            if (size < 1) {
-                W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), flags);
-                continue;
-            }
-            /* a block of pixel pairs, every second row and column */
-            for (a = 0; a < size; a += 2) {
-                for (b = 0; b < size; b += 2) {
-                    W32_F(rec, 0x36a) = (float)((double)a + (double)x);
-                    W32_F(rec, 0x36e) = (float)((double)b + (double)y);
-                    W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(W32_F(rec, 0x36a)),
-                                       Render_Ftol(W32_F(rec, 0x36e)), flags);
-                    W32_F(rec, 0x36a) = (float)((double)W32_F(rec, 0x36a) + 1.0);
-                    W32_F(rec, 0x36e) = (float)((double)W32_F(rec, 0x36e) + 1.0);
-                    W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(W32_F(rec, 0x36a)),
-                                       Render_Ftol(W32_F(rec, 0x36e)), flags);
-                }
-            }
-            continue;
-        }
         if (size < 1)
             size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
         /* the first corner's colour from the colour table [0x10185760] (256 entries) by the flags. For a textured
@@ -767,12 +735,8 @@ int __cdecl Sim12_1007dd89(uint8_t *rec)
         if (flags == 0)
             return 0;
         size = W32_ParticleScale(rec, Render_Ftol((double)(int32_t)(U32(rec, 0x34a) * 0x7d0u) / (double)z));
-        if (size < 1) {
-            if (G32(0x1017b940) == 0)
-                W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), flags);
-            else
-                size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
-        }
+        if (size < 1)
+            size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
 #ifdef W32M_MUTATE /* the checker's negative check only: one size step bigger */
         size++;
 #endif
@@ -907,12 +871,8 @@ int __cdecl Sim12_1007bca5(uint8_t *rec)
         if (flags == 0)
             return 0;
         size = W32_ParticleScale(rec, Render_Ftol((double)(int32_t)(U32(rec, 0x34a) * 0x7d0u) / (double)z));
-        if (size < 1) {
-            if (G32(0x1017b940) == 0)
-                W32T_CALL_100e84f0(GBYTES(0x109e3e00), Render_Ftol(x), Render_Ftol(y), flags);
-            else
-                size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
-        }
+        if (size < 1)
+            size = g_w32_1011e700[S32(rec, 0x402)].size >> 1;
 #ifdef W32M_MUTATE /* the checker's negative check only: one size step bigger */
         size++;
 #endif
@@ -985,49 +945,7 @@ void __cdecl Sim12_1007c1a1(float x, float y, float z, float dx, float dy, float
     U32(rec, 0xc) = 1;
 }
 
-/* the sparks' updates (2D mode, by their kind): the dust's, colour from a table by age, size 1 */
-static int W32x_SparkUpdate(uint8_t *rec, uint32_t table)
-{
-    int32_t age = (int32_t)(G32(0x1015dc78) - U32(rec, 0x33e)), r, k;
-
-#ifdef W32X_MUTATE /* the checker's negative check only: one frame longer */
-    if (age <= 0x5b && (U16(rec, 0x10) & 2) == 0) {
-#else
-    if (age <= 0x5a && (U16(rec, 0x10) & 2) == 0) {
-#endif
-        r = Sim_1009c929(10);
-        Sim_100a9d7c(W32T_NODE(rec), W32_F(rec, 0x34e), (float)((double)r + (double)W32_F(rec, 0x352)),
-                     W32_F(rec, 0x356));
-        Sim_100aa799(W32T_NODE(rec));
-        k = Render_Ftol((double)age / 90.0 * 3.0);
-        U32(rec, 0x346) = *GBYTES(table + (uint32_t)k);
-        U32(rec, 0x34a) = 1;
-        return 1;
-    }
-    Sim_100aa351(W32T_NODE(rec));
-    U16(rec, 0x10) = (uint16_t)(U16(rec, 0x10) & 0xfff8);
-    return 0;
-}
-
-// FUNCTION: HGSIM12 0x1007c996
-int __cdecl Sim12_1007c996(uint8_t *rec)
-{
-    return W32x_SparkUpdate(rec, 0x1036f050u);
-}
-
-// FUNCTION: HGSIM12 0x1007ca8b
-int __cdecl Sim12_1007ca8b(uint8_t *rec)
-{
-    return W32x_SparkUpdate(rec, 0x10215b18u);
-}
-
-/* 1.2 0x1007cb80 and 0x1007cc7c are byte for byte the dust's update 0x10084a87, 0x1007cd78 its draw 0x10084b83 */
-// FUNCTION: HGSIM12 0x1007cb80
-int __cdecl Sim12_1007cb80(uint8_t *rec)
-{
-    return Sim12_10084a87(rec);
-}
-
+/* 1.2 0x1007cc7c is byte for byte the dust's update 0x10084a87, 0x1007cd78 its draw 0x10084b83 */
 // FUNCTION: HGSIM12 0x1007cc7c
 int __cdecl Sim12_1007cc7c(uint8_t *rec)
 {
@@ -1046,34 +964,20 @@ void __cdecl Sim12_1007d342(float x, float y, float z, float dx, float dy, float
     uint8_t *rec, *block, *p;
     float dist, ax = 0.0f, ay = 0.0f, az = 0.0f, sx = 0.0f, sy = 0.0f, sz = 0.0f;
     int32_t type = 0xd, i;
-    int(__cdecl *update)(uint8_t *);
 
     dist = W32_InSight(x, y, z);
     if (!(dist < 0.0f || dist > 0.0f))               /* fcomp 0.0 / test ah, 0x40 */
         return;
-    if (G32(0x1017b940) == 0) {
-        if (kind == 0)
-            update = Sim12_1007c996;
-        else if (kind == 1)
-            update = Sim12_1007ca8b;
-        else if (kind == 2)
-            update = Sim12_1007cb80;
-        else
-            update = 0;
-    } else {
-        update = Sim12_1007cc7c;
-        if (ground >= 0xf && ground <= 0x1b)
-            type = 0xe;
-        else if (ground == 0x25 || ground == 0x2d)
-            type = 0x10;
-        else if ((ground >= 0x21 && ground <= 0x23) || ground == 0x28)
-            type = 0xf;
-        else
-            type = 0xd;
-    }
-    if (update == 0)
-        return;
-    rec = W32_NewSystem((uint32_t)(uintptr_t)update, (uint32_t)(uintptr_t)Sim12_1007cd78, 0, 0, type);
+    (void)kind;
+    if (ground >= 0xf && ground <= 0x1b)
+        type = 0xe;
+    else if (ground == 0x25 || ground == 0x2d)
+        type = 0x10;
+    else if ((ground >= 0x21 && ground <= 0x23) || ground == 0x28)
+        type = 0xf;
+    else
+        type = 0xd;
+    rec = W32_NewSystem((uint32_t)(uintptr_t)Sim12_1007cc7c, (uint32_t)(uintptr_t)Sim12_1007cd78, 0, 0, type);
     if (rec == 0)
         return;
 #ifdef W32X_MUTATE /* the checker's negative check only: the scale a fifth */

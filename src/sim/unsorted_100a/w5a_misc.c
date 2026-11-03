@@ -6,10 +6,7 @@ void __cdecl Sim_100a2b8c(uint32_t a, uint32_t b, uint32_t c)
 {
     uint32_t table = (uint32_t)(uintptr_t)SIM_PTR(void, 0x109e3e00);
 
-    if (G32(0x1017b940) != 0)
-        W5A_CALL_100ef727(table, a, b, G32(0x101cc2bc), G32(0x101ccc6c), 0, SIM_PTR(u16a, 0x101659e0)[c]);
-    else
-        W5A_CALL_100e86a1(table, a, b, G32(0x101cc2bc), G32(0x101ccc6c), 0, c);
+    W5A_CALL_100ef727(table, a, b, G32(0x101cc2bc), G32(0x101ccc6c), 0, SIM_PTR(u16a, 0x101659e0)[c]);
     G32(0x101cc2bc) = a;
     G32(0x101ccc6c) = b;
 }

@@ -161,12 +161,9 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         C2(0x100fc690, S(0x1017ed20), P(mission));
         C2(0x100fc6a0, S(0x1017ed20), S(0x1014b1e4));
     }
-    if (G32(0x1017b940) != 0)
-        C3(0x1003695b, S(0x1014b1ec), 0, 1);
-    else if (G32(0x1017b944) != 0)
-        C3(0x1003695b, S(0x1014b1f4), 0, 2);
-    else
-        C3(0x1003695b, S(0x1014b1fc), 0, 0);
+    /* round 42: the renderer plugin is always the "3dfx" slot (our Vulkan renderer); the original chose the D3D slot
+       for [0x1017b940] (now set with the "3dfx" switch) and a software one without either (DECISIONS.md) */
+    C3(0x1003695b, S(0x1014b1f4), 0, 2);
     if (C0(0x100d1df9) != 0)
         C2(0x100bc280, 0x51, 0);
     if (g_w33CdNeeded != 0) {          /* 1.2: the CD search only when the CD is needed */
@@ -179,8 +176,6 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
     if (G32(0x101668f4) != 0)
         C0(0x1005f8d0);
     res = (uint32_t *)(uintptr_t)C1(0x10036876, S(0x1014b204));
-    if (G32(0x1017b940) != 0 && U32(res, 0x44) != 1)
-        G32(0x1017b940) = 0;
     if (C0(0x10034c11) == 0)
         C2(0x100bc280, 0x50, 0);
     /* 1.0's "3dfx" flag [0x1017d0ac] is 1.2's 3DFX / PowerVR flag [0x1014b954] (g_w33Voodoo): 1.2 also sets it for
@@ -386,19 +381,14 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         NETPOLL();
         C0(0x1008988f);
         C0(0x100b8938);
-        if (G32(0x1017b940) != 0) {
-            G32(0x1013a010) = 0;
-            G32(0x1013a00c) = 0;
-        }
-        if (G32(0x1017b944) != 0) {
-            G32(0x1017b940) = 1;
-            G32(0x1013a010) = 0;
-            G32(0x1013a00c) = 6;
-            G32(0x1015e688) = S(0x1014b838);
-        }
+        /* the "3dfx" display set-up, the only one left (round 42) */
+        G32(0x1017b940) = 1;
+        G32(0x1013a010) = 0;
+        G32(0x1013a00c) = 6;
+        G32(0x1015e688) = S(0x1014b838);
         if (C6(0x1003795b, G32(0x1013a00c), G32(0x1013a010), S(0x109e3e20), G32(0x1017b918), G32(0x1017b91c), 0) == 0)
             C2(0x100bc280, 0x50, G32(0x101c5140));
-        if (G32(0x1017b918) == 0x280 && G32(0x1017b91c) == 0x1e0 && G32(0x1017b940) != 0) {
+        if (G32(0x1017b918) == 0x280 && G32(0x1017b91c) == 0x1e0) {
             G32(0x109e3dc4) = U32(G32(0x109e3e00), 4) + 1;
             G32(0x109e3dc8) = U32(G32(0x109e3e00), 8) + 1;
             U32(G32(0x109e3e00), 8) = U32(G32(0x109e3e00), 8) - 1;
@@ -463,16 +453,10 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         U8(GBYTES(0x101653fd), 0) = 1;
         G32(0x101655ac) = 0xffffffffu;
         G32(0x1017b934) = 1;
-        if (G32(0x1017b940) != 0 || g_w33Voodoo != 0) {      /* 1.2: also in its 3DFX / PowerVR mode */
-            C0(0x100a2a66);
-            NETPOLL();
-            C0(0x10006e52);
-            NETPOLL();
-        }
-        if (G32(0x1017b940) != 0 && G32(0x1017b944) == 0) {
-            C5(0x1008181e, 0, 0, G32(0x1017b918), G32(0x1017b91c), 0);
-            C5(0x1008181e, 0, 0, G32(0x1017b918), G32(0x1017b91c), 0);
-        }
+        C0(0x100a2a66);
+        NETPOLL();
+        C0(0x10006e52);
+        NETPOLL();
         LOGSTEP(0x1014b5e4);
         C0(0x10041e61);
         while (GS32(0x1017b8bc) < 3) {
@@ -512,56 +496,28 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
             C0(0x100ac001);
             C0(0x10045db9);
             C0(0x10058493);
-            if (G32(0x1015e694) != 0 && G32(0x1017b940) == 0) {
-                while (G32(0x1015e694) != 0) {
-                    if (U32(G32(0x1015e688), 0) == 0)
-                        C5(0x1008181e, 0, 0, G32(0x1017b918), G32(0x1017b91c), 0xf0);
-                    if (W21_DriverReady() == 0) {
-                        CI0(0x1014cb3c);
-                        C0(0x1002a0ca);
-                        C0(0x10075585);
-                        C0(0x1007e0ff);
-                    }
-                    if (U32(G32(0x1015e688), 0) == 0)
-                        C5(0x1008181e, 0, 0, G32(0x1017b918), G32(0x1017b91c), 0xf0);
-                    C0(0x10035478);
-                    C0(0x10037cab);
-                    C0(0x100d3491);
-                    C0(0x100d33ec);
-                }
-            }
             if ((G32(0x1017b94c) & 0x80000000u) != 0)
                 C0(0x100b388a);
             C0(0x10006a2f);
-            if (G32(0x1017b940) != 0 || W21_DriverReady() == 0) {
-                G32(0x1017b948) = 1;
-                CI0(0x1014cb3c);
-                if (G32(0x1017b940) == 0 || G32(0x1017b948) == 0 || W21_DriverReady() == 0) {
-                    G32(0x1017b948) = 0;
-                    C0(0x10089bad);
-                    C0(0x1002a0ca);
-                    C0(0x1007e0ff);
-                    C0(0x10075585);
-                    if (G32(0x1017b940) != 0) {
-                        if (G32(0x1017b940) != 0)
-                            C7(0x100ef727, S(0x109e3e00), 0, 0x1df, 0x27f, 0x1df, 0, U16(GBYTES(0x10165bc0), 0));
-                        else
-                            C7(0x100e86a1, S(0x109e3e00), 0, 0x1df, 0x27f, 0x1df, 0, 0xf0);
-                        if (G32(0x1017b940) != 0)
-                            C7(0x100ef727, S(0x109e3e00), 0x27f, 0, 0x27f, 0x1df, 0, U16(GBYTES(0x10165bc0), 0));
-                        else
-                            C7(0x100e86a1, S(0x109e3e00), 0x27f, 0, 0x27f, 0x1df, 0, 0xf0);
-                    }
-                    if (G32(0x1017b92c) != 0 && G32(0x1017b930) != 0)
-                        C0(0x1008b6a0);
-                    if (G32(0x1015f204) != 0) {
-                        G32(0x1015f204) = 0;
-                        C2(0x100e46d0, 0x80, 1);
-                        C0(0x100473e4);
-                        C2(0x100e46d0, 0x80, 0);
-                        C2(0x100fc780, S(0x1015e9e0), G32(0x101c45a4));
-                        C4(0x1007df6c, S(0x1015e9e0), G32(0x109b98c0), 0x16a, 0x32);
-                    }
+            G32(0x1017b948) = 1;
+            CI0(0x1014cb3c);
+            if (G32(0x1017b948) == 0 || W21_DriverReady() == 0) {
+                G32(0x1017b948) = 0;
+                C0(0x10089bad);
+                C0(0x1002a0ca);
+                C0(0x1007e0ff);
+                C0(0x10075585);
+                C7(0x100ef727, S(0x109e3e00), 0, 0x1df, 0x27f, 0x1df, 0, U16(GBYTES(0x10165bc0), 0));
+                C7(0x100ef727, S(0x109e3e00), 0x27f, 0, 0x27f, 0x1df, 0, U16(GBYTES(0x10165bc0), 0));
+                if (G32(0x1017b92c) != 0 && G32(0x1017b930) != 0)
+                    C0(0x1008b6a0);
+                if (G32(0x1015f204) != 0) {
+                    G32(0x1015f204) = 0;
+                    C2(0x100e46d0, 0x80, 1);
+                    C0(0x100473e4);
+                    C2(0x100e46d0, 0x80, 0);
+                    C2(0x100fc780, S(0x1015e9e0), G32(0x101c45a4));
+                    C4(0x1007df6c, S(0x1015e9e0), G32(0x109b98c0), 0x16a, 0x32);
                 }
             }
             C0(0x10035478);
@@ -586,10 +542,7 @@ uint32_t __stdcall SimMain(uint32_t instance, uint32_t unused1, char *cmdline, u
         NETPOLL();
         C1(0x10061bc5, U8(GBYTES(0x101653fd), 0) & 4);
         if (W21_DriverReady() == 0) {
-            if (G32(0x1017b940) != 0)
-                C2(0x100f0865, S(0x109e3e00), 0);
-            else
-                C2(0x100eb070, S(0x109e3e00), 0xf0);
+            C2(0x100f0865, S(0x109e3e00), 0);
         }
         NETPOLL();
         C0(0x10035478);

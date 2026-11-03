@@ -21,20 +21,15 @@ typedef int(__cdecl *W9cDTextFn)(uint32_t pane, int32_t x, int32_t y, uint32_t f
 
 static void W9cD_Shape(uint32_t pane, uint32_t shape, int32_t x, int32_t y)
 {
-    if (G32(0x1017b940) != 0)
-        W9CD_CALL_100f0205(pane, shape, 0, x, y);
-    else
-        W9CD_CALL_100e91dc(pane, shape, 0, x, y);
+    W9CD_CALL_100f0205(pane, shape, 0, x, y);
 }
 
 static void W9cD_Text(uint32_t pane, int32_t x, int32_t y, uint32_t font, const char *text)
 {
     if (G32(0x101668e8) != 0)
         W9CD_CALL_100f2f01(pane, x, y, font, text, GBYTES(0x109b9920));
-    else if (G32(0x1017b940) != 0)
-        W9CD_CALL_100f1e10(pane, x, y, font, text, GBYTES(0x109b9920));
     else
-        W9CD_CALL_100ecea6(pane, x, y, font, text, GBYTES(0x109b9920));
+        W9CD_CALL_100f1e10(pane, x, y, font, text, GBYTES(0x109b9920));
 }
 
 // FUNCTION: HGSIM 0x100d3d10

@@ -41,24 +41,14 @@ void __cdecl Sim_100a4f03(void *list)
 void __cdecl Sim_100a4ff0(void *node)
 {
     G32(0x1017d134) = 0;
-    if (G32(0x1017b940) != 0) {
-        Sim_100a88db();
-        G32(0x1017d138) = 0;
-        G32(0x1017d13c) = 0;
-        G32(0x101cc2ac) = LIST_AT(0);
-        Sim_100a526b(node);
-        if (GS32(0x1017d138) > 1)
-            W8Y_CALL_100a4700(LIST_AT(0), LIST_AT(G32(0x1017d138)) - 8);
-        G32(0x1017d134) = G32(0x1017d138);
-        return;
-    }
     Sim_100a88db();
     G32(0x1017d138) = 0;
     G32(0x1017d13c) = 0;
-    G32(0x101c9ea4) = 1;
-    G32(0x101cc2ac) = G32(0x1017d168);
+    G32(0x101cc2ac) = LIST_AT(0);
     Sim_100a526b(node);
-    draw_all();
+    if (GS32(0x1017d138) > 1)
+        W8Y_CALL_100a4700(LIST_AT(0), LIST_AT(G32(0x1017d138)) - 8);
+    G32(0x1017d134) = G32(0x1017d138);
 }
 
 // FUNCTION: HGSIM 0x100a512a
@@ -66,26 +56,16 @@ void __cdecl Sim_100a512a(void *node)
 {
     uint32_t first;
 
-    if (G32(0x1017b940) != 0) {
-        G32(0x1017d130) = 0;
-        first = G32(0x101c9ea0);
-        G32(0x1017d138) = 0;
-        G32(0x1017d13c) = 0;
-        G32(0x101cc2ac) = LIST_AT(first);
-        Sim_100a526b(node);
-        if (GS32(0x1017d138) > 1)
-            W8Y_CALL_100a4700(LIST_AT(first), LIST_AT(first + G32(0x1017d138)) - 8);
-        G32(0x1017d130) = G32(0x1017d138);
-        G32(0x101c9ea0) = G32(0x101c9ea0) + G32(0x1017d138);
-        return;
-    }
-    Sim_100a88db();
+    G32(0x1017d130) = 0;
+    first = G32(0x101c9ea0);
     G32(0x1017d138) = 0;
     G32(0x1017d13c) = 0;
-    G32(0x101c9ea4) = 1;
-    G32(0x101cc2ac) = G32(0x1017d168);
+    G32(0x101cc2ac) = LIST_AT(first);
     Sim_100a526b(node);
-    draw_all();
+    if (GS32(0x1017d138) > 1)
+        W8Y_CALL_100a4700(LIST_AT(first), LIST_AT(first + G32(0x1017d138)) - 8);
+    G32(0x1017d130) = G32(0x1017d138);
+    G32(0x101c9ea0) = G32(0x101c9ea0) + G32(0x1017d138);
 }
 
 // FUNCTION: HGSIM 0x100a526b

@@ -51,7 +51,6 @@ int __cdecl FileRec_CopyToFile(const char *path, const char *name);
 /* w8v_shots.c */
 int __cdecl Screenshot_WriteTga(const char *name, int32_t width, int32_t height, int32_t stride, const uint8_t *pixels);
 int __cdecl Gif_WriteImage(int32_t x, int32_t y, int32_t width, int32_t height, uint32_t pixelFn);
-int __cdecl Gif_CloseFile(void);
 
 /* w8v_misc.c */
 void __cdecl Sim_10048287(uint32_t a, int32_t index, uint32_t c, uint32_t d);

@@ -10,30 +10,15 @@
 // FUNCTION: HGSIM 0x100473e4
 void __cdecl Screenshot_Save(void)
 {
-    uint32_t region[5];
     char name[16];
     int32_t number = GS32(0x1015f150);
 
-    region[0] = (uint32_t)(uintptr_t)GBYTES(0x109e3e20);
-    region[1] = 0;
-    region[2] = 0;
-    region[3] = G32(0x109e3e14);
-    region[4] = G32(0x109e3de0);
     if (number >= 1000)
         return;
-    if (G32(0x1017b940) != 0) {
-        G32(0x1015f150) = (uint32_t)number + 1u;
-        Crt_SPrintf(name, (const char *)GBYTES(0x1013b2d0), number);          /* "hg%04d.tga" */
-        Screenshot_WriteTga(name, (int32_t)(G32(0x109e3e14) + 1u), (int32_t)(G32(0x109e3de0) + 1u),
-                            (int32_t)(G32(0x109e3e24) + 1u), BYTES(G32(0x109e3e20)));
-    } else {
-        G32(0x1015f150) = (uint32_t)number + 1u;
-        Crt_SPrintf(name, (const char *)GBYTES(0x1013b2dc), number);          /* "hg%04d.gif" */
-        Sim_1004ec60((int)(uintptr_t)name);
-        Sim_1004ecb8();
-        Sim_1004ed37((const uint8_t *)region);
-        Sim_1004edb6();
-    }
+    G32(0x1015f150) = (uint32_t)number + 1u;
+    Crt_SPrintf(name, (const char *)GBYTES(0x1013b2d0), number);          /* "hg%04d.tga" */
+    Screenshot_WriteTga(name, (int32_t)(G32(0x109e3e14) + 1u), (int32_t)(G32(0x109e3de0) + 1u),
+                        (int32_t)(G32(0x109e3e24) + 1u), BYTES(G32(0x109e3e20)));
 }
 
 /* The byte table at 0x1004b9ef folded with the jump table at 0x1004b95b: code -> result. */

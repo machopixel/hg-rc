@@ -446,14 +446,6 @@ def g_4e1c6(ctx):
     return []
 
 
-def g_4ec60(ctx):
-    begin(ctx)
-    r = ctx.rng
-    w32(ctx, 0x1013b9a8, r.choice([3, 3, 3, 0, 1, 2]))
-    w32(ctx, 0x109e3da4, newbuf(ctx, 0x20))
-    return [r.choice([0, 1, 0x1234, ctx.u32()])]
-
-
 def g_4edca(ctx):
     begin(ctx)
     w32(ctx, 0x109b8be0, ctx.u32())
@@ -903,7 +895,6 @@ SPECS = [
     S('Sim_100474db', 0x100474db, g_474db),
     S('Sim_1004dcaa', 0x1004dcaa, g_4dcaa),
     S('Sim_1004e1c6', 0x1004e1c6, g_4e1c6),
-    S('Sim_1004ec60', 0x1004ec60, g_4ec60),
     S('Sim_1004edca', 0x1004edca, g_4edca),
     S('Sim_1004f0d6', 0x1004f0d6, g_4f0d6, void=True),
     S('Sim_1005264d', 0x1005264d, g_5264d, void=True),

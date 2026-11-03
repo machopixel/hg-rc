@@ -169,6 +169,10 @@ def g(ctx):
               0x1015e694, 0x1017692c, 0x1017b92c, 0x1017b930, 0x1015f204, 0x1017b8b8, 0x1015dca0, 0x1015ebf8,
               0x1017b8cc):
         w32(ctx, a, r.choice([0, 0, 1, r.getrandbits(32)]))
+    # round 42: as after "/3dfx" (the command line is a stub here): 1.0 has [0x1017b944] set and [0x1017b940] clear
+    # until its SimMain sets it with the display; the C's parse sets both, and nothing before that point reads it
+    w32(ctx, 0x1017b940, 0)
+    w32(ctx, 0x1017b944, 1)
     w32(ctx, 0x1017b8bc, r.choice([0, 0, 0, 2, 3]))
     w32(ctx, 0x1017b94c, r.choice([0, 1, 2, 3, 3, 0x80000000, r.getrandbits(32)]))
     w32(ctx, 0x1015dc7c, r.getrandbits(32))
@@ -232,7 +236,7 @@ def screen_log(log_o, log_c):
 
 
 SPECS = [dict(name='SimMain', orig=0x10084feb, c='SimMain@24', gen=g, api=API, trials=300 if NEG else 4000,
-              post_c=post_c,
+              post_c=post_c, renderer_free=True,      # round 42: the flags as after "/3dfx" (g)
               ignore_syms={'g_w33CdNeeded': 4,      # 1.2's CD flag (round 33), no 1.0 counterpart
                            'g_w33Voodoo': 4})]      # compared at 1.0's [0x1017d0ac] (post_c)
 

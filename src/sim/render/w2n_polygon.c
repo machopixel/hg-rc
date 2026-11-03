@@ -28,7 +28,7 @@ int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, in
     void **next = projected;
     int left = count;
 
-    if (texture == NULL || U32(0x1017b940) == 0)
+    if (texture == NULL)
         return 0;
     while (left-- != 0) {
         const unsigned char *p = *next++;
@@ -37,10 +37,7 @@ int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, in
         *(float *)(v + 0xc) = *(float *)(CAMERA + 0x94) / *(const float *)(p + 8);
         *(uint32_t *)(v + 0x1c) = *(const uint32_t *)(p + 0x20);
         *(uint32_t *)(v + 0x20) = *(const uint32_t *)(p + 0x24);
-        if (U32(0x1017b940) != 0)
-            *(uint32_t *)(v + 0x10) = 0xff;
-        else
-            *(uint32_t *)(v + 0x10) = 0x80;
+        *(uint32_t *)(v + 0x10) = 0xff;
         v[0x14] = (unsigned char)U32(0x10143fdc);
         v[0x15] = (unsigned char)U32(0x10143fe0);
         v[0x16] = (unsigned char)U32(0x10143fe4);
@@ -59,84 +56,55 @@ int __cdecl Render_SubmitVertexPtrs_100a0339(void *texture, void **projected, in
     return 1;
 }
 
-/* The software path: 24-byte records (x, y, z << 16, 1, 1, 1) for the routine at 0x100f9fd4. */
-static void DrawSoftware(unsigned n)
-{
-    int32_t sw[MAX_POLY * 6];
-    int32_t *out = sw;
-    unsigned char **next = PROJECTED_LIST;
-    unsigned i;
-
-    for (i = 0; i < n; i++, out += 6) {
-        const unsigned char *p = *next++;
-
-        out[0] = *(const int32_t *)(p + 0x18);
-        out[1] = *(const int32_t *)(p + 0x1c);
-        out[5] = 1;
-        out[3] = 1;
-        out[4] = 1;
-        out[2] = (int32_t)((uint32_t)Render_Ftol(*(const float *)(p + 0x20)) << 16);
-    }
-    if (U32(0x1017d1e4) == 0)
-        U32(0x1017d1e4) = (uint32_t)(uintptr_t)RENDER_LOAD(SIM_PTR(void, 0x1014d1dc), *SIM_PTR(void *, 0x1014cf0c));
-    SIM_FN(void(__cdecl *)(void *, void *, unsigned, int, int, int, void *, int), 0x100f9fd4)(
-        SIM_PTR(void, 0x109e3e00), sw, n, 0x40, 0, 0, (void *)(uintptr_t)U32(0x1017d1e4), 0);
-}
-
 // FUNCTION: HGSIM 0x100ac738
 void __cdecl Render_SubmitClipped_100ac738(unsigned char *verts, unsigned count)
 {
     unsigned n = Render_ClipPolygon(verts, count, *(uint32_t *)(CAMERA + 0x3c), *(uint32_t *)(CAMERA + 0x40));
+    unsigned char buf[MAX_POLY * 0x24];
+    int32_t desc[2];
+    unsigned char *out;
+    unsigned char **next;
+    unsigned i;
 
-    if (U32(0x1017b940) != 0) {
-        unsigned char buf[MAX_POLY * 0x24];
-        int32_t desc[2];
-        unsigned char *out;
-        unsigned char **next;
-        unsigned i;
+    if (n < 3)
+        return;
+    next = PROJECTED_LIST;
+    out = buf + (n - 1) * 0x24;
+    for (i = 0; i < n; i++, out -= 0x24) {
+        const unsigned char *p = *next++;
+        float u;
 
-        if (n < 3)
-            return;
-        next = PROJECTED_LIST;
-        out = buf + (n - 1) * 0x24;
-        for (i = 0; i < n; i++, out -= 0x24) {
-            const unsigned char *p = *next++;
-            float u;
-
-            ScreenPosition(out, p);
-            /* 1.2 (0x100974e8): rhw 1 / z (1.0: 1) */
-            *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
-            *(uint32_t *)(out + 0x1c) = ONE_BITS;
-            *(uint32_t *)(out + 0x20) = ONE_BITS;
-            *(uint32_t *)(out + 0x10) = 0xfe;
-            out[0x14] = 0xf2;
-            out[0x16] = 0x46;
-            out[0x15] = 0xae;
-            *(uint32_t *)(out + 0x18) =
-                (uint32_t)Render_FogLevel(*(const float *)(p + 8), *(const float *)(verts + 0x10)) << 24;
-            u = *(const float *)(p + 0x20);
-            if (!(u < F32(0x1012baa4)) && !(u > F32(0x1012baa4))) {
-                out[0x17] = 0x40;
-                if (g_w33Voodoo != 0)                   /* 1.2's 3DFX / PowerVR mode: the fog byte 0xbf */
+        ScreenPosition(out, p);
+        /* 1.2 (0x100974e8): rhw 1 / z (1.0: 1) */
+        *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
+        *(uint32_t *)(out + 0x1c) = ONE_BITS;
+        *(uint32_t *)(out + 0x20) = ONE_BITS;
+        *(uint32_t *)(out + 0x10) = 0xfe;
+        out[0x14] = 0xf2;
+        out[0x16] = 0x46;
+        out[0x15] = 0xae;
+        *(uint32_t *)(out + 0x18) =
+            (uint32_t)Render_FogLevel(*(const float *)(p + 8), *(const float *)(verts + 0x10)) << 24;
+        u = *(const float *)(p + 0x20);
+        if (!(u < F32(0x1012baa4)) && !(u > F32(0x1012baa4))) {
+            out[0x17] = 0x40;
+            if (g_w33Voodoo != 0)                   /* 1.2's 3DFX / PowerVR mode: the fog byte 0xbf */
 #ifdef W2NS_MUTATE /* the checker's negative check only: 0xff instead */
-                    *(uint32_t *)(out + 0x18) = 0xff000000u;
+                *(uint32_t *)(out + 0x18) = 0xff000000u;
 #else
-                    *(uint32_t *)(out + 0x18) = 0xbf000000u;
+                *(uint32_t *)(out + 0x18) = 0xbf000000u;
 #endif
-            } else {
-                out[0x17] = 0;
-                if (g_w33Voodoo != 0)
-                    *(uint32_t *)(out + 0x18) = 0xff000000u;
-            }
+        } else {
+            out[0x17] = 0;
+            if (g_w33Voodoo != 0)
+                *(uint32_t *)(out + 0x18) = 0xff000000u;
         }
-        /* 1.2: its 3DFX / PowerVR mode with fog on turns the renderer's fog off here (1.2's state 1 = our 2) */
-        if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
-            RENDER_STATE(2, 0);
-        desc[1] = 0xfe;
-        RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
-    } else if (n >= 3) {
-        DrawSoftware(n);
     }
+    /* 1.2: its 3DFX / PowerVR mode with fog on turns the renderer's fog off here (1.2's state 1 = our 2) */
+    if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
+        RENDER_STATE(2, 0);
+    desc[1] = 0xfe;
+    RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
 }
 
 // FUNCTION: HGSIM 0x100ad1f3
@@ -147,6 +115,10 @@ void __cdecl Sim_100ad1f3(unsigned char *obj, unsigned char *part)
     unsigned char *table;
     unsigned char *rec;
     unsigned n, i;
+    unsigned char buf[MAX_POLY * 0x24];
+    int32_t desc[2];
+    unsigned char *out;
+    unsigned char **next = PROJECTED_LIST;
 
     if (part == NULL || (*(uint32_t *)(part + 0x1c) & 0x80000000u) != 0)
         return;
@@ -169,53 +141,31 @@ void __cdecl Sim_100ad1f3(unsigned char *obj, unsigned char *part)
     n = Render_ClipPolygon(recs, n, *(uint32_t *)(CAMERA + 0x3c), *(uint32_t *)(CAMERA + 0x40));
     if (n < 3)
         return;
-    if (U32(0x1017b940) != 0) {
-        unsigned char buf[MAX_POLY * 0x24];
-        int32_t desc[2];
-        unsigned char *out = buf + (n - 1) * 0x24;
-        unsigned char **next = PROJECTED_LIST;
+    out = buf + (n - 1) * 0x24;
+    for (i = 0; i < n; i++, out -= 0x24) {
+        const unsigned char *p = *next++;
 
-        for (i = 0; i < n; i++, out -= 0x24) {
-            const unsigned char *p = *next++;
-
-            ScreenPosition(out, p);
-            /* 1.2 (0x10097ff0): rhw 1 / z (1.0: 1), light 0xff (1.0: 0xfe) */
-            *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
-            *(uint32_t *)(out + 0x1c) = ONE_BITS;
-            *(uint32_t *)(out + 0x20) = ONE_BITS;
+        ScreenPosition(out, p);
+        /* 1.2 (0x10097ff0): rhw 1 / z (1.0: 1), light 0xff (1.0: 0xfe) */
+        *(float *)(out + 0xc) = (float)((double)F32(0x10111000) / (double)*(const float *)(p + 8));
+        *(uint32_t *)(out + 0x1c) = ONE_BITS;
+        *(uint32_t *)(out + 0x20) = ONE_BITS;
 #ifdef W2NS_MUTATE /* the checker's negative check only: 1.0's light */
-            *(uint32_t *)(out + 0x10) = 0xfe;
+        *(uint32_t *)(out + 0x10) = 0xfe;
 #else
-            *(uint32_t *)(out + 0x10) = 0xff;
+        *(uint32_t *)(out + 0x10) = 0xff;
 #endif
-            out[0x14] = 0;
-            out[0x16] = 0;
-            out[0x15] = 0;
-            out[0x17] = 0x80;
-            if (g_w33Voodoo == 0)
-                *(uint32_t *)(out + 0x18) = (uint32_t)Render_FogLevel(*(const float *)(p + 8), fogParam) << 24;
-            else                                        /* 1.2's 3DFX / PowerVR mode: the fog byte 0x80 */
-                *(uint32_t *)(out + 0x18) = 0x80000000u;
-        }
-        desc[1] = 0xff;                                 /* 1.2: 0xff (1.0: 0xfe) */
-        if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
-            RENDER_STATE(2, 0);
-        RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
-    } else {
-        unsigned char buf[MAX_POLY * 0x24];
-        unsigned char *out = buf;
-        unsigned char **next = PROJECTED_LIST;
-
-        for (i = 0; i < n; i++, out += 0x24) {
-            const unsigned char *p = *next++;
-
-            ScreenPosition(out, p);
-            *(uint32_t *)(out + 0xc) = ONE_BITS;
-            *(uint32_t *)(out + 0x1c) = ONE_BITS;
-            *(uint32_t *)(out + 0x20) = ONE_BITS;
-            *(uint32_t *)(out + 0x10) = 0xf0;
-            *(uint32_t *)(out + 0x14) = 0xff000000u;
-        }
-        RENDER_SLOT(void(__cdecl *)(unsigned, void *, int), 0x1014cb4c)(n, buf, 0xf0);
+        out[0x14] = 0;
+        out[0x16] = 0;
+        out[0x15] = 0;
+        out[0x17] = 0x80;
+        if (g_w33Voodoo == 0)
+            *(uint32_t *)(out + 0x18) = (uint32_t)Render_FogLevel(*(const float *)(p + 8), fogParam) << 24;
+        else                                        /* 1.2's 3DFX / PowerVR mode: the fog byte 0x80 */
+            *(uint32_t *)(out + 0x18) = 0x80000000u;
     }
+    desc[1] = 0xff;                                 /* 1.2: 0xff (1.0: 0xfe) */
+    if (U32(0x1017d108) != 0 && g_w33Voodoo != 0)
+        RENDER_STATE(2, 0);
+    RENDER_CALL(0xf, RENDER_PLUGIN, buf, (int)n, desc);
 }
